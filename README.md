@@ -11,10 +11,11 @@ For more information, we recommend reading the following paper to understand the
 *    [“Constraint-Behavior Contracts: A Formalism for Specifying Physical Systems,”][CBContract23] Sheng-Jung Yu, Inigo Incer, and Alberto Sangiovanni-Vincentelli, MEMOCODE, 2023.
 *    [“Contract Replaceability for Ensuring Independent Design using Assume-Guarantee Contracts,”][Independent23] Sheng-Jung Yu, Inigo Incer, and Alberto Sangiovanni-Vincentelli, MEMOCODE, 2023.
 
-Dependency:
+Dependency and Development Environment:
 
-*    PDM for package management
-*    sphinx for documentation generation
+*    [PDM](https://pdm-project.org/latest/) for package management
+*    [sphinx](https://www.sphinx-doc.org/en/master/index.html) for documentation generation
+*    [pytest](https://docs.pytest.org/en/8.0.x/contents.html) for unit test
 
 
 [CBcontract23]: https://ieeexplore.ieee.org/document/10316201
