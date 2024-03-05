@@ -11,5 +11,11 @@ For more information, we recommend reading the following paper to understand the
 *    [“Constraint-Behavior Contracts: A Formalism for Specifying Physical Systems,”][CBContract23] Sheng-Jung Yu, Inigo Incer, and Alberto Sangiovanni-Vincentelli, MEMOCODE, 2023.
 *    [“Contract Replaceability for Ensuring Independent Design using Assume-Guarantee Contracts,”][Independent23] Sheng-Jung Yu, Inigo Incer, and Alberto Sangiovanni-Vincentelli, MEMOCODE, 2023.
 
+Dependency:
+
+*    PDM for package management
+*    sphinx for documentation generation
+
+
 [CBcontract23]: https://ieeexplore.ieee.org/document/10316201
 [Independent23]: https://ieeexplore.ieee.org/document/10316205
