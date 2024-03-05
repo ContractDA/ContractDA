@@ -1,4 +1,4 @@
-from contract_base import ContractBase
+from contractda.contracts.contract_base import ContractBase
 
 class CBContract(ContractBase):
     """
