@@ -1,12 +1,14 @@
-from set_base import SetBase
+from contractda.sets.set_base import SetBase
+import random
+
 
 class ExplicitSet(SetBase):
     def __init__(self, vars: list[str], values: list[tuple]):
-        self.__vars: list[str] = vars
-        self.__values_internal = values #list[list] = self.__convert_values_to_internal(values)
+        self._vars: list[str] = vars
+        self._values_internal = values #list[list] = self.__convert_values_to_internal(values)
 
     def __str__(self):
-        return f"{tuple(self.__vars)} = {str(self.__values_internal)}"
+        return f"{tuple(self._vars)} = {str(self._values_internal)}"
     
     @staticmethod 
     def union(set1, set2):
@@ -30,13 +32,20 @@ class ExplicitSet(SetBase):
         pass
 
     def __iter__(self):
-        self._iter = iter(self.__values) 
+        self._iter = iter(self._values_internal) 
         return self
 
     def __next__(self):
         value = next(self._iter)
         return value
 
+    def sample(self):
+        random.seed(0)
+        random_id = random.randrange(0, self.len())
+        return self._values_internal[random_id]
+
+    def len(self):
+        return len(self._vars)
 
     # def __convert_values_to_internal(self, vars: list[str], values: list[tuple]):
     #     internal = [[value[i] for value in values] for i, var in enumerate(vars)]

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Callable
 
+
 class SetBase(ABC):
     """
     Class for defining sets
@@ -14,27 +15,22 @@ class SetBase(ABC):
     #   Set Operation
     ######################
     @abstractmethod
-    @staticmethod 
     def union(set1, set2):
         pass
 
     @abstractmethod
-    @staticmethod 
     def intersect(set1, set2):
         pass
 
     @abstractmethod
-    @staticmethod 
     def difference(set1, set2):
         pass
 
     @abstractmethod
-    @staticmethod 
     def complement(set1, set2):
         pass
 
     @abstractmethod
-    @staticmethod 
     def project(set1):
         pass
     ######################

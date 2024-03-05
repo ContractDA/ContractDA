@@ -1,0 +1,11 @@
+[[package]]
+name = "contractda"
+version = "0.1.0"
+requires_python = ">=3.10"
+summary = "A design automation tool for contract-based design"
+
+[metadata]
+lock_version = "4.0"
+content_hash = "sha256:5120dc427a6526c2fa1088756dc7ebc533a2d2cea85d8037498b1294ecf87b8a"
+
+[metadata.files]
