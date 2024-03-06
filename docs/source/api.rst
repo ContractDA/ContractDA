@@ -5,6 +5,5 @@ API
     :toctree: generated
 
     contractda
-    contractda.sets.set_base
-    contractda.sets.explicit_set
+    contractda.sets.set_base.SetBase
     contractda.sets.explicit_set.ExplicitSet

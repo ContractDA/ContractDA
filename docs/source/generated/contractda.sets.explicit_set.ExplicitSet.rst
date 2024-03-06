@@ -26,4 +26,13 @@
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ExplicitSet.internal_values
+      ~ExplicitSet.internal_vars
+      ~ExplicitSet.ordered_values
+      ~ExplicitSet.ordered_vars
+   
    
