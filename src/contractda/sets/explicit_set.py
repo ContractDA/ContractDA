@@ -3,7 +3,16 @@ import random
 
 
 class ExplicitSet(SetBase):
+    """
+    A set class that explicitly enumerate all elements
+    """
     def __init__(self, vars: list[str], values: list[tuple]):
+        """
+        Constructor
+        
+        :param list[str] vars: The names for the variables
+        :param list[tuple] values: The value in the set, each tuple is an element in the set, and the value in the tuple is the same order as that in the vars
+        """
         self._vars: list[str] = vars
         self._values_internal = values #list[list] = self.__convert_values_to_internal(values)
 

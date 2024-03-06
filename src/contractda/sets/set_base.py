@@ -4,8 +4,7 @@ from typing import Callable
 
 class SetBase(ABC):
     """
-    Class for defining sets
-    
+    Base class for different set objects
     """
 
     def __init__(self):
