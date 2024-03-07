@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from typing import Callable
 
 
+
+
 class SetBase(ABC):
     """
     Base class for different set objects
@@ -30,7 +32,7 @@ class SetBase(ABC):
         pass
 
     @abstractmethod
-    def project(set1):
+    def project(set1, vars, refine = True):
         pass
     ######################
     #   Extraction
