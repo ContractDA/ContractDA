@@ -7,3 +7,5 @@ API
     contractda
     contractda.sets.set_base.SetBase
     contractda.sets.explicit_set.ExplicitSet
+    contractda.sets.var
+    

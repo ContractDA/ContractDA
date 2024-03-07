@@ -18,5 +18,16 @@ Dependency and Development Environment:
 *    [pytest](https://docs.pytest.org/en/8.0.x/contents.html) for unit test
 
 
+To generate the document
+```
+$ cd docs
+$ make html
+```
+
+To use pytest for unit test
+```
+$pytest test/test_set/test_explicit_set.py
+```
+
 [CBcontract23]: https://ieeexplore.ieee.org/document/10316201
 [Independent23]: https://ieeexplore.ieee.org/document/10316205
