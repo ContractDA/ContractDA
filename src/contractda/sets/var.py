@@ -67,6 +67,10 @@ class BoolVar(Var):
     def __init__(self, id: str):
         super().__init__(id, var_type=VarType.BOOL)
 
+    @property
+    def value_range(self):
+        return [False, True]
+
     def is_finite(self):
         return True
     

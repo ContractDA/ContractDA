@@ -16,23 +16,23 @@ class SetBase(ABC):
     #   Set Operation
     ######################
     @abstractmethod
-    def union(set1, set2):
+    def union(self, set2):
         pass
 
     @abstractmethod
-    def intersect(set1, set2):
+    def intersect(self, set2):
         pass
 
     @abstractmethod
-    def difference(set1, set2):
+    def difference(self, set2):
         pass
 
     @abstractmethod
-    def complement(set1, set2):
+    def complement(self, set2):
         pass
 
     @abstractmethod
-    def project(set1, vars, refine = True):
+    def project(self, vars, is_refine = True):
         pass
     ######################
     #   Extraction

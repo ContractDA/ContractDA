@@ -101,10 +101,10 @@ def test_explicit_set_project1(set_a, set_b, all_vars):
     vars = [b, a, c]
     values = [(1, 2, 1), (1, 2, 2), (1, 1, 1)]
     test_set = ExplicitSet(vars, values)
-    test1 = test_set.project(test_set, [a, b], is_refine=False)
-    test2 = test_set.project(test_set, [b, a], is_refine=True)
-    test3 = test_set.project(test_set, [a, b, d, e], is_refine=False)
-    test4 = test_set.project(test_set, [a, b, e, d], is_refine=True)
+    test1 = test_set.project([a, b], is_refine=False)
+    test2 = ExplicitSet.project(test_set, [b, a], is_refine=True)
+    test3 = ExplicitSet.project(test_set, [a, b, d, e], is_refine=False)
+    test4 = ExplicitSet.project(test_set, [a, b, e, d], is_refine=True)
 
     gold1 = [(2, 1), (1, 1)]
     gold2 = [(1, 2)]

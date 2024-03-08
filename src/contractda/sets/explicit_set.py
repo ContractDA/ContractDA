@@ -1,6 +1,9 @@
+from __future__ import annotations
+from typing import Iterable
+
 from contractda.sets.set_base import SetBase
 from contractda.sets.var import Var
-from typing import Iterable
+
 import random
 import copy
 import itertools
@@ -93,26 +96,16 @@ class ExplicitSet(SetBase):
         # assume the variables are checked to be the same as the self._vars and are unique
         self._var_order = argsort(vars)
 
-    
-    @staticmethod 
-    def union(set1, set2):
-        # union does not work if the sets have different variables
-
-
-
-
+    def union(self, set2):
         pass
 
-    def union(set2):
-        pass
-
-    @staticmethod 
-    def intersect(set1, set2):
+    def intersect(self, set2):
         """ Return the intersect of the two set
 
         Compute the intersect of the two explicit set
         """
         # check the variables
+        set1 = self
         vars1 = set1._vars
         vars2 = set2._vars
 
@@ -163,16 +156,15 @@ class ExplicitSet(SetBase):
 
         return ExplicitSet(vars = vars, values=ret_values)
 
-    @staticmethod 
-    def difference(set1, set2):
+
+    def difference(self, set2):
         pass
 
-    @staticmethod 
-    def complement(set1, set2):
+
+    def complement(self, set2):
         pass
 
-    @staticmethod 
-    def project(set1, new_vars: Iterable[Var], is_refine = False):
+    def project(self, new_vars: Iterable[Var], is_refine = False) -> ExplicitSet:
         """Project the set onto the new variables.
         The projection can be refinement or abstraction.
         Abstraction mean the projection back to the original space is larger than the original set
@@ -187,17 +179,16 @@ class ExplicitSet(SetBase):
         """
 
         # find overleapped variables:
-        overlapped_vars = [var for var in new_vars if var in set1._vars]
+        overlapped_vars = [var for var in new_vars if var in self._vars]
         # project to the subset
-        ret = ExplicitSet._project_subset(set1, overlapped_vars, is_refine = is_refine)
-        added_vars = [var for var in new_vars if var not in set1._vars]
+        ret = self._project_subset(overlapped_vars, is_refine = is_refine)
+        added_vars = [var for var in new_vars if var not in self._vars]
         if added_vars:
-            ret = ExplicitSet._project_extend(ret, added_vars)
+            ret = ret._project_extend(added_vars)
         ret._reorder_vars(new_vars)
         return ret
     
-    @staticmethod 
-    def _project_subset(set1, new_vars: Iterable[Var], is_refine = False):
+    def _project_subset(self, new_vars: Iterable[Var], is_refine = False):
         """
         Project the set onto the new variables.
 
@@ -206,34 +197,32 @@ class ExplicitSet(SetBase):
         """
         # assume vars are subset of self._vars
         new_vars_set = {var for var in new_vars}
-        indices = [i for i, var in enumerate(set1._vars) if var in new_vars_set]
+        indices = [i for i, var in enumerate(self._vars) if var in new_vars_set]
         # abstraction:
         if not is_refine:
-            remain_vars = [var for var in set1._vars if var in new_vars_set]
+            remain_vars = [var for var in self._vars if var in new_vars_set]
             # collect all matching values
-            new_values = {tuple([value[i] for i in indices]) for value in set1._values_internal}
+            new_values = {tuple([value[i] for i in indices]) for value in self._values_internal}
             ret = ExplicitSet(vars = remain_vars, values = new_values)
             ret._reorder_vars(new_vars)
             return ret
 
         # refinement: need to check if all other values is covered
         if is_refine:
-            discarded_vars = [var for var in set1._vars if var not in new_vars_set] 
-            ret = set1
+            discarded_vars = [var for var in self._vars if var not in new_vars_set] 
+            ret = self
             for var in discarded_vars:
-                ret = ExplicitSet._project_refine_one_variable(ret, var)
+                ret = ret._project_refine_one_variable(var)
             ret._reorder_vars(new_vars)
             return ret            
 
-    @staticmethod
-    def _project_refine_one_variable(set1, var: Var):   
-
-        discarded_idx =  set1._vars.index(var)
+    def _project_refine_one_variable(self, var: Var):   
+        discarded_idx =  self._vars.index(var)
         discarded_domain = set(var._value_range)
-        new_vars = [v for v in set1._vars if v != var]
+        new_vars = [v for v in self._vars if v != var]
         # create a dictionary: key: new_value_candidate, value: discarded value set
         refine_dict = dict()
-        for value in set1._values_internal:
+        for value in self._values_internal:
             cand = tuple([value[i] for i, val in enumerate(value) if i != discarded_idx])
             discarded_value = value[discarded_idx]
             if cand not in refine_dict:
@@ -246,18 +235,17 @@ class ExplicitSet(SetBase):
         return ret
 
 
-    @staticmethod 
-    def _project_extend(set1, new_vars: Iterable[Var], is_refine = True):   
+    def _project_extend(self, new_vars: Iterable[Var], is_refine = True):   
         """ Extend the variables with new_vars
         """
         new_domain = [var._value_range for var in new_vars]
 
         new_values = []
-        for value in set1._values_internal:
+        for value in self._values_internal:
             for elem in itertools.product(*new_domain):
                 new_values.append(tuple(list(value) + list(elem)))
 
-        return ExplicitSet(set1._vars + new_vars, new_values)
+        return ExplicitSet(self._vars + new_vars, new_values)
 
     def sample(self):
         random.seed(0)

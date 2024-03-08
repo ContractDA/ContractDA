@@ -19,6 +19,7 @@
       ~ExplicitSet.intersect
       ~ExplicitSet.len
       ~ExplicitSet.project
+      ~ExplicitSet.reorder_vars
       ~ExplicitSet.sample
       ~ExplicitSet.union
    
@@ -30,6 +31,7 @@
 
    .. autosummary::
    
+      ~ExplicitSet.get_values_dict
       ~ExplicitSet.internal_values
       ~ExplicitSet.internal_vars
       ~ExplicitSet.ordered_values

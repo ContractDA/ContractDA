@@ -52,10 +52,10 @@ if __name__ == "__main__":
     vars = [b, a, c]
     values = [(1, 2, 1), (1, 2, 2), (1, 1, 1)]
     test_set = ExplicitSet(vars, values)
-    test1 = test_set.project(test_set, [b, a], is_refine=False)
-    test2 = test_set.project(test_set, [a, b], is_refine=True)
-    test3 = test_set.project(test_set, [a, b, d, e], is_refine=False)
-    test4 = test_set.project(test_set, [b, a, e, d], is_refine=True)
+    test1 = test_set.project([b, a], is_refine=False)
+    test2 = test_set.project([a, b], is_refine=True)
+    test3 = test_set.project([a, b, d, e], is_refine=False)
+    test4 = test_set.project([b, a, e, d], is_refine=True)
 
     print(test1._values_internal, [var.id for var in test1._vars])
     print(test1)
