@@ -62,3 +62,15 @@ if __name__ == "__main__":
     print(test2)
     print(test3)
     print(test4)
+
+    print("")
+    print("Complement")
+    test1 = test_set.complement()
+    print(test1)
+
+    str_a = RangeIntVar("str_a", ["abc", "test", "454"])
+    str_b = RangeIntVar("str_b", ["abc", "444", "555"])
+    values = [("abc", "444"), ("454", "444")]
+    test_set = ExplicitSet([str_a, str_b], values=values)
+    print(test_set)
+    print(test_set.complement())

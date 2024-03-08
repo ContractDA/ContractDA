@@ -28,7 +28,7 @@ class SetBase(ABC):
         pass
 
     @abstractmethod
-    def complement(self, set2):
+    def complement(self):
         pass
 
     @abstractmethod

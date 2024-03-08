@@ -19,6 +19,7 @@ class ExplicitSet(SetBase):
         :param list[str] vars: The ids for the variables
         :param list[tuple] values: The value in the set, each tuple is an element in the set, and the value in the tuple is the same order as that in the vars
         """
+        #TODO: check if the provided value is within the range of the vars
         # check no duplicate variable in vars
         if not self._verify_unique_vars(vars):
             var_names = [var.id for var in vars]
@@ -161,8 +162,13 @@ class ExplicitSet(SetBase):
         pass
 
 
-    def complement(self, set2):
-        pass
+    def complement(self):
+        """ Return the complement of the set
+        """
+        domain = self._domain()
+        new_values = [value for value in domain if value not in self._values_internal]  
+        ret = ExplicitSet(vars=self._vars, values=new_values)
+        return ret
 
     def project(self, new_vars: Iterable[Var], is_refine = False) -> ExplicitSet:
         """Project the set onto the new variables.
@@ -275,6 +281,9 @@ class ExplicitSet(SetBase):
     
     def _convert_values_to_internal(self, values: list[tuple]) -> list[tuple]:  
         return {self._convert_value_to_internal(value) for value in values}
+
+    def _domain(self):
+        return itertools.product(*[var.value_range for var in self._vars])
 
 def argsort(seq):
     # http://stackoverflow.com/questions/3071415/efficient-method-to-calculate-the-rank-vector-of-a-list-in-python
