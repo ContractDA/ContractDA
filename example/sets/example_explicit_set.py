@@ -1,12 +1,12 @@
 from contractda.sets.explicit_set import ExplicitSet
-from contractda.sets.var import IntVar, BoolVar, RealVar, RangeIntVar
+from contractda.sets.var import IntVar, BoolVar, RealVar, CategoricalVar
 
 if __name__ == "__main__":
-    v = RangeIntVar("v", range(1,10))
-    w = RangeIntVar("w", range(1,10))
-    x = RangeIntVar("x", range(1,10))
-    y = RangeIntVar("y", range(1,10))
-    z = RangeIntVar("z", range(1,10))
+    v = CategoricalVar("v", range(1,10))
+    w = CategoricalVar("w", range(1,10))
+    x = CategoricalVar("x", range(1,10))
+    y = CategoricalVar("y", range(1,10))
+    z = CategoricalVar("z", range(1,10))
     
 
     a_values = [(1, 2, 3), (2, 3, 4), (1, 3, 5), (3, 3, 2), (1, 10, 23)]
@@ -44,11 +44,11 @@ if __name__ == "__main__":
     print(oc_set)
 
     # projection
-    a = RangeIntVar("a", range(1,3))
-    b = RangeIntVar("b", range(1,3))
-    c = RangeIntVar("c", range(1,3))
-    d = RangeIntVar("d", range(1,5))
-    e = RangeIntVar("e", range(1,4))
+    a = CategoricalVar("a", range(1,3))
+    b = CategoricalVar("b", range(1,3))
+    c = CategoricalVar("c", range(1,3))
+    d = CategoricalVar("d", range(1,5))
+    e = CategoricalVar("e", range(1,4))
     vars = [b, a, c]
     values = [(1, 2, 1), (1, 2, 2), (1, 1, 1)]
     test_set = ExplicitSet(vars, values)
@@ -68,9 +68,36 @@ if __name__ == "__main__":
     test1 = test_set.complement()
     print(test1)
 
-    str_a = RangeIntVar("str_a", ["abc", "test", "454"])
-    str_b = RangeIntVar("str_b", ["abc", "444", "555"])
+    print("")
+    str_a = CategoricalVar("str_a", ["abc", "test", "454"])
+    str_b = CategoricalVar("str_b", ["abc", "444", "555"])
     values = [("abc", "444"), ("454", "444")]
     test_set = ExplicitSet([str_a, str_b], values=values)
     print(test_set)
     print(test_set.complement())
+
+    print("")
+    print("Example for difference")
+    x = CategoricalVar("x", range(1,5))
+    y = CategoricalVar("y", range(1,5))
+    z = CategoricalVar("z", range(1,4))
+
+    a_values = [(1, 2), (2, 1), (3, 3), (3, 4)]
+    b_values = [(2, 2), (1, 2), (3, 4)]
+    c_values = [(2, 3), (1, 2)]
+
+    a_set = ExplicitSet([y, x], a_values)
+    b_set = ExplicitSet([x, y], b_values)
+    c_set = ExplicitSet([y, z], c_values)
+    ret_set = a_set.difference(b_set)
+    print("difference of a_set - b_set: ", ret_set)
+    ret_set = a_set.difference(c_set)
+    print("difference of a_set - c_set: ", ret_set)
+
+    # union
+    print("")
+    print("Union")
+    ret_set = a_set.union(b_set)
+    print("union of a_set and b_set: ", ret_set)
+    ret_set = a_set.union(c_set)
+    print("union of a_set and c_set: ", ret_set)

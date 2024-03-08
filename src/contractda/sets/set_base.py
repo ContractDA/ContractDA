@@ -9,7 +9,7 @@ class SetBase(ABC):
     Base class for different set objects
     """
 
-    def __init__(self):
+    def __init__(self, solver):
         pass
 
     ######################

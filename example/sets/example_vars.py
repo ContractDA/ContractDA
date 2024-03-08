@@ -1,4 +1,4 @@
-from contractda.sets.var import IntVar, BoolVar, RealVar, RangeIntVar
+from contractda.sets.var import IntVar, BoolVar, RealVar, CategoricalVar
 
 if __name__ == "__main__":
     int_a = IntVar("a")
@@ -7,8 +7,8 @@ if __name__ == "__main__":
     bool_d = BoolVar("d")
     real_e = RealVar("e")
     real_f = RealVar('f')
-    range_g = RangeIntVar("g", range(1, 10, 2))
-    range_h = RangeIntVar("h", range(10, 15, 1))
+    range_g = CategoricalVar("g", range(1, 10, 2))
+    range_h = CategoricalVar("h", range(10, 15, 1))
 
     print(int_a)
     print(int_b)

@@ -4,6 +4,8 @@ from typing import Iterable
 from contractda.sets.set_base import SetBase
 from contractda.sets.var import Var
 
+from contractda.solvers.explicit_set_solver import ExplicitSetSolver, ExplicitSetVarType, ExplicitSetValueType
+
 import random
 import copy
 import itertools
@@ -11,8 +13,14 @@ import itertools
 class ExplicitSet(SetBase):
     """
     A set class that explicitly enumerate all elements
+
+    For projection and intersection, extension variables are accepted and specialized treatment is performed to improve the performance
+    For difference and union, extension variables are treated as plain projecction.
+
+    Note: Complement, and projection with refinement or, extension variables. Domain is enumerated and thus the performance might not good.
+    If you can write the set with clause, theory prover can be used to accelates the set computation.
     """
-    def __init__(self, vars: list[Var], values: Iterable[tuple]):
+    def __init__(self, vars: ExplicitSetVarType, values: ExplicitSetValueType):
         """
         Constructor
 
@@ -49,28 +57,28 @@ class ExplicitSet(SetBase):
         return value
     
     @property
-    def internal_vars(self) -> list[Var]:
+    def internal_vars(self) -> ExplicitSetVarType:
         """
         The ids for the variables, which is sorted
         """
         return self._vars
 
     @property
-    def ordered_vars(self) -> list[Var]:
+    def ordered_vars(self) -> ExplicitSetVarType:
         """
         The ids for the variables, which is not sorted and may reflect the original input from designer
         """
         return [self._vars[id] for id in self._var_order]
 
     @property
-    def internal_values(self) -> list[dict]:
+    def internal_values(self) -> ExplicitSetValueType:
         """
         The value of each element, each element is represented by a dictionary whose key are the variable id and value are the values for the variable
         """
         return self._values_internal
     
     @property
-    def ordered_values(self) -> list[tuple]:
+    def ordered_values(self) -> ExplicitSetValueType:
         """
         Return the values ordered by the ordered_vars
         """
@@ -97,10 +105,38 @@ class ExplicitSet(SetBase):
         # assume the variables are checked to be the same as the self._vars and are unique
         self._var_order = argsort(vars)
 
-    def union(self, set2):
-        pass
+    def union(self, set2) -> ExplicitSet:
+        """ Return the union of the two set
 
-    def intersect(self, set2):
+        Compute the union of the two explicit set
+        Note: if the variable set is different, projection is used
+        :param ExplicitSet set2: The set for difference
+        """
+        # check vars
+        set1 = self
+
+        var1_set = set(set1._vars)
+        var2_set = set(set2._vars)
+        all_vars = var1_set.union(var2_set)
+
+        # projection to ensure the variables are the same
+        if all_vars != var1_set:
+            set1 = set1.project(list(all_vars))
+        if all_vars != var2_set:
+            set2 = set2.project(list(all_vars))
+
+        # same variables
+        # compute the set union
+        new_values = set1._values_internal.union(set2._values_internal)
+        ret = ExplicitSet(vars = set1._vars, values=new_values)
+
+        new_var = self.ordered_vars
+        new_var += [var for var in set2.ordered_vars if var not in new_var]
+        ret._reorder_vars(new_var)
+        return ret
+
+
+    def intersect(self, set2) -> ExplicitSet:
         """ Return the intersect of the two set
 
         Compute the intersect of the two explicit set
@@ -158,12 +194,38 @@ class ExplicitSet(SetBase):
         return ExplicitSet(vars = vars, values=ret_values)
 
 
-    def difference(self, set2):
-        pass
+    def difference(self, set2: ExplicitSet) -> ExplicitSet:
+        """Return a new set that is the difference of the given set to the set2
+
+        Note: if the variable set is different, projection is used
+        :param ExplicitSet set2: The set for difference
+        """
+        # check vars
+        set1 = self
+
+        var1_set = set(set1._vars)
+        var2_set = set(set2._vars)
+        all_vars = var1_set.union(var2_set)
+
+        # projection to ensure the variables are the same
+        if all_vars != var1_set:
+            set1 = set1.project(list(all_vars))
+        if all_vars != var2_set:
+            set2 = set2.project(list(all_vars))
+
+        # same variables
+        # compute the set difference
+        new_values = set1._values_internal - set2._values_internal
+        ret = ExplicitSet(vars = set1._vars, values=new_values)
+
+        new_var = self.ordered_vars
+        new_var += [var for var in set2.ordered_vars if var not in new_var]
+        ret._reorder_vars(new_var)
+        return ret
 
 
-    def complement(self):
-        """ Return the complement of the set
+    def complement(self) -> ExplicitSet:
+        """ Return a new set that is the complement of the set
         """
         domain = self._domain()
         new_values = [value for value in domain if value not in self._values_internal]  
@@ -175,9 +237,9 @@ class ExplicitSet(SetBase):
         The projection can be refinement or abstraction.
         Abstraction mean the projection back to the original space is larger than the original set
         Refinement mean the projectio back to the original space is smaller than the original set
-        For example, given (RangeIntVar("x", range(1,3)), RangeIntVar("y", range(1,3)), RangeIntVar("z", range(1,3)) = [(1, 2, 1), (1, 2, 2), (1, 1, 1)]
-        The refinement projection on to x, y is (RangeIntVar("x", range(1,3)), RangeIntVar("y", range(1,3)) = [(1, 2)]
-        The abstraction projection on to x, y is (RangeIntVar("x", range(1,3)), RangeIntVar("y", range(1,3)) = [(1, 2), (1, 1)]
+        For example, given (CategoricalVar("x", range(1,3)), CategoricalVar("y", range(1,3)), CategoricalVar("z", range(1,3)) = [(1, 2, 1), (1, 2, 2), (1, 1, 1)]
+        The refinement projection on to x, y is (CategoricalVar("x", range(1,3)), CategoricalVar("y", range(1,3)) = [(1, 2)]
+        The abstraction projection on to x, y is (CategoricalVar("x", range(1,3)), CategoricalVar("y", range(1,3)) = [(1, 2), (1, 1)]
 
         :param Iterable[str] vars: The id of the new variables
         :param bool is_refine: whether the resulting set is a refinement or abstraction, refinement results in a smaller project (must allow any values in the )

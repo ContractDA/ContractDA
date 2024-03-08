@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
 from enum import Enum
+from typing import Iterable
 
 # enum for support type
+
+# TODO: create a FiniteSetVar to contain range and bool
+# TODO: rename range_integer as range
 class VarType(Enum):
     """ Enum for variable type
 
@@ -12,9 +16,9 @@ class VarType(Enum):
     INTEGER = 0,
     REAL = 1,
     BOOL = 2,
-    RANGE_INTEGER = 3
+    CATEGORICAL = 3
 
-var_type_string_map = {VarType.INTEGER: "integer", VarType.REAL: "real", VarType.BOOL: "bool", VarType.RANGE_INTEGER: "range_integer"}
+var_type_string_map = {VarType.INTEGER: "integer", VarType.REAL: "real", VarType.BOOL: "bool", VarType.CATEGORICAL: "categorical"}
 
 class Var(ABC):
     """
@@ -64,6 +68,8 @@ class RealVar(Var):
 
 
 class BoolVar(Var):
+    """Variable of boolean value
+    """
     def __init__(self, id: str):
         super().__init__(id, var_type=VarType.BOOL)
 
@@ -74,9 +80,17 @@ class BoolVar(Var):
     def is_finite(self):
         return True
     
-class RangeIntVar(Var):
-    def __init__(self, id: str, value_range:range):
-        super().__init__(id, var_type=VarType.RANGE_INTEGER)
+class CategoricalVar(Var):
+    """Variable of categorical value
+
+    The categorical value can be any hashable values, such as string, integer, float.
+    """
+    def __init__(self, id: str, value_range:Iterable):
+        """Constructor
+        :param str id: the identifier of the variable
+        :param Iterable value_range: the set of allowed categorical values
+        """
+        super().__init__(id, var_type=VarType.CATEGORICAL)
         self._value_range = value_range
 
     def is_finite(self) -> bool:
@@ -89,4 +103,8 @@ class RangeIntVar(Var):
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(\"{self._id}\") ({str(self._value_range)})"
 
-     
+def is_subtype(a, b) -> bool:
+    """check if variable a is a subtype of b, i.e., any value of a can be accepted by b
+    """
+    #TODO:
+    return NotImplementedError

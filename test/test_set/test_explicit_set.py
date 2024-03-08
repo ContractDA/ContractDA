@@ -1,15 +1,15 @@
 from contractda.sets.explicit_set import ExplicitSet
-from contractda.sets.var import RangeIntVar
+from contractda.sets.var import CategoricalVar
 import pytest
 
 @pytest.fixture
 def all_vars():
     return {
-    "v": RangeIntVar("v", range(1,10)),
-    "w": RangeIntVar("w", range(1,10)),
-    "x": RangeIntVar("x", range(1,10)),
-    "y": RangeIntVar("y", range(1,10)),
-    "z": RangeIntVar("z", range(1,10))
+    "v": CategoricalVar("v", range(1,10)),
+    "w": CategoricalVar("w", range(1,10)),
+    "x": CategoricalVar("x", range(1,10)),
+    "y": CategoricalVar("y", range(1,10)),
+    "z": CategoricalVar("z", range(1,10))
     }
 
 ######## Test basic data
@@ -93,11 +93,11 @@ def test_explicit_set_intersect(set_a, set_b, all_vars):
 
 
 def test_explicit_set_project1(set_a, set_b, all_vars):
-    a = RangeIntVar("a", range(1,3))
-    b = RangeIntVar("b", range(1,3))
-    c = RangeIntVar("c", range(1,3))
-    d = RangeIntVar("d", range(1,5))
-    e = RangeIntVar("e", range(1,4))
+    a = CategoricalVar("a", range(1,3))
+    b = CategoricalVar("b", range(1,3))
+    c = CategoricalVar("c", range(1,3))
+    d = CategoricalVar("d", range(1,5))
+    e = CategoricalVar("e", range(1,4))
     vars = [b, a, c]
     values = [(1, 2, 1), (1, 2, 2), (1, 1, 1)]
     test_set = ExplicitSet(vars, values)
@@ -124,6 +124,64 @@ def test_explicit_set_project1(set_a, set_b, all_vars):
     assert(test2.ordered_values == set(gold2))
     assert(test3.ordered_values == set(gold3))
     assert(test4.ordered_values == set(gold4))
+
+def test_explicit_set_difference():
+    x = CategoricalVar("x", range(1,5))
+    y = CategoricalVar("y", range(1,5))
+    z = CategoricalVar("z", range(1,4))
+
+    a_values = [(1, 2), (2, 1), (3, 3), (3, 4)]
+    b_values = [(2, 2), (1, 2), (3, 4)]
+    c_values = [(2, 3), (1, 2)]
+
+    # basic, without reorder issue
+    a_set = ExplicitSet([x, y], a_values)
+    b_set = ExplicitSet([x, y], b_values)
+    ret_set = a_set.difference(b_set)
+    gold = set([(2, 1), (3, 3)])
+    assert(gold == ret_set.ordered_values)
+    assert([x, y] == ret_set.ordered_vars)
+
+    a_set = ExplicitSet([y, x], a_values)
+    b_set = ExplicitSet([x, y], b_values)
+    c_set = ExplicitSet([y, z], c_values)
+    ret_set = a_set.difference(b_set)
+    gold = set([(1, 2), (3, 3), (3, 4)])
+    assert(gold == ret_set.ordered_values)
+    assert([y, x] == ret_set.ordered_vars)
+    
+    ret_set = a_set.difference(c_set)
+    gold = set([(1, 2, 1), (2, 1, 1), (3, 3, 1), (3, 4, 3), (1, 2, 3), (3, 3, 3), (3, 4, 2), (2, 1, 2), (3, 4, 1), (3, 3, 2)])
+    assert(gold == ret_set.ordered_values)
+    assert([y, x, z] == ret_set.ordered_vars)
+
+def test_explicit_set_union():
+    x = CategoricalVar("x", range(1,5))
+    y = CategoricalVar("y", range(1,5))
+    z = CategoricalVar("z", range(1,4))
+
+    a_values = [(1, 2), (2, 1), (3, 3), (3, 4)]
+    b_values = [(2, 2), (1, 2), (3, 4)]
+    c_values = [(2, 3), (1, 2)]   
+
+    a_set = ExplicitSet([y, x], a_values)
+    b_set = ExplicitSet([x, y], b_values)
+    c_set = ExplicitSet([y, z], c_values)
+    ret_set = a_set.union(b_set)
+    gold = set([(1, 2), (2, 1), (3, 4), (4, 3), (3, 3), (2, 2)])
+    assert(gold == ret_set.ordered_values)
+    assert([y, x] == ret_set.ordered_vars)
+    
+    ret_set = a_set.union(c_set)
+    gold = set([(1, 2, 1), (1, 2, 2), (1, 2, 3),
+                (2, 1, 1), (2, 1, 2), (2, 1, 3),
+                (3, 3, 1), (3, 3, 2), (3, 3, 3),
+                (3, 4, 1), (3, 4, 2), (3, 4, 3),
+                (2, 1, 3), (2, 2, 3), (2, 3, 3), (2, 4, 3),
+                (1, 1, 2), (1, 2, 2), (1, 3, 2), (1, 4, 2)
+                ])
+    assert(gold == ret_set.ordered_values)
+    assert([y, x, z] == ret_set.ordered_vars)
 
 if __name__ == "__main__":
     test_explicit_set()
