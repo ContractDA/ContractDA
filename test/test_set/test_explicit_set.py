@@ -92,6 +92,39 @@ def test_explicit_set_intersect(set_a, set_b, all_vars):
     assert(set(set_c._vars) == set(all_vars.values()))
 
 
+def test_explicit_set_project1(set_a, set_b, all_vars):
+    a = RangeIntVar("a", range(1,3))
+    b = RangeIntVar("b", range(1,3))
+    c = RangeIntVar("c", range(1,3))
+    d = RangeIntVar("d", range(1,5))
+    e = RangeIntVar("e", range(1,4))
+    vars = [b, a, c]
+    values = [(1, 2, 1), (1, 2, 2), (1, 1, 1)]
+    test_set = ExplicitSet(vars, values)
+    test1 = test_set.project(test_set, [a, b], is_refine=False)
+    test2 = test_set.project(test_set, [b, a], is_refine=True)
+    test3 = test_set.project(test_set, [a, b, d, e], is_refine=False)
+    test4 = test_set.project(test_set, [a, b, e, d], is_refine=True)
+
+    gold1 = [(2, 1), (1, 1)]
+    gold2 = [(1, 2)]
+    gold3 = [(2, 1, 1, 1), (2, 1, 1, 2), (2, 1, 1, 3), 
+             (2, 1, 2, 1), (2, 1, 2, 2), (2, 1, 2, 3), 
+             (2, 1, 3, 1), (2, 1, 3, 2), (2, 1, 3, 3), 
+             (2, 1, 4, 1), (2, 1, 4, 2), (2, 1, 4, 3),
+             (1, 1, 1, 1), (1, 1, 1, 2), (1, 1, 1, 3), 
+             (1, 1, 2, 1), (1, 1, 2, 2), (1, 1, 2, 3), 
+             (1, 1, 3, 1), (1, 1, 3, 2), (1, 1, 3, 3), 
+             (1, 1, 4, 1), (1, 1, 4, 2), (1, 1, 4, 3)]
+    gold4 = [(2, 1, 1, 1), (2, 1, 1, 2), (2, 1, 1, 3), (2, 1, 1, 4),
+             (2, 1, 2, 1), (2, 1, 2, 2), (2, 1, 2, 3), (2, 1, 2, 4),
+             (2, 1, 3, 1), (2, 1, 3, 2), (2, 1, 3, 3), (2, 1, 3, 4)]    
+    # check test1
+    assert(test1.ordered_values == set(gold1))
+    assert(test2.ordered_values == set(gold2))
+    assert(test3.ordered_values == set(gold3))
+    assert(test4.ordered_values == set(gold4))
+
 if __name__ == "__main__":
     test_explicit_set()
     test_explicit_set_iter()
