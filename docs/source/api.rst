@@ -9,5 +9,6 @@ API
     contractda.sets.explicit_set.ExplicitSet
     contractda.sets.explicit_set.ExplicitSet.project
     contractda.sets.explicit_set.ExplicitSet.intersect
+    contractda.sets.explicit_set.ExplicitSet.complement
     contractda.sets.var
     contractda.sets.var.RangeIntVar
