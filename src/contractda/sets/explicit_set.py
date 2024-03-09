@@ -4,7 +4,7 @@ from typing import Iterable
 from contractda.sets.set_base import SetBase
 from contractda.sets.var import Var
 
-from contractda.solvers.explicit_set_solver import ExplicitSetSolver, ExplicitSetVarType, ExplicitSetValueType
+from contractda.solvers.explicit_set_solver import ExplicitSetSolver, ExplicitSetVarType, ExplicitSetElementType, ExplicitSetExpressionType
 
 import random
 import copy
@@ -20,14 +20,15 @@ class ExplicitSet(SetBase):
     Note: Complement, and projection with refinement or, extension variables. Domain is enumerated and thus the performance might not good.
     If you can write the set with clause, theory prover can be used to accelates the set computation.
     """
-    def __init__(self, vars: ExplicitSetVarType, values: ExplicitSetValueType):
+    def __init__(self, vars: ExplicitSetVarType, expr: ExplicitSetExpressionType):
         """
         Constructor
 
         :param list[str] vars: The ids for the variables
-        :param list[tuple] values: The value in the set, each tuple is an element in the set, and the value in the tuple is the same order as that in the vars
+        :param list[tuple] expr: The expression of the set, the explicit set
+         requires a explicit expression by a list of tuple, each tuple is an element in the set, and the value in the tuple is the same order as that in the vars
         """
-        #TODO: check if the provided value is within the range of the vars
+        #TODO: check if the provided value in the element of the expr is within the range of the vars
         # check no duplicate variable in vars
         if not self._verify_unique_vars(vars):
             var_names = [var.id for var in vars]
@@ -42,19 +43,19 @@ class ExplicitSet(SetBase):
         self._var_order = var_arg_sorted
         # _vars: the variable ordered by hash values
         self._vars: list[Var] = [vars[i] for i in var_arg_sorted]
-        # _values_internal: the set values corresponding to the variables ordered by _vars
-        self._values_internal =  self._convert_values_to_internal(values) 
+        # _expr_internal: the set expr corresponding to the variables ordered by _vars
+        self._expr_internal =  self._convert_expr_to_internal(expr) 
 
     def __str__(self):
-        return f"{tuple([str(var)for var in self.ordered_vars])} = {str(self.ordered_values)}"
+        return f"{tuple([str(var)for var in self.ordered_vars])} = {str(self.ordered_expr)}"
 
     def __iter__(self):
-        self._iter = iter(self._values_internal) 
+        self._iter = iter(self._expr_internal) 
         return self
 
     def __next__(self):
-        value = next(self._iter)
-        return value
+        element = next(self._iter)
+        return element
     
     @property
     def internal_vars(self) -> ExplicitSetVarType:
@@ -71,24 +72,24 @@ class ExplicitSet(SetBase):
         return [self._vars[id] for id in self._var_order]
 
     @property
-    def internal_values(self) -> ExplicitSetValueType:
+    def internal_expr(self) -> ExplicitSetExpressionType:
         """
-        The value of each element, each element is represented by a dictionary whose key are the variable id and value are the values for the variable
+        The expr of the set, followed the internal_vars
         """
-        return self._values_internal
+        return self._expr_internal
     
     @property
-    def ordered_values(self) -> ExplicitSetValueType:
+    def ordered_expr(self) -> ExplicitSetExpressionType:
         """
-        Return the values ordered by the ordered_vars
+        Return the expr ordered by the ordered_vars
         """
-        return self._convert_values_to_external(self.internal_values)
+        return self._convert_expr_to_external(self.internal_expr)
 
     @property
-    def get_values_dict(self) -> list[dict]:
-        """Return the value in the form of dictionaries with keys being the variables and values being the values.
+    def get_element_dict(self) -> list[dict]:
+        """Return the element in the form of dictionaries with keys being the variables and value being the values in each element.
         """
-        return [{k: v for k, v in zip(self._vars, elem)} for elem in self._values_internal]
+        return [{k: v for k, v in zip(self._vars, elem)} for elem in self._expr_internal]
     
     def reorder_vars(self, vars: list[Var]) -> None:
         """ Change the order of variables
@@ -127,8 +128,8 @@ class ExplicitSet(SetBase):
 
         # same variables
         # compute the set union
-        new_values = set1._values_internal.union(set2._values_internal)
-        ret = ExplicitSet(vars = set1._vars, values=new_values)
+        new_expr = set1._expr_internal.union(set2._expr_internal)
+        ret = ExplicitSet(vars = set1._vars, expr=new_expr)
 
         new_var = self.ordered_vars
         new_var += [var for var in set2.ordered_vars if var not in new_var]
@@ -151,8 +152,8 @@ class ExplicitSet(SetBase):
         # special case 1, same variables set
         if var_set1 == var_set2:
             # no need to reorder as the they are sorted
-            values = set1._values_internal.intersection(set2._values_internal)
-            return ExplicitSet(vars=vars1.copy(), values=values)
+            expr = set1._expr_internal.intersection(set2._expr_internal)
+            return ExplicitSet(vars=vars1.copy(), expr=expr)
             pass
 
         # special case 2, one is contained by the other
@@ -176,22 +177,22 @@ class ExplicitSet(SetBase):
         vars = vars1.copy()
         vars.extend(vars2_unique)
 
-        values1 = set1._values_internal
-        values2 = set2._values_internal
+        expr1 = set1._expr_internal
+        expr2 = set2._expr_internal
 
-        ret_values = set()
-        for value1 in values1:
-            for value2 in values2:
-                #TODO: should create a set of overlapped values to filter out those not in the intersection 
-                overlapped_values1 = tuple([value1[i] for i in overlapped_vars_idx1])
-                overlapped_values2 = tuple([value2[i] for i in overlapped_vars_idx2])
-                if overlapped_values1 == overlapped_values2:
+        ret_expr = set()
+        for elem1 in expr1:
+            for elem2 in expr2:
+                #TODO: should create a set of overlapped expr to filter out those not in the intersection 
+                overlapped_expr1 = tuple([elem1[i] for i in overlapped_vars_idx1])
+                overlapped_expr2 = tuple([elem2[i] for i in overlapped_vars_idx2])
+                if overlapped_expr1 == overlapped_expr2:
                     # same core, form an element in intersection
-                    value_list = list(value1) + [value2[i] for i in unique_vars_idx2]
-                    new_value = tuple(value_list)
-                    ret_values.add(new_value)
+                    elem_list = list(elem1) + [elem2[i] for i in unique_vars_idx2]
+                    new_elem = tuple(elem_list)
+                    ret_expr.add(new_elem)
 
-        return ExplicitSet(vars = vars, values=ret_values)
+        return ExplicitSet(vars = vars, expr=ret_expr)
 
 
     def difference(self, set2: ExplicitSet) -> ExplicitSet:
@@ -215,8 +216,8 @@ class ExplicitSet(SetBase):
 
         # same variables
         # compute the set difference
-        new_values = set1._values_internal - set2._values_internal
-        ret = ExplicitSet(vars = set1._vars, values=new_values)
+        new_expr = set1._expr_internal - set2._expr_internal
+        ret = ExplicitSet(vars = set1._vars, expr=new_expr)
 
         new_var = self.ordered_vars
         new_var += [var for var in set2.ordered_vars if var not in new_var]
@@ -228,8 +229,8 @@ class ExplicitSet(SetBase):
         """ Return a new set that is the complement of the set
         """
         domain = self._domain()
-        new_values = [value for value in domain if value not in self._values_internal]  
-        ret = ExplicitSet(vars=self._vars, values=new_values)
+        new_expr = [elem for elem in domain if elem not in self._expr_internal]  
+        ret = ExplicitSet(vars=self._vars, expr=new_expr)
         return ret
 
     def project(self, new_vars: Iterable[Var], is_refine = False) -> ExplicitSet:
@@ -269,13 +270,13 @@ class ExplicitSet(SetBase):
         # abstraction:
         if not is_refine:
             remain_vars = [var for var in self._vars if var in new_vars_set]
-            # collect all matching values
-            new_values = {tuple([value[i] for i in indices]) for value in self._values_internal}
-            ret = ExplicitSet(vars = remain_vars, values = new_values)
+            # collect all matching expr
+            new_expr = {tuple([elem[i] for i in indices]) for elem in self._expr_internal}
+            ret = ExplicitSet(vars = remain_vars, expr = new_expr)
             ret._reorder_vars(new_vars)
             return ret
 
-        # refinement: need to check if all other values is covered
+        # refinement: need to check if all other expr is covered
         if is_refine:
             discarded_vars = [var for var in self._vars if var not in new_vars_set] 
             ret = self
@@ -288,18 +289,18 @@ class ExplicitSet(SetBase):
         discarded_idx =  self._vars.index(var)
         discarded_domain = set(var._value_range)
         new_vars = [v for v in self._vars if v != var]
-        # create a dictionary: key: new_value_candidate, value: discarded value set
+        # create a dictionary: key: new_elem_candidate, elem: discarded value set
         refine_dict = dict()
-        for value in self._values_internal:
-            cand = tuple([value[i] for i, val in enumerate(value) if i != discarded_idx])
-            discarded_value = value[discarded_idx]
+        for elem in self._expr_internal:
+            cand = tuple([elem[i] for i, val in enumerate(elem) if i != discarded_idx])
+            discarded_value = elem[discarded_idx]
             if cand not in refine_dict:
                 refine_dict[cand] = set([discarded_value])
             else:
                 refine_dict[cand].add(discarded_value)
 
-        new_values = [cand for cand, covered_values in refine_dict.items() if covered_values == discarded_domain]
-        ret = ExplicitSet(vars = new_vars, values = new_values)
+        new_expr = [cand for cand, covered_expr in refine_dict.items() if covered_expr == discarded_domain]
+        ret = ExplicitSet(vars = new_vars, expr = new_expr)
         return ret
 
 
@@ -308,17 +309,17 @@ class ExplicitSet(SetBase):
         """
         new_domain = [var._value_range for var in new_vars]
 
-        new_values = []
-        for value in self._values_internal:
-            for elem in itertools.product(*new_domain):
-                new_values.append(tuple(list(value) + list(elem)))
+        new_expr = []
+        for elem in self._expr_internal:
+            for extend_elem in itertools.product(*new_domain):
+                new_expr.append(tuple(list(elem) + list(extend_elem)))
 
-        return ExplicitSet(self._vars + new_vars, new_values)
+        return ExplicitSet(self._vars + new_vars, new_expr)
 
     def sample(self):
         random.seed(0)
         random_id = random.randrange(0, self.len())
-        return list(self._values_internal)[random_id]
+        return list(self._expr_internal)[random_id]
 
     def len(self):
         return len(self._vars)
@@ -330,19 +331,19 @@ class ExplicitSet(SetBase):
     def _verify_finite_domain(self, vars: list[Var]) -> bool:
         return all([var.is_finite() for var in vars])
 
-    def _convert_value_to_external(self, value: tuple) -> tuple:  
-        sorted_pair = sorted(zip(self._var_order, value), key=lambda x: x[0])
+    def _convert_elem_to_external(self, elem: tuple) -> tuple:  
+        sorted_pair = sorted(zip(self._var_order, elem), key=lambda x: x[0])
         return tuple([val for _, val in sorted_pair])
 
-    def _convert_values_to_external(self, values: list[tuple]) -> list[tuple]:
-        return {self._convert_value_to_external(value) for value in values}
+    def _convert_expr_to_external(self, expr: list[tuple]) -> list[tuple]:
+        return {self._convert_elem_to_external(elem) for elem in expr}
 
-    # value in var_order: the value should go to place 
-    def _convert_value_to_internal(self, value: tuple) -> tuple:  
-        return tuple([ value[idx] for idx in self._var_order])
+    # elem in var_order: the elem should go to place 
+    def _convert_elem_to_internal(self, elem: tuple) -> tuple:  
+        return tuple([ elem[idx] for idx in self._var_order])
     
-    def _convert_values_to_internal(self, values: list[tuple]) -> list[tuple]:  
-        return {self._convert_value_to_internal(value) for value in values}
+    def _convert_expr_to_internal(self, expr: list[tuple]) -> list[tuple]:  
+        return {self._convert_elem_to_internal(elem) for elem in expr}
 
     def _domain(self):
         return itertools.product(*[var.value_range for var in self._vars])

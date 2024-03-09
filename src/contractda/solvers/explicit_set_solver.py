@@ -5,7 +5,9 @@ from contractda.solvers.solver_base import SolverBase, SetValueType
 from contractda.sets.var import Var
 
 ExplicitSetVarType = list[Var]
-ExplicitSetValueType = Iterable[tuple]
+ExplicitSetElementType = tuple
+ExplicitSetExpressionType = Iterable[ExplicitSetElementType]
+
 
 class ExplicitSetSolver(SolverBase):
     """Solver for explicit set
@@ -19,3 +21,26 @@ class ExplicitSetSolver(SolverBase):
     def __init__(self):
         pass
 
+    def check_contain(self,  set_expr: ExplicitSetExpressionType, value: ExplicitSetElementType) -> bool:
+        pass
+
+    def check_proper_contain(self, set_expr_a: ExplicitSetExpressionType , set_expr_b: ExplicitSetExpressionType) -> bool:
+        pass
+
+    def check_subset(self, set_expr_a: ExplicitSetExpressionType , set_expr_b: ExplicitSetExpressionType) -> bool:
+        pass
+
+    def check_proper_subset(self, set_expr_a: ExplicitSetExpressionType , set_expr_b: ExplicitSetExpressionType) -> bool:
+        pass
+
+    def get_enumeration(self, set_expr: ExplicitSetExpressionType ) -> Iterable:
+        pass
+
+    def is_satifiable(self, set_expr: ExplicitSetExpressionType) -> bool:
+        pass
+
+    def check_equivalence(self, set_expr_a: ExplicitSetExpressionType, set_expr_b: ExplicitSetExpressionType ) -> bool:
+        pass
+
+    def check_disjoint(self, set_expr_a: ExplicitSetExpressionType, set_expr_b: ExplicitSetExpressionType ) -> bool:
+        pass
