@@ -1,4 +1,4 @@
-﻿contractda.sets.explicit\_set.ExplicitSet.complement
+contractda.sets.explicit\_set.ExplicitSet.complement
 ====================================================
 
 .. currentmodule:: contractda.sets.explicit_set

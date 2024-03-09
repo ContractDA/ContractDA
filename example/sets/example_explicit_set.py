@@ -1,4 +1,4 @@
-from contractda.sets.explicit_set import ExplicitSet
+from contractda.sets import ExplicitSet
 from contractda.sets.var import IntVar, BoolVar, RealVar, CategoricalVar
 
 if __name__ == "__main__":
@@ -103,3 +103,5 @@ if __name__ == "__main__":
     print("union of a_set and b_set: ", ret_set)
     ret_set = a_set.union(c_set)
     print("union of a_set and c_set: ", ret_set)
+
+    print(ret_set.enumerate())

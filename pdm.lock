@@ -36,6 +36,7 @@ path = "./."
 summary = "A design automation tool for contract-based design"
 dependencies = [
     "ContractDA @ file:///${PROJECT_ROOT}",
+    "pytest>=8.0.2",
     "sphinx>=7.2.6",
 ]
 
@@ -158,6 +159,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sphinx-rtd-theme"
+version = "2.0.0"
+requires_python = ">=3.6"
+summary = "Read the Docs theme for Sphinx"
+dependencies = [
+    "docutils<0.21",
+    "sphinx<8,>=5",
+    "sphinxcontrib-jquery<5,>=4",
+]
+
+[[package]]
 name = "sphinxcontrib-applehelp"
 version = "1.0.8"
 requires_python = ">=3.9"
@@ -174,6 +186,15 @@ name = "sphinxcontrib-htmlhelp"
 version = "2.0.5"
 requires_python = ">=3.9"
 summary = "sphinxcontrib-htmlhelp is a sphinx extension which renders HTML help files"
+
+[[package]]
+name = "sphinxcontrib-jquery"
+version = "4.1"
+requires_python = ">=2.7"
+summary = "Extension to include jQuery on newer Sphinx releases"
+dependencies = [
+    "Sphinx>=1.8",
+]
 
 [[package]]
 name = "sphinxcontrib-jsmath"
@@ -207,7 +228,7 @@ summary = "HTTP library with thread-safe connection pooling, file post, and more
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:4cfa0c897ceb50f6d7be75de331b644e3794a7035871e431d681313b7149a6d4"
+content_hash = "sha256:397d397c1fbf7ee9dfcc96f8fc1b7e09f102683a493ab817a3ae86d034de6bb8"
 
 [metadata.files]
 "alabaster 0.7.16" = [
@@ -432,6 +453,10 @@ content_hash = "sha256:4cfa0c897ceb50f6d7be75de331b644e3794a7035871e431d681313b7
     {url = "https://files.pythonhosted.org/packages/73/8e/6e51da4b26665b4b92b1944ea18b2d9c825e753e19180cc5bdc818d0ed3b/sphinx-7.2.6.tar.gz", hash = "sha256:9a5160e1ea90688d5963ba09a2dcd8bdd526620edbb65c328728f1b2228d5ab5"},
     {url = "https://files.pythonhosted.org/packages/b2/b6/8ed35256aa530a9d3da15d20bdc0ba888d5364441bb50a5a83ee7827affe/sphinx-7.2.6-py3-none-any.whl", hash = "sha256:1e09160a40b956dc623c910118fa636da93bd3ca0b9876a7b3df90f07d691560"},
 ]
+"sphinx-rtd-theme 2.0.0" = [
+    {url = "https://files.pythonhosted.org/packages/ea/46/00fda84467815c29951a9c91e3ae7503c409ddad04373e7cfc78daad4300/sphinx_rtd_theme-2.0.0-py2.py3-none-any.whl", hash = "sha256:ec93d0856dc280cf3aee9a4c9807c60e027c7f7b461b77aeffed682e68f0e586"},
+    {url = "https://files.pythonhosted.org/packages/fe/33/2a35a9cdbfda9086bda11457bcc872173ab3565b16b6d7f6b3efaa6dc3d6/sphinx_rtd_theme-2.0.0.tar.gz", hash = "sha256:bd5d7b80622406762073a04ef8fadc5f9151261563d47027de09910ce03afe6b"},
+]
 "sphinxcontrib-applehelp 1.0.8" = [
     {url = "https://files.pythonhosted.org/packages/26/6b/68f470fc337ed24043fec987b101f25b35010970bd958970c2ae5990859f/sphinxcontrib_applehelp-1.0.8.tar.gz", hash = "sha256:c40a4f96f3776c4393d933412053962fac2b84f4c99a7982ba42e09576a70619"},
     {url = "https://files.pythonhosted.org/packages/56/89/fea3fbf6785b388e6cb8a1beaf62f96e80b37311bdeed6e133388a732426/sphinxcontrib_applehelp-1.0.8-py3-none-any.whl", hash = "sha256:cb61eb0ec1b61f349e5cc36b2028e9e7ca765be05e49641c97241274753067b4"},
@@ -443,6 +468,10 @@ content_hash = "sha256:4cfa0c897ceb50f6d7be75de331b644e3794a7035871e431d681313b7
 "sphinxcontrib-htmlhelp 2.0.5" = [
     {url = "https://files.pythonhosted.org/packages/8a/03/2f9d699fbfdf03ecb3b6d0e2a268a8998d009f2a9f699c2dcc936899257d/sphinxcontrib_htmlhelp-2.0.5.tar.gz", hash = "sha256:0dc87637d5de53dd5eec3a6a01753b1ccf99494bd756aafecd74b4fa9e729015"},
     {url = "https://files.pythonhosted.org/packages/c2/e9/74c4cda5b409af3222fda38f0774e616011bc935f639dbc0da5ca2d1be7d/sphinxcontrib_htmlhelp-2.0.5-py3-none-any.whl", hash = "sha256:393f04f112b4d2f53d93448d4bce35842f62b307ccdc549ec1585e950bc35e04"},
+]
+"sphinxcontrib-jquery 4.1" = [
+    {url = "https://files.pythonhosted.org/packages/76/85/749bd22d1a68db7291c89e2ebca53f4306c3f205853cf31e9de279034c3c/sphinxcontrib_jquery-4.1-py2.py3-none-any.whl", hash = "sha256:f936030d7d0147dd026a4f2b5a57343d233f1fc7b363f68b3d4f1cb0993878ae"},
+    {url = "https://files.pythonhosted.org/packages/de/f3/aa67467e051df70a6330fe7770894b3e4f09436dea6881ae0b4f3d87cad8/sphinxcontrib-jquery-4.1.tar.gz", hash = "sha256:1620739f04e36a2c779f1a131a2dfd49b2fd07351bf1968ced074365933abc7a"},
 ]
 "sphinxcontrib-jsmath 1.0.1" = [
     {url = "https://files.pythonhosted.org/packages/b2/e8/9ed3830aeed71f17c026a07a5097edcf44b692850ef215b161b8ad875729/sphinxcontrib-jsmath-1.0.1.tar.gz", hash = "sha256:a9925e4a4587247ed2191a22df5f6970656cb8ca2bd6284309578f2153e0c4b8"},

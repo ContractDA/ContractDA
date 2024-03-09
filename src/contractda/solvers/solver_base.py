@@ -20,10 +20,6 @@ class SolverBase(ABC):
         pass
 
     @abstractmethod
-    def check_proper_contain(self, set_expr_a: Any, set_expr_b: Any) -> bool:
-        pass
-
-    @abstractmethod
     def check_subset(self, set_expr_a: Any, set_expr_b: Any) -> bool:
         pass
 
@@ -36,7 +32,7 @@ class SolverBase(ABC):
         pass
 
     @abstractmethod
-    def is_satifiable(self, set_expr: Any) -> Any:
+    def check_satifiable(self, set_expr: Any) -> Any:
         pass
 
     @abstractmethod

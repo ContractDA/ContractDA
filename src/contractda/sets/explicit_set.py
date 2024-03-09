@@ -1,3 +1,5 @@
+""" Class for ExplicitSet
+"""
 from __future__ import annotations
 from typing import Iterable
 
@@ -19,6 +21,7 @@ class ExplicitSet(SetBase):
 
     Note: Complement, and projection with refinement or, extension variables. Domain is enumerated and thus the performance might not good.
     If you can write the set with clause, theory prover can be used to accelates the set computation.
+
     """
     def __init__(self, vars: ExplicitSetVarType, expr: ExplicitSetExpressionType):
         """
@@ -45,6 +48,9 @@ class ExplicitSet(SetBase):
         self._vars: list[Var] = [vars[i] for i in var_arg_sorted]
         # _expr_internal: the set expr corresponding to the variables ordered by _vars
         self._expr_internal =  self._convert_expr_to_internal(expr) 
+        
+        # solver
+        self._solver = ExplicitSetSolver()
 
     def __str__(self):
         return f"{tuple([str(var)for var in self.ordered_vars])} = {str(self.ordered_expr)}"
@@ -55,7 +61,10 @@ class ExplicitSet(SetBase):
 
     def __next__(self):
         element = next(self._iter)
-        return element
+        return self._convert_elem_to_external(element)
+    
+    def enumerate(self) -> Iterable[ExplicitSetElementType]:
+        return self._solver.get_enumeration(self._expr_internal)
     
     @property
     def internal_vars(self) -> ExplicitSetVarType:

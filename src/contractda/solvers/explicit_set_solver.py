@@ -3,11 +3,11 @@ from typing import Iterable, NewType
 
 from contractda.solvers.solver_base import SolverBase, SetValueType
 from contractda.sets.var import Var
+from functools import cmp_to_key
 
 ExplicitSetVarType = list[Var]
 ExplicitSetElementType = tuple
 ExplicitSetExpressionType = Iterable[ExplicitSetElementType]
-
 
 class ExplicitSetSolver(SolverBase):
     """Solver for explicit set
@@ -21,26 +21,68 @@ class ExplicitSetSolver(SolverBase):
     def __init__(self):
         pass
 
-    def check_contain(self,  set_expr: ExplicitSetExpressionType, value: ExplicitSetElementType) -> bool:
-        pass
+    def check_contain(self,  set_expr: ExplicitSetExpressionType, element: ExplicitSetElementType) -> bool:
+        """Check if the element is contained in the set represented by the expr
 
-    def check_proper_contain(self, set_expr_a: ExplicitSetExpressionType , set_expr_b: ExplicitSetExpressionType) -> bool:
-        pass
+        :param ExplicitSetExpressionType set_expr: the expr that represents the set.
+        :param ExplicitSetElementType element: the element to test if it is in the set.
+        :return bool: True if the element is contained in the set
+        """
+        return element in set_expr
 
     def check_subset(self, set_expr_a: ExplicitSetExpressionType , set_expr_b: ExplicitSetExpressionType) -> bool:
-        pass
+        """Check if set_expr_a is a subset of set_expr
+
+        :param ExplicitSetExpressionType set_expr_a: the expr that represents the set_a.
+        :param ExplicitSetExpressionType set_expr_b: the expr that represents the set_b.
+        :return bool: True if the set a is a subset of set b
+        """
+        return set_expr_a.issubset(set_expr_b)
 
     def check_proper_subset(self, set_expr_a: ExplicitSetExpressionType , set_expr_b: ExplicitSetExpressionType) -> bool:
-        pass
+        """Check if set_expr_a is a proper subset of set_expr
+
+        :param ExplicitSetExpressionType set_expr_a: the expr that represents the set_a.
+        :param ExplicitSetExpressionType set_expr_b: the expr that represents the set_b.
+        :return bool: True if the set a is a proper subset of set b
+        """
+        return set_expr_a < set_expr_b
 
     def get_enumeration(self, set_expr: ExplicitSetExpressionType ) -> Iterable:
-        pass
+        """Return all elements in the set
 
-    def is_satifiable(self, set_expr: ExplicitSetExpressionType) -> bool:
-        pass
+        :param ExplicitSetExpressionType set_expr: the expr that represents the set.
+        :return Iterable: the list of all elements
+        """
+        elements = list(set_expr)
+        elements.sort()
+        return elements
+
+    def check_satifiable(self, set_expr: ExplicitSetExpressionType) -> bool:
+        """Check if there is any element satisfying the set
+
+        :param ExplicitSetExpressionType set_expr: the expr that represents the set.
+        :return bool: true if there is satisfying element
+        """
+        return bool(set_expr)
 
     def check_equivalence(self, set_expr_a: ExplicitSetExpressionType, set_expr_b: ExplicitSetExpressionType ) -> bool:
-        pass
+        """Check if the two set represented by set_expr_a and set_expr_b are equivalent
+
+        :param ExplicitSetExpressionType set_expr_a: the expr that represents the set_a.
+        :param ExplicitSetExpressionType set_expr_b: the expr that represents the set_b.
+        :return bool: True if the sets are equivalent
+        """
+        return set_expr_a == set_expr_b
 
     def check_disjoint(self, set_expr_a: ExplicitSetExpressionType, set_expr_b: ExplicitSetExpressionType ) -> bool:
-        pass
+        """Check if the two set represented by set_expr_a and set_expr_b are disjoint
+
+        :param ExplicitSetExpressionType set_expr_a: the expr that represents the set_a.
+        :param ExplicitSetExpressionType set_expr_b: the expr that represents the set_b.
+        :return bool: True if the sets are disjoint
+        """
+        return set_expr_a.isdisjoint(set_expr_b)
+
+
+

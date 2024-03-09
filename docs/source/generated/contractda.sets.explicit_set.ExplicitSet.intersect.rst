@@ -1,4 +1,4 @@
-﻿contractda.sets.explicit\_set.ExplicitSet.intersect
+contractda.sets.explicit\_set.ExplicitSet.intersect
 ===================================================
 
 .. currentmodule:: contractda.sets.explicit_set

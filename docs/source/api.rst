@@ -3,12 +3,10 @@ API
 
 .. autosummary::
     :toctree: generated
+    :template: module.rst
+    :recursive:
+    
+    contractda.sets
+    contractda.solvers
+    contractda.contracts
 
-    contractda
-    contractda.sets.set_base.SetBase
-    contractda.sets.explicit_set.ExplicitSet
-    contractda.sets.explicit_set.ExplicitSet.project
-    contractda.sets.explicit_set.ExplicitSet.intersect
-    contractda.sets.explicit_set.ExplicitSet.complement
-    contractda.sets.var
-    contractda.sets.var.RangeIntVar

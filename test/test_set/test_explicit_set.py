@@ -50,7 +50,7 @@ def test_ordered_expr(basic_explicit_set, basic_expr):
     
 def test_explicit_set_iter(basic_explicit_set, basic_expr):
 
-    result_iter = [basic_explicit_set._convert_elem_to_external(e) for e in basic_explicit_set] 
+    result_iter = [e for e in basic_explicit_set] 
     result_set = set(result_iter)
     assert(result_set == set(basic_expr))
     assert(len(result_iter) == len(basic_expr))

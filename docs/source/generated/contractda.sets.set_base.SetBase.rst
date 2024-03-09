@@ -1,28 +1,28 @@
-﻿contractda.sets.set\_base.SetBase
+contractda.sets.set\_base.SetBase
 =================================
 
 .. currentmodule:: contractda.sets.set_base
 
+.. add toctree option to make autodoc generate the pages
+
 .. autoclass:: SetBase
 
    
-   .. automethod:: __init__
+   
+   
 
+   
    
    .. rubric:: Methods
 
    .. autosummary::
+      :toctree: .
    
-      ~SetBase.__init__
-      ~SetBase.complement
-      ~SetBase.difference
-      ~SetBase.intersect
-      ~SetBase.project
-      ~SetBase.sample
-      ~SetBase.union
-   
-   
-
-   
+      ~contractda.sets.set_base.SetBase.complement
+      ~contractda.sets.set_base.SetBase.difference
+      ~contractda.sets.set_base.SetBase.intersect
+      ~contractda.sets.set_base.SetBase.project
+      ~contractda.sets.set_base.SetBase.sample
+      ~contractda.sets.set_base.SetBase.union
    
    
