@@ -1,5 +1,5 @@
 from contractda.sets import ExplicitSet
-from contractda.sets._var import IntVar, BoolVar, RealVar, CategoricalVar
+from contractda.vars._var import IntVar, BoolVar, RealVar, CategoricalVar
 
 if __name__ == "__main__":
     v = CategoricalVar("v", range(1,10))

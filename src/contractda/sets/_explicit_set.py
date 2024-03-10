@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Iterable
 
 from contractda.sets._base import SetBase
-from contractda.sets._var import Var
+from contractda.vars._var import Var
 
 from contractda.solvers.explicit_set_solver import ExplicitSetSolver, ExplicitSetVarType, ExplicitSetElementType, ExplicitSetExpressionType
 

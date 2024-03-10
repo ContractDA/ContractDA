@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Iterable, NewType
 
 from contractda.solvers.solver_base import SolverBase, SetValueType
-from contractda.sets._var import Var
+from contractda.vars._var import Var
 from functools import cmp_to_key
 
 ExplicitSetVarType = list[Var]

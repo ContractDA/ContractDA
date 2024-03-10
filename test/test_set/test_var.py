@@ -1,4 +1,4 @@
-from contractda.sets._var import CategoricalVar, BoolVar, IntVar, RealVar
+from contractda.vars._var import CategoricalVar, BoolVar, IntVar, RealVar
 
 def test_range():
     x = CategoricalVar("x", value_range=range(1, 10))

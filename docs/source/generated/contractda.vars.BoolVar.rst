@@ -1,7 +1,7 @@
-contractda.sets.BoolVar
+﻿contractda.vars.BoolVar
 =======================
 
-.. currentmodule:: contractda.sets
+.. currentmodule:: contractda.vars
 
 .. add toctree option to make autodoc generate the pages
 
@@ -14,8 +14,8 @@ contractda.sets.BoolVar
 
 .. autosummary::
 
-   ~contractda.sets.BoolVar.id
-   ~contractda.sets.BoolVar.value_range
+   ~contractda.vars.BoolVar.id
+   ~contractda.vars.BoolVar.value_range
 
 
 
@@ -25,6 +25,6 @@ contractda.sets.BoolVar
 
 .. autosummary::
 
-   ~contractda.sets.BoolVar.get_id
-   ~contractda.sets.BoolVar.is_finite
+   ~contractda.vars.BoolVar.get_id
+   ~contractda.vars.BoolVar.is_finite
 

@@ -28,4 +28,5 @@
    contractda.contracts
    contractda.sets
    contractda.solvers
+   contractda.vars
 

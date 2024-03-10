@@ -22,9 +22,7 @@ var_type_string_map = {VarType.INTEGER: "integer", VarType.REAL: "real", VarType
 
 class Var(ABC):
     """
-    Base class for variables
-
-    Currently support integer, real, bool, and range
+    Abstract Base class for variables in the set
     """
     def __init__(self, id: str, var_type: str): 
         self._id = id
@@ -34,7 +32,7 @@ class Var(ABC):
         return f"{self.__class__.__name__}(\"{self._id}\")"
     
     @abstractmethod
-    def is_finite(self):
+    def is_finite(self) -> bool:
         """ Return whether the domain of this variable is finite'
 
         :return: True is the domain is finite, False if the domain is not
@@ -42,17 +40,30 @@ class Var(ABC):
         """
         pass
 
-    def get_id(self):
+    def get_id(self) -> str:
+        """Return the identifier of the variable
+
+        :return: The identifier of the variable.
+        :rtype: str
+        """
         return self._id
     
     @property 
-    def id(self):
+    def id(self) -> str:
+        """ The identifier of the variable
+
+        :rtype: str
+        """
         return self._id
 
         
         
 
 class IntVar(Var):
+    """Integer variable
+    
+    :param str id: The identifier of the variable 
+    """
     def __init__(self, id: str):
         super().__init__(id, var_type=VarType.INTEGER)
 
@@ -60,6 +71,10 @@ class IntVar(Var):
         return False
         
 class RealVar(Var):
+    """Real Valued variable
+    
+    :param str id: The identifier of the variable 
+    """
     def __init__(self, id: str):
         super().__init__(id, var_type=VarType.REAL)
 
@@ -69,12 +84,19 @@ class RealVar(Var):
 
 class BoolVar(Var):
     """Variable of boolean value
+
+    :param str id: The identifier of the variable
     """
     def __init__(self, id: str):
         super().__init__(id, var_type=VarType.BOOL)
 
     @property
     def value_range(self):
+        """The available values for the variable
+
+        :return: The list of all available values for the variable
+        :rtype: Iterable
+        """
         return [False, True]
 
     def is_finite(self):
@@ -87,6 +109,7 @@ class CategoricalVar(Var):
     """
     def __init__(self, id: str, value_range:Iterable):
         """Constructor
+
         :param str id: the identifier of the variable
         :param Iterable value_range: the set of allowed categorical values
         """
@@ -98,6 +121,11 @@ class CategoricalVar(Var):
     
     @property
     def value_range(self):
+        """The available values for the variable
+
+        :return Iterable: The list of all available values for the variable
+        :rtype: Iterable
+        """
         return self._value_range
 
     def __str__(self) -> str:

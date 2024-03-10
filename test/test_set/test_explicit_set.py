@@ -1,5 +1,5 @@
 from contractda.sets._explicit_set import ExplicitSet
-from contractda.sets._var import CategoricalVar
+from contractda.vars._var import CategoricalVar
 import pytest
 
 @pytest.fixture

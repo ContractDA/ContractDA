@@ -1,7 +1,7 @@
-contractda.sets.IntVar
+﻿contractda.vars.IntVar
 ======================
 
-.. currentmodule:: contractda.sets
+.. currentmodule:: contractda.vars
 
 .. add toctree option to make autodoc generate the pages
 
@@ -14,7 +14,7 @@ contractda.sets.IntVar
 
 .. autosummary::
 
-   ~contractda.sets.IntVar.id
+   ~contractda.vars.IntVar.id
 
 
 
@@ -24,6 +24,6 @@ contractda.sets.IntVar
 
 .. autosummary::
 
-   ~contractda.sets.IntVar.get_id
-   ~contractda.sets.IntVar.is_finite
+   ~contractda.vars.IntVar.get_id
+   ~contractda.vars.IntVar.is_finite
 
