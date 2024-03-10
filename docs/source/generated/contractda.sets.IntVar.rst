@@ -1,11 +1,11 @@
-contractda.sets.Var
-===================
+contractda.sets.IntVar
+======================
 
 .. currentmodule:: contractda.sets
 
 .. add toctree option to make autodoc generate the pages
 
-.. autoclass:: Var
+.. autoclass:: IntVar
    :members:
    
 
@@ -14,7 +14,7 @@ contractda.sets.Var
 
 .. autosummary::
 
-   ~contractda.sets.Var.id
+   ~contractda.sets.IntVar.id
 
 
 
@@ -24,6 +24,6 @@ contractda.sets.Var
 
 .. autosummary::
 
-   ~contractda.sets.Var.get_id
-   ~contractda.sets.Var.is_finite
+   ~contractda.sets.IntVar.get_id
+   ~contractda.sets.IntVar.is_finite
 

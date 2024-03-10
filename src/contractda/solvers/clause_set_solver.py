@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Iterable
 
 from contractda.solvers.solver_base import SolverBase
-from contractda.sets.var import Var
+from contractda.sets._var import Var
 
 ClauseSetVarType = list[Var]
 ClauseValueType = None

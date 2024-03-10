@@ -11,18 +11,6 @@ contractda.contracts.contract\_base
    
    
 
-   
-   
-   .. rubric:: Classes
-
-   .. autosummary::
-      :toctree:
-      :template: class.rst
-      :recursive:
-   
-      contractda.contracts.contract_base.ContractBase
-   
-   
 
    
    

@@ -6,7 +6,5 @@ API
     :template: module.rst
     :recursive:
     
-    contractda.sets
-    contractda.solvers
-    contractda.contracts
+    contractda
 

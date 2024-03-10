@@ -66,7 +66,7 @@ For another example, to activate the virtual environment and then run python:
 For more information, check out the :doc:`usage` section for further information, including how to :ref:`install <installation>` the project.
 
 .. toctree::
-   :maxdepth: 10
+   :maxdepth: 2
    :caption: Contents:
 
    usage

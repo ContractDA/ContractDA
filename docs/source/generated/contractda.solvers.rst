@@ -1,4 +1,4 @@
-﻿contractda.solvers
+contractda.solvers
 ==================
 
 .. automodule:: contractda.solvers
@@ -11,9 +11,6 @@
    
    
 
-   
-   
-   
 
    
    

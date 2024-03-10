@@ -25,6 +25,10 @@ exclude_patterns = []
 # -- Auto generation import --------------------------------------------------
 import pathlib
 import sys
+# Generate autodoc stubs for functions and classes.
+autoclass_content = 'both'
+autosummary_generate = True
+
 sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
 
 # -- Options for HTML output -------------------------------------------------

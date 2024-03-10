@@ -1,4 +1,4 @@
-﻿contractda.contracts
+contractda.contracts
 ====================
 
 .. automodule:: contractda.contracts
@@ -11,9 +11,6 @@
    
    
 
-   
-   
-   
 
    
    

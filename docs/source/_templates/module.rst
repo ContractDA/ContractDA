@@ -24,19 +24,6 @@
    {% endif %}
    {% endblock %}
 
-   {% block classes %}
-   {% if classes %}
-   .. rubric:: {{ _('Classes') }}
-
-   .. autosummary::
-      :toctree:
-      :template: class.rst
-      :recursive:
-   {% for item in classes %}
-      {{ fullname }}.{{ item }}
-   {%- endfor %}
-   {% endif %}
-   {% endblock %}
 
    {% block exceptions %}
    {% if exceptions %}

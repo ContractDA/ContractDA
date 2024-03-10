@@ -3,8 +3,8 @@
 from __future__ import annotations
 from typing import Iterable
 
-from contractda.sets.set_base import SetBase
-from contractda.sets.var import Var
+from contractda.sets._base import SetBase
+from contractda.sets._var import Var
 
 from contractda.solvers.explicit_set_solver import ExplicitSetSolver, ExplicitSetVarType, ExplicitSetElementType, ExplicitSetExpressionType
 
@@ -22,15 +22,12 @@ class ExplicitSet(SetBase):
     Note: Complement, and projection with refinement or, extension variables. Domain is enumerated and thus the performance might not good.
     If you can write the set with clause, theory prover can be used to accelates the set computation.
 
+    :param list[str] vars: The ids for the variables
+    :param list[tuple] expr: The expression of the set, the explicit set
+        requires a explicit expression by a list of tuple, each tuple is an element in the set, and the value in the tuple is the same order as that in the vars
     """
     def __init__(self, vars: ExplicitSetVarType, expr: ExplicitSetExpressionType):
-        """
-        Constructor
 
-        :param list[str] vars: The ids for the variables
-        :param list[tuple] expr: The expression of the set, the explicit set
-         requires a explicit expression by a list of tuple, each tuple is an element in the set, and the value in the tuple is the same order as that in the vars
-        """
         #TODO: check if the provided value in the element of the expr is within the range of the vars
         # check no duplicate variable in vars
         if not self._verify_unique_vars(vars):

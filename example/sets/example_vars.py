@@ -1,4 +1,4 @@
-from contractda.sets.var import IntVar, BoolVar, RealVar, CategoricalVar
+from contractda.sets._var import IntVar, BoolVar, RealVar, CategoricalVar
 
 if __name__ == "__main__":
     int_a = IntVar("a")
