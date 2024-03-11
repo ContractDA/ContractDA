@@ -37,6 +37,7 @@ summary = "A design automation tool for contract-based design"
 dependencies = [
     "ContractDA @ file:///${PROJECT_ROOT}",
     "pytest>=8.0.2",
+    "sphinx-rtd-theme>=2.0.0",
     "sphinx>=7.2.6",
 ]
 
@@ -96,6 +97,11 @@ name = "pluggy"
 version = "1.4.0"
 requires_python = ">=3.8"
 summary = "plugin and hook calling mechanisms for python"
+
+[[package]]
+name = "ply"
+version = "3.11"
+summary = "Python Lex & Yacc"
 
 [[package]]
 name = "pygments"
@@ -228,7 +234,7 @@ summary = "HTTP library with thread-safe connection pooling, file post, and more
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:397d397c1fbf7ee9dfcc96f8fc1b7e09f102683a493ab817a3ae86d034de6bb8"
+content_hash = "sha256:85ae0c688320b1557a1032f2304400ebdece7e17d51cb56f7e3d6a852a629a3a"
 
 [metadata.files]
 "alabaster 0.7.16" = [
@@ -432,6 +438,10 @@ content_hash = "sha256:397d397c1fbf7ee9dfcc96f8fc1b7e09f102683a493ab817a3ae86d03
 "pluggy 1.4.0" = [
     {url = "https://files.pythonhosted.org/packages/54/c6/43f9d44d92aed815e781ca25ba8c174257e27253a94630d21be8725a2b59/pluggy-1.4.0.tar.gz", hash = "sha256:8c85c2876142a764e5b7548e7d9a0e0ddb46f5185161049a79b7e974454223be"},
     {url = "https://files.pythonhosted.org/packages/a5/5b/0cc789b59e8cc1bf288b38111d002d8c5917123194d45b29dcdac64723cc/pluggy-1.4.0-py3-none-any.whl", hash = "sha256:7db9f7b503d67d1c5b95f59773ebb58a8c1c288129a88665838012cfb07b8981"},
+]
+"ply 3.11" = [
+    {url = "https://files.pythonhosted.org/packages/a3/58/35da89ee790598a0700ea49b2a66594140f44dec458c07e8e3d4979137fc/ply-3.11-py2.py3-none-any.whl", hash = "sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce"},
+    {url = "https://files.pythonhosted.org/packages/e5/69/882ee5c9d017149285cab114ebeab373308ef0f874fcdac9beb90e0ac4da/ply-3.11.tar.gz", hash = "sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3"},
 ]
 "pygments 2.17.2" = [
     {url = "https://files.pythonhosted.org/packages/55/59/8bccf4157baf25e4aa5a0bb7fa3ba8600907de105ebc22b0c78cfbf6f565/pygments-2.17.2.tar.gz", hash = "sha256:da46cec9fd2de5be3a8a784f434e4c4ab670b4ff54d605c4c2717e9d49c4c367"},

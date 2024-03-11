@@ -32,3 +32,6 @@ For another example, to activate the virtual environment and then run python:
 
    $ source .venv/bin/activate
    $ python 
+
+
+Use :class:`~contractda.sets.ExplicitSet` for explicit set objects
