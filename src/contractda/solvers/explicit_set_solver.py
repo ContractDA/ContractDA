@@ -3,11 +3,8 @@ from typing import Iterable, NewType
 
 from contractda.solvers.solver_base import SolverBase, SetValueType
 from contractda.vars._var import Var
+from contractda.sets._explicit_set_def import ExplicitSetVarType, ExplicitSetElementType, ExplicitSetExpressionType
 from functools import cmp_to_key
-
-ExplicitSetVarType = list[Var]
-ExplicitSetElementType = tuple
-ExplicitSetExpressionType = Iterable[ExplicitSetElementType]
 
 class ExplicitSetSolver(SolverBase):
     """Solver for explicit set

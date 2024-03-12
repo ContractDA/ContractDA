@@ -36,9 +36,11 @@ path = "./."
 summary = "A design automation tool for contract-based design"
 dependencies = [
     "ContractDA @ file:///${PROJECT_ROOT}",
+    "ply>=3.11",
     "pytest>=8.0.2",
     "sphinx-rtd-theme>=2.0.0",
     "sphinx>=7.2.6",
+    "z3-solver>=4.13.0.0",
 ]
 
 [[package]]
@@ -232,9 +234,14 @@ version = "2.2.1"
 requires_python = ">=3.8"
 summary = "HTTP library with thread-safe connection pooling, file post, and more."
 
+[[package]]
+name = "z3-solver"
+version = "4.13.0.0"
+summary = "an efficient SMT solver library"
+
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:85ae0c688320b1557a1032f2304400ebdece7e17d51cb56f7e3d6a852a629a3a"
+content_hash = "sha256:52edb677ec6bad9e2184e9625f1b95085a48f08eb0c8bda80df7311843bcd9d8"
 
 [metadata.files]
 "alabaster 0.7.16" = [
@@ -502,4 +509,13 @@ content_hash = "sha256:85ae0c688320b1557a1032f2304400ebdece7e17d51cb56f7e3d6a852
 "urllib3 2.2.1" = [
     {url = "https://files.pythonhosted.org/packages/7a/50/7fd50a27caa0652cd4caf224aa87741ea41d3265ad13f010886167cfcc79/urllib3-2.2.1.tar.gz", hash = "sha256:d0570876c61ab9e520d776c38acbbb5b05a776d3f9ff98a5c8fd5162a444cf19"},
     {url = "https://files.pythonhosted.org/packages/a2/73/a68704750a7679d0b6d3ad7aa8d4da8e14e151ae82e6fee774e6e0d05ec8/urllib3-2.2.1-py3-none-any.whl", hash = "sha256:450b20ec296a467077128bff42b73080516e71b56ff59a60a02bef2232c4fa9d"},
+]
+"z3-solver 4.13.0.0" = [
+    {url = "https://files.pythonhosted.org/packages/0e/8c/9058d3998fdc2148f3e6d3497e949d5dfc77c66b1cc1cb461554c0bba954/z3_solver-4.13.0.0-py2.py3-none-manylinux2014_aarch64.whl", hash = "sha256:9d622022a3511c059915c56b2c231c84b5c1be1b82f457d7560dda3d916474fe"},
+    {url = "https://files.pythonhosted.org/packages/25/c0/dd978c813288f6860bcfb9e4d2d1d3b311a42a2237a4766e5a0adbcaa79b/z3_solver-4.13.0.0-py2.py3-none-win_amd64.whl", hash = "sha256:3555436cfe9a5fa2d1b432fb9a5e4460e487649c22e5e68a56f7d81594d043e9"},
+    {url = "https://files.pythonhosted.org/packages/3a/fd/e3f5850fd04480a942aca9f9f7520d3fa5b57731335c221a11f55bb6d91a/z3-solver-4.13.0.0.tar.gz", hash = "sha256:52588e92aec7cb338fd6288ce93758ae01770f62ca0c80e8f4f2b2333feaf51b"},
+    {url = "https://files.pythonhosted.org/packages/4e/5b/934de9f1f31b1d0f3a8da0ff2e3092136fbffe737eca52965818464af4c3/z3_solver-4.13.0.0-py2.py3-none-macosx_11_0_arm64.whl", hash = "sha256:bca7d59a699a440247537c2180c519d682c9df3520a16ce288fced61a70d253d"},
+    {url = "https://files.pythonhosted.org/packages/9c/20/f28dfa982bc820760117e5615d59d695d12a6fb31660f53a749be27cccca/z3_solver-4.13.0.0-py2.py3-none-macosx_11_0_x86_64.whl", hash = "sha256:4a4731fded91b32e1861e1c7c96e500da743bb9431246cac51f7c3ffc0f21b5d"},
+    {url = "https://files.pythonhosted.org/packages/b9/27/ca09e1f4642b42a2972047f508bc4ecb0c5acf975c910eb0fdeaf9ec21d0/z3_solver-4.13.0.0-py2.py3-none-win32.whl", hash = "sha256:13468e1018c817b7f794898d3100f02541d15c13ab56c0785c5acdea32a066cf"},
+    {url = "https://files.pythonhosted.org/packages/c6/79/0255fe0efee7ea9db8987ced14c70028a0007d4d4aaaed8965310bbd7bb1/z3_solver-4.13.0.0-py2.py3-none-manylinux2014_x86_64.whl", hash = "sha256:8c42de82b6e3ff7ee61287d03c7af8a99f9f6554cdd1204c6b9bca96ff1cb7fb"},
 ]

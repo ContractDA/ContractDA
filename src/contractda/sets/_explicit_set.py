@@ -6,7 +6,8 @@ from typing import Iterable
 from contractda.sets._base import SetBase
 from contractda.vars._var import Var
 
-from contractda.solvers.explicit_set_solver import ExplicitSetSolver, ExplicitSetVarType, ExplicitSetElementType, ExplicitSetExpressionType
+from contractda.solvers.explicit_set_solver import ExplicitSetSolver
+from contractda.sets._explicit_set_def import ExplicitSetVarType, ExplicitSetElementType, ExplicitSetExpressionType
 
 import random
 import copy
