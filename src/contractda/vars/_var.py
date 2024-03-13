@@ -18,7 +18,7 @@ class VarType(Enum):
     BOOL = 2,
     CATEGORICAL = 3
 
-var_type_string_map = {VarType.INTEGER: "integer", VarType.REAL: "real", VarType.BOOL: "bool", VarType.CATEGORICAL: "categorical"}
+var_type_string_map = {VarType.INTEGER: "integer", VarType.REAL: "real", VarType.BOOL: "boolean", VarType.CATEGORICAL: "categorical"}
 
 class Var(ABC):
     """

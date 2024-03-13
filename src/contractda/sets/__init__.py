@@ -14,13 +14,13 @@ The :mod:`contract.sets` module defines a base class for set object as described
 
 from contractda.sets._explicit_set import ExplicitSet
 from contractda.sets._clause_set import ClauseSet
-from contractda.sets._clause import FOLClause, LTLClause
+from contractda.sets._fol_clause_set import FOLClauseSet
 from contractda.sets._base import SetBase
 
 __all__ = [
     "ExplicitSet",
     "ClauseSet",
-    "FOLClause",
-    "LTLClause"
+    "FOLClauseSet",
+#    "LTLClause"
     "SetBase",
 ]

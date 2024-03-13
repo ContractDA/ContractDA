@@ -56,6 +56,7 @@ class FOL_Lexer(object):
         self.t_GT = re.escape(token_symbol["GT"])
         self.t_EQ = re.escape(token_symbol["EQ"])
         self.t_NOT = re.escape(token_symbol["NOT"])
+        self.t_NEQ = re.escape(token_symbol["NEQ"])
         self.t_IMPLY = re.escape(token_symbol["IMPLY"])
         self.t_LAND = re.escape(token_symbol["LAND"])
         self.t_LOR = re.escape(token_symbol["LOR"])
@@ -118,7 +119,8 @@ class FOL_Parser(object):
         self._ctx = {}
 
     def p_proposition_uniop(self, p):
-        '''proposition : NOT proposition'''
+        '''proposition : NOT proposition
+                       | NOT expression'''
         p[0] = _fol_lan.PropositionNodeUniOp(p[1], p[2])
 
     def p_proposition_binop(self, p):
@@ -130,7 +132,11 @@ class FOL_Parser(object):
                    | expression NEQ expression    
                    | proposition AND proposition   
                    | proposition OR proposition   
-                   | proposition IMPLY proposition'''
+                   | proposition IMPLY proposition
+                   | expression EQ proposition
+                   | expression NEQ proposition
+                   | proposition EQ expression
+                   | proposition NEQ expression  '''
         p[0] = _fol_lan.PropositionNodeBinOp(p[2],p[1],p[3]) 
     def p_proposition_paren(self, p):   
         '''proposition : LPAREN proposition RPAREN'''
@@ -175,6 +181,7 @@ class FOL_Parser(object):
     # Error rule for syntax errors
     def p_error(self, p):
      print("Syntax error in input!")
+     raise Exception("Syntax Error")
  
  # Build the parser
     def build(self, **kwargs):

@@ -23,10 +23,10 @@ class Z3Interface(TheoremSolverInterface):
             if "bv_size" in kwargs:
                 bv_size = kwargs["bv_size"]
             else:
-                print("Error, no bit vector size provided")
+                raise Exception("Error, no bit vector size provided")
             return z3.BitVec(var_name, bv_size)
         else:
-            print("Error, Not supported type")
+            raise Exception("Error, Not supported type")
 
     def get_constant_value(self, sort: str, value, **kwargs):
         if sort == "real":
@@ -94,6 +94,9 @@ class Z3Interface(TheoremSolverInterface):
     def add_conjunction_clause(self, *args):
         self._solver.add(*args)
 
+    def assertions(self):
+        return self._solver.assertions()
+    
     def check(self) -> bool:
         #print(self._solver.assertions())
         ret = self._solver.check()
@@ -121,7 +124,7 @@ class Z3Interface(TheoremSolverInterface):
         elif z3.is_bool(ref):
             return z3.is_true(ref)
         else:
-            print("unsupported type")
+            raise Exception("unsupported type")
         # TODO: access value for other sort
 
     def _var_is_variable(self, var):

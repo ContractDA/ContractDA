@@ -17,6 +17,10 @@ if __name__ == "__main__":
     print("")
     lexer.test("x & y == false")
     print(lexer.tokens)
+    print("")
+    print("")
+    lexer.test("a == false")
+    print(lexer.tokens)
 
 
     ast = fol_parser.test("5 > x && !((c_54 < x) -> (50 + 54 * 44e-5 == -5)) # 1jijij jfaiji")

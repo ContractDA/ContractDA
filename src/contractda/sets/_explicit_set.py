@@ -1,12 +1,11 @@
 """ Class for ExplicitSet
 """
 from __future__ import annotations
-from typing import Iterable
+from typing import Iterable, Any
 
 from contractda.sets._base import SetBase
 from contractda.vars._var import Var
 
-from contractda.solvers.explicit_set_solver import ExplicitSetSolver
 from contractda.sets._explicit_set_def import ExplicitSetVarType, ExplicitSetElementType, ExplicitSetExpressionType
 
 import random
@@ -46,24 +45,10 @@ class ExplicitSet(SetBase):
         self._vars: list[Var] = [vars[i] for i in var_arg_sorted]
         # _expr_internal: the set expr corresponding to the variables ordered by _vars
         self._expr_internal =  self._convert_expr_to_internal(expr) 
-        
-        # solver
-        self._solver = ExplicitSetSolver()
 
     def __str__(self):
         return f"{tuple([str(var)for var in self.ordered_vars])} = {str(self.ordered_expr)}"
 
-    def __iter__(self):
-        self._iter = iter(self._expr_internal) 
-        return self
-
-    def __next__(self):
-        element = next(self._iter)
-        return self._convert_elem_to_external(element)
-    
-    def enumerate(self) -> Iterable[ExplicitSetElementType]:
-        return self._solver.get_enumeration(self._expr_internal)
-    
     @property
     def internal_vars(self) -> ExplicitSetVarType:
         """
@@ -113,15 +98,51 @@ class ExplicitSet(SetBase):
         # assume the variables are checked to be the same as the self._vars and are unique
         self._var_order = argsort(vars)
 
-    def union(self, set2) -> ExplicitSet:
-        """ Return the union of the two set
+    ######################
+    #   Extraction
+    ######################
 
-        Compute the union of the two explicit set
+    def __iter__(self):
+        self._iter = iter(self._expr_internal) 
+        return self
+
+    def __next__(self):
+        element = next(self._iter)
+        return self._convert_elem_to_external(element)
+    
+    def get_enumeration(self) -> Iterable[ExplicitSetElementType]:
+        """ Enumerate the set elements
+
+        :return: An iterable object that can produce all elements
+        :rtype: Iterable
+        """
+        return self._solver.get_enumeration(self._expr_internal)
+    
+    def sample(self):
+        """ Sample an element in the set
+
+        :return: any element that is in the set
+        :rtype: Any
+        """
+        random.seed(0)
+        random_id = random.randrange(0, self.len())
+        return list(self._expr_internal)[random_id]
+    ######################
+    #   Set Operation
+    ######################
+
+    def union(self, other: ExplicitSet) -> ExplicitSet:
+        """ Union opration on set
+
         Note: if the variable set is different, projection is used
-        :param ExplicitSet set2: The set for difference
+
+        :param ExplicitSet other: the set to be union with this set
+        :return: A new set which represents the union of the two set
+        :rtype: ExplicitSet
         """
         # check vars
         set1 = self
+        set2 = other
 
         var1_set = set(set1._vars)
         var2_set = set(set2._vars)
@@ -144,13 +165,16 @@ class ExplicitSet(SetBase):
         return ret
 
 
-    def intersect(self, set2) -> ExplicitSet:
-        """ Return the intersect of the two set
+    def intersect(self, other: ExplicitSet) -> ExplicitSet:
+        """ Intersect opration on set
 
-        Compute the intersect of the two explicit set
+        :param ExplicitSet other: the set to be intersect with this set
+        :return: A new set which represents the intersect of the two set
+        :rtype: ExplicitSet
         """
         # check the variables
         set1 = self
+        set2 = other
         vars1 = set1._vars
         vars2 = set2._vars
 
@@ -202,14 +226,16 @@ class ExplicitSet(SetBase):
         return ExplicitSet(vars = vars, expr=ret_expr)
 
 
-    def difference(self, set2: ExplicitSet) -> ExplicitSet:
-        """Return a new set that is the difference of the given set to the set2
+    def difference(self, other: ExplicitSet) -> ExplicitSet:
+        """ Difference opration on set 
 
-        Note: if the variable set is different, projection is used
-        :param ExplicitSet set2: The set for difference
+        :param ExplicitSet other: the set to be difference with this set
+        :return: A new set which represents the difference of the two set
+        :rtype: ExplicitSet
         """
         # check vars
         set1 = self
+        set2 = other
 
         var1_set = set(set1._vars)
         var2_set = set(set2._vars)
@@ -233,7 +259,10 @@ class ExplicitSet(SetBase):
 
 
     def complement(self) -> ExplicitSet:
-        """ Return a new set that is the complement of the set
+        """ Complement opration on set 
+
+        :return: A new set which represents the Complement of the set
+        :rtype: Explicitset
         """
         domain = self._domain()
         new_expr = [elem for elem in domain if elem not in self._expr_internal]  
@@ -241,7 +270,8 @@ class ExplicitSet(SetBase):
         return ret
 
     def project(self, new_vars: Iterable[Var], is_refine = False) -> ExplicitSet:
-        """Project the set onto the new variables.
+        """ Projection opration of set onto the new variables 
+
         The projection can be refinement or abstraction.
         Abstraction mean the projection back to the original space is larger than the original set
         Refinement mean the projectio back to the original space is smaller than the original set
@@ -249,9 +279,10 @@ class ExplicitSet(SetBase):
         The refinement projection on to x, y is (CategoricalVar("x", range(1,3)), CategoricalVar("y", range(1,3)) = [(1, 2)]
         The abstraction projection on to x, y is (CategoricalVar("x", range(1,3)), CategoricalVar("y", range(1,3)) = [(1, 2), (1, 1)]
 
-        :param Iterable[str] vars: The id of the new variables
-        :param bool is_refine: whether the resulting set is a refinement or abstraction, refinement results in a smaller project (must allow any values in the )
-        :return: The new set after projection
+        :param Iterable[Var] vars: the list of variables to be the projection result.
+        :param bool is_refine: whether the projection is to result in refinement or abstraction
+        :return: A new set which represents the Projection of the set on the input variables
+        :rtype: SetBase
         """
 
         # find overleapped variables:
@@ -265,8 +296,7 @@ class ExplicitSet(SetBase):
         return ret
     
     def _project_subset(self, new_vars: Iterable[Var], is_refine = False):
-        """
-        Project the set onto the new variables.
+        """ Project the set onto the new variables.
 
         :param Iterable[str] vars: The id of the new variables, which must be a subset of the variables in the set
         :param bool is_refine: whether the resulting set is a refinement or abstraction, refinement results in a smaller project (must allow any values in the )
@@ -322,11 +352,60 @@ class ExplicitSet(SetBase):
                 new_expr.append(tuple(list(elem) + list(extend_elem)))
 
         return ExplicitSet(self._vars + new_vars, new_expr)
+    
+    
+    def is_contain(self, element: ExplicitSetElementType) -> bool:
+        """ Check if the set is contain the element
 
-    def sample(self):
-        random.seed(0)
-        random_id = random.randrange(0, self.len())
-        return list(self._expr_internal)[random_id]
+        :param ExplicitSetElementType element: the element to be checked if it is contained in the set
+        :return: True if the element is in the set. False if not.
+        :rtype: bool
+        """
+        pass
+
+    def is_subset(self, other: ExplicitSet) -> bool:
+        """ Check if the set is a subset of the other set
+
+        :param ExplicitSet other: the other set to be check if this set is a subset of it.
+        :return: True if this set is a subset of the other set. False if not.
+        :rtype: bool
+        """
+        pass
+
+    def is_proper_subset(self, other: ExplicitSet) -> bool:
+        """ Check if the set is a proper subset of the other set
+
+        :param ExplicitSet other: the other set to be check if this set is a proper subset of it.
+        :return: True if this set is a proper subset of the other set. False if not.
+        :rtype: bool
+        """
+        pass
+
+    def is_satifiable(self) -> bool:
+        """ Check if the set is satisfiable, i.e., not empty
+
+        :return: True if this set is satisfiable. False if not.
+        :rtype: bool
+        """
+        pass
+
+    def is_equivalence(self, other: ExplicitSet) -> bool:
+        """ Check if the set is equivalent to the other set
+
+        :param ExplicitSet other: the other set to be check if this set is equivalent to it.
+        :return: True if this set is equivalent to the other set. False if not.
+        :rtype: bool
+        """
+        pass
+
+    def is_disjoint(self, other: ExplicitSet) -> bool:
+        """ Check if the set is disjoint to the other set
+
+        :param ExplicitSet other: the other set to be check if this set is disjoint to it.
+        :return: True if this set is disjoint to the other set. False if not.
+        :rtype: bool
+        """
+        pass
 
     def len(self):
         return len(self._vars)

@@ -10,11 +10,10 @@
     ~contractda.solvers.ClauseSetSolver
 """
 
-from contractda.solvers.solver_base import SolverBase
-from contractda.solvers.explicit_set_solver import ExplicitSetSolver
-from contractda.solvers.clause_set_solver import ClauseSetSolver
+from contractda.solvers.z3_interface import Z3Interface
+from contractda.solvers.theorem_prover_interface import TheoremSolverInterface
 
 __all__ = [
-    "ExplicitSetSolver",
-    "ClauseSetSolver",
+    "Z3Interface",
+    "TheoremSolverInterface",
 ]
