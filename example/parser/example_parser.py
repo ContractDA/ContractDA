@@ -2,6 +2,8 @@
 from contractda.sets.parsers._fol_parser import FOL_Lexer, fol_parser
 import contractda.sets._fol_lan as _fol_lan
 
+import copy
+
 if __name__ == "__main__":
     lexer = FOL_Lexer()
     lexer.build()
@@ -38,6 +40,17 @@ if __name__ == "__main__":
     ast = fol_parser.parse("(z == x + y -> x^5 >= 3) && true")
     print(ast)
     print(ast.get_symbols())
+    ast_copy = copy.deepcopy(ast)
+    print(ast_copy)
+    print(ast_copy.get_symbols())
     print(ast.evaluate({"x": 29, "y": 100, "z": 129}))
     print(ast.evaluate({"x": 1, "y": 100, "z": 101}))
     print(ast.evaluate({"x": False, "y": 100, "z": 101}))
+
+    ast = fol_parser.parse("true")
+    print(ast)
+    print(ast.get_symbols())
+    print(ast.evaluate({"x": False, "y": 100, "z": 101}))
+
+
+

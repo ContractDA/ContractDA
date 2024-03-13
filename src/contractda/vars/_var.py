@@ -55,6 +55,12 @@ class Var(ABC):
         :rtype: str
         """
         return self._id
+    
+    @property
+    def type_str(self) -> str:
+        """ The identifier of the type
+        """
+        return var_type_string_map[self._var_type]
 
         
         
@@ -78,7 +84,7 @@ class RealVar(Var):
     def __init__(self, id: str):
         super().__init__(id, var_type=VarType.REAL)
 
-    def _is_finite(self) -> bool:
+    def is_finite(self) -> bool:
         return False
 
 

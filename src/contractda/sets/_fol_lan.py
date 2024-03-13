@@ -3,10 +3,14 @@
 This source file defines the abstract syntax tree (AST) of First-order logic.
 """
 from abc import ABC, abstractmethod
-
+import copy
 
 class AST_Node(ABC):
-    def __init__(self):
+    def __init__(self, children = None):
+        if children is None:
+            self._children = []
+        else: 
+            self._children = children
         pass
 
     @abstractmethod
@@ -21,6 +25,11 @@ class AST_Node(ABC):
     def evaluate(self, value_table = dict):
         pass
 
+    @property
+    def children(self):
+        return self._children
+
+
 def name_remap(name_map, node):
     for name, s in node.get_symbols().items():
         s.name = name_map[name]
@@ -31,22 +40,21 @@ class PropositionNode(AST_Node):
     #              !Proposition
     #              (Proposition)
 
-    def __init__(self):
-        pass
+    def __init__(self, children = None):
+        super().__init__(children=children)
 
 
 class PropositionNodeBinOp(PropositionNode):
     def __init__(self, op, exp1, exp2):
-        self.exp1 = exp1
-        self.exp2 = exp2
         self.op = op
+        super().__init__(children=[exp1, exp2])
 
     def __str__(self):
-        return str(self.exp1) + str(self.op) + str(self.exp2)
+        return str(self._children[0]) + str(self.op) + str(self._children[1])
 
     def get_symbols(self):
-        l_symbols = self.exp1.get_symbols()
-        r_symbols = self.exp2.get_symbols()
+        l_symbols = self._children[0].get_symbols()
+        r_symbols = self._children[1].get_symbols()
         res = l_symbols.copy()
         res.update(r_symbols)
         return res
@@ -56,23 +64,23 @@ class PropositionNodeBinOp(PropositionNode):
 
     def evaluate(self, value_table = dict) -> bool:
         if self.op == "==":
-            return self.exp1.evaluate(value_table) == self.exp2.evaluate(value_table)
+            return self._children[0].evaluate(value_table) == self._children[1].evaluate(value_table)
         elif self.op == "<=":
-            return self.exp1.evaluate(value_table) <= self.exp2.evaluate(value_table)
+            return self._children[0].evaluate(value_table) <= self._children[1].evaluate(value_table)
         elif self.op == "<":
-            return self.exp1.evaluate(value_table) < self.exp2.evaluate(value_table)
+            return self._children[0].evaluate(value_table) < self._children[1].evaluate(value_table)
         elif self.op == ">":
-            return self.exp1.evaluate(value_table) > self.exp2.evaluate(value_table)
+            return self._children[0].evaluate(value_table) > self._children[1].evaluate(value_table)
         elif self.op == ">=":
-            return self.exp1.evaluate(value_table) >= self.exp2.evaluate(value_table)
+            return self._children[0].evaluate(value_table) >= self._children[1].evaluate(value_table)
         elif self.op == "!=":
-            return self.exp1.evaluate(value_table) != self.exp2.evaluate(value_table)
+            return self._children[0].evaluate(value_table) != self._children[1].evaluate(value_table)
         elif self.op == "&&":
-            return self.exp1.evaluate(value_table) and self.exp2.evaluate(value_table)
+            return self._children[0].evaluate(value_table) and self._children[1].evaluate(value_table)
         elif self.op == "||":
-            return self.exp1.evaluate(value_table) or self.exp2.evaluate(value_table)
+            return self._children[0].evaluate(value_table) or self._children[1].evaluate(value_table)
         elif self.op == "->":
-            return (not self.exp1.evaluate(value_table)) or self.exp2.evaluate(value_table)
+            return (not self._children[0].evaluate(value_table)) or self._children[1].evaluate(value_table)
         else:
             raise Exception(f"Unsupported operator: {self.op}")
 
@@ -80,31 +88,32 @@ class PropositionNodeUniOp(PropositionNode):#(!Proposition)
     def __init__(self, op, exp1):
         self.exp1 = exp1
         self.op = op
+        super().__init__(children=[exp1])
 
     def __str__(self):
-        return str(self.op) + str(self.exp1)
+        return str(self.op) + str(self._children[0])
 
     def get_symbols(self):
-        return self.exp1.get_symbols()
+        return self._children[0].get_symbols()
     
     def evaluate(self, value_table: dict):
         if self.op == "!":
-            return not self.exp1.evaluate(value_table)
+            return not self._children[0].evaluate(value_table)
         else:
             raise Exception(f"Unsupported operator: {self.op}")
            
 class PropositionNodeParen(PropositionNode):#(!Proposition)
     def __init__(self, content):
-        self.content = content
+        super().__init__(children=[content])
 
     def __str__(self):
-        return "(" + str(self.content) + ")"
+        return "(" + str(self._children[0]) + ")"
 
     def get_symbols(self):
-        return self.content.get_symbols()  
+        return self._children[0].get_symbols()  
 
     def evaluate(self, value_table: dict):
-        return self.content.evaluate(value_table)
+        return self._children[0].evaluate(value_table)
 # class UnaryOp(AST_Node):
 #     def __init__(self, left, op, right):
 #         self.left = left
@@ -118,59 +127,59 @@ class ExpressionNode(AST_Node):
     # Expression +-*/^ Expressions
     # (Expression)
     # Literals
-    def __init__(self, content):
-        pass
+    def __init__(self, children = None):
+        super().__init__(children=children)
 
 class ExpressionNodeParen(ExpressionNode): # (Expression)
     # Literals
 
     def __init__(self, content):
-        self.content = content
+        super().__init__(children=[content])
 
     def __str__(self):
-        return "(" + str(self.content) + ")"
+        return "(" + str(self._children[0]) + ")"
 
     def get_symbols(self):
-        return self.content.get_symbols()   
+        return self._children[0].get_symbols()   
 
     def evaluate(self, value_table: dict):
-        return self.content.evaluate(value_table)
+        return self._children[0].evaluate(value_table)
 
 class ExpressionNodeBinOp(ExpressionNode):
                                              # Expression +-*/^ Literals/Constant
                                              # Expression +-*/^ Expressions
     def __init__(self, op, left, right):
-        self.left = left
         self.op = op
-        self.right = right
+        super().__init__(children=[left, right])
 
     def __str__(self):
-        return str(self.left) + str(self.op) + str(self.right)
+        return str(self._children[0]) + str(self.op) + str(self._children[1])
 
     def get_symbols(self):
-        l_symbols = self.left.get_symbols()
-        r_symbols = self.right.get_symbols()
+        l_symbols = self._children[0].get_symbols()
+        r_symbols = self._children[1].get_symbols()
         res = l_symbols.copy()
         res.update(r_symbols)
         return res
     
     def evaluate(self, value_table: dict):
         if self.op == "+":
-            return self.left.evaluate(value_table) + self.right.evaluate(value_table)
+            return self._children[0].evaluate(value_table) + self._children[1].evaluate(value_table)
         elif self.op == "-":
-            return self.left.evaluate(value_table) - self.right.evaluate(value_table)
+            return self._children[0].evaluate(value_table) - self._children[1].evaluate(value_table)
         elif self.op == "*":
-            return self.left.evaluate(value_table) * self.right.evaluate(value_table)
+            return self._children[0].evaluate(value_table) * self._children[1].evaluate(value_table)
         elif self.op == "/":
-            return self.left.evaluate(value_table) / self.right.evaluate(value_table)
+            return self._children[0].evaluate(value_table) / self._children[1].evaluate(value_table)
         elif self.op == "^":
-            return self.left.evaluate(value_table) ** self.right.evaluate(value_table)
+            return self._children[0].evaluate(value_table) ** self._children[1].evaluate(value_table)
         else:
             raise Exception(f"Unsupported operator: {self.op}")
 
 class TFNode(AST_Node):
     def __init__(self, val):
         self.val = val
+        super().__init__(children=None)
     def __str__(self):
         return self.val
     def get_symbols(self):
@@ -187,6 +196,8 @@ class TFNode(AST_Node):
 class Symbol(AST_Node): # Literals
     def __init__(self, name):
         self.name = name
+        super().__init__(children=None)
+
     def __str__(self):
         return self.name
     def get_symbols(self):
@@ -200,6 +211,8 @@ class Symbol(AST_Node): # Literals
 class Constant(AST_Node): # Constant
     def __init__(self, val):
         self.val = val
+        super().__init__(children=None)
+
     def __str__(self):
         return str(self.val)
     def get_symbols(self):
