@@ -1,4 +1,4 @@
-﻿contractda.vars.BoolVar
+contractda.vars.BoolVar
 =======================
 
 .. currentmodule:: contractda.vars
@@ -15,6 +15,7 @@
 .. autosummary::
 
    ~contractda.vars.BoolVar.id
+   ~contractda.vars.BoolVar.type_str
    ~contractda.vars.BoolVar.value_range
 
 

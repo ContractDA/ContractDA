@@ -7,9 +7,9 @@ import copy
 from contractda.vars._var import Var
 from contractda.sets._clause import Clause
 import contractda.sets._fol_lan as fol_lan
-from contractda.sets.parsers import fol_parser
+from contractda.sets._parsers import fol_parser
 
-from contractda.solvers.z3_interface import Z3Interface
+from contractda.solvers._z3_interface import Z3Interface
 
 
 

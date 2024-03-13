@@ -1,5 +1,5 @@
 
-from contractda.sets.parsers._fol_parser import FOL_Lexer, fol_parser
+from contractda.sets._parsers._fol_parser import FOL_Lexer, fol_parser
 import contractda.sets._fol_lan as _fol_lan
 
 import copy

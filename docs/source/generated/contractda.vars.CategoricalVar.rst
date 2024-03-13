@@ -1,4 +1,4 @@
-﻿contractda.vars.CategoricalVar
+contractda.vars.CategoricalVar
 ==============================
 
 .. currentmodule:: contractda.vars
@@ -15,6 +15,7 @@
 .. autosummary::
 
    ~contractda.vars.CategoricalVar.id
+   ~contractda.vars.CategoricalVar.type_str
    ~contractda.vars.CategoricalVar.value_range
 
 

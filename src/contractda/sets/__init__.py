@@ -9,6 +9,7 @@ The :mod:`contract.sets` module defines a base class for set object as described
 
     ~contractda.sets.ExplicitSet
     ~contractda.sets.ClauseSet
+    ~contractda.sets.FOLClauseSet
     ~contractda.sets.SetBase
 """
 

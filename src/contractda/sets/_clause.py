@@ -1,9 +1,5 @@
 from abc import ABC, abstractmethod
 from contractda.vars._var import Var
-import contractda.sets._fol_lan as fol_lan
-from contractda.sets.parsers import fol_parser
-
-import copy
 
 ClauseSetVarType = list[Var]
 ClauseSetElementType = tuple

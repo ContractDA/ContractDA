@@ -30,8 +30,14 @@ contractda.sets.ExplicitSet
 
    ~contractda.sets.ExplicitSet.complement
    ~contractda.sets.ExplicitSet.difference
-   ~contractda.sets.ExplicitSet.enumerate
+   ~contractda.sets.ExplicitSet.get_enumeration
    ~contractda.sets.ExplicitSet.intersect
+   ~contractda.sets.ExplicitSet.is_contain
+   ~contractda.sets.ExplicitSet.is_disjoint
+   ~contractda.sets.ExplicitSet.is_equivalence
+   ~contractda.sets.ExplicitSet.is_proper_subset
+   ~contractda.sets.ExplicitSet.is_satifiable
+   ~contractda.sets.ExplicitSet.is_subset
    ~contractda.sets.ExplicitSet.len
    ~contractda.sets.ExplicitSet.project
    ~contractda.sets.ExplicitSet.reorder_vars

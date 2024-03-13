@@ -2,9 +2,9 @@ from typing import Callable
 
 import z3
 
-from contractda.solvers.theorem_prover_interface import TheoremSolverInterface
+from contractda.solvers._solver_interface import SolverInterface
 
-class Z3Interface(TheoremSolverInterface):
+class Z3Interface(SolverInterface):
     def __init__(self):
         super().__init__()
         self._solver = z3.Solver()

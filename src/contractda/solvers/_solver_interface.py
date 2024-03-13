@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod, abstractstaticmethod
 from typing import Callable
 
 
-class TheoremSolverInterface(ABC):
+class SolverInterface(ABC):
     """Temporary not used, but should be able to insert into AST to create clause"""
 
     def __init__(self):

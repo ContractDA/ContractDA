@@ -2,15 +2,11 @@
 """
 from __future__ import annotations
 from typing import Iterable, Callable, Any
-import random
-import copy
-import itertools
 
 from contractda.sets._clause_set import ClauseSet
 from contractda.vars._var import Var
-from contractda.sets._clause import Clause, ClauseSetVarType, ClauseSetElementType
+from contractda.sets._clause import Clause, ClauseSetVarType
 import contractda.sets._fol_lan as fol_lan
-from contractda.sets.parsers import fol_parser
 from contractda.sets._fol_clause import FOLClause
 from contractda.solvers import Z3Interface
 

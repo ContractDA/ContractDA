@@ -5,15 +5,14 @@
     :toctree: 
     :template: class.rst
 
-    ~contractda.solvers.SolverBase
-    ~contractda.solvers.ExplicitSetSolver
-    ~contractda.solvers.ClauseSetSolver
+    ~contractda.solvers.Z3Interface
+    ~contractda.solvers.SolverInterface
 """
 
-from contractda.solvers.z3_interface import Z3Interface
-from contractda.solvers.theorem_prover_interface import TheoremSolverInterface
+from contractda.solvers._z3_interface import Z3Interface
+from contractda.solvers._solver_interface import SolverInterface
 
 __all__ = [
     "Z3Interface",
-    "TheoremSolverInterface",
+    "SolverInterface",
 ]

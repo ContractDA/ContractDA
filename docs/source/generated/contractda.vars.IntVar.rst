@@ -1,4 +1,4 @@
-﻿contractda.vars.IntVar
+contractda.vars.IntVar
 ======================
 
 .. currentmodule:: contractda.vars
@@ -15,6 +15,7 @@
 .. autosummary::
 
    ~contractda.vars.IntVar.id
+   ~contractda.vars.IntVar.type_str
 
 
 
