@@ -2,10 +2,11 @@
 """
 from __future__ import annotations
 from typing import Iterable, Callable, Any
+import copy
 
-from contractda.sets._clause_set import ClauseSet
+from contractda.sets._clause_set import ClauseSet, ClauseSetVarType
 from contractda.vars._var import Var
-from contractda.sets._clause import Clause, ClauseSetVarType
+from contractda.sets._clause import Clause
 import contractda.sets._fol_lan as fol_lan
 from contractda.sets._fol_clause import FOLClause
 from contractda.solvers import Z3Interface
@@ -72,7 +73,19 @@ class FOLClauseSet(ClauseSet):
         :return: A new set which represents the union of the two set
         :rtype: FOLClauseSet
         """
-        pass
+        new_expr_a = copy.deepcopy(self.expr)
+        new_expr_b = copy.deepcopy(other.expr)
+        try:
+            new_vars = self._combine_vars(self._vars, other._vars)
+        except:
+            LOG.error("The two set is defined under different variables with the same identifier!")
+        # TODO: catch the exception 
+        new_expr_a.clause_or(new_expr_b)
+        new_instance = __class__.__new__(__class__)
+        new_instance._expr = new_expr_a
+        new_instance._vars = new_vars
+        new_instance._solver_type = self._solver_type
+        return new_instance
 
     def intersect(self, other: FOLClauseSet) -> FOLClauseSet:
         """ Intersect opration on set
@@ -81,7 +94,19 @@ class FOLClauseSet(ClauseSet):
         :return: A new set which represents the intersect of the two set
         :rtype: FOLClauseSet
         """
-        pass
+        new_expr_a = copy.deepcopy(self.expr)
+        new_expr_b = copy.deepcopy(other.expr)
+        try:
+            new_vars = self._combine_vars(self._vars, other._vars)
+        except:
+            LOG.error("The two set is defined under different variables with the same identifier!")
+        # TODO: catch the exception 
+        new_expr_a.clause_and(new_expr_b)
+        new_instance = __class__.__new__(__class__)
+        new_instance._expr = new_expr_a
+        new_instance._vars = new_vars
+        new_instance._solver_type = self._solver_type
+        return new_instance
 
     def difference(self, other: FOLClauseSet) -> FOLClauseSet:
         """ Difference opration on set 
@@ -90,7 +115,20 @@ class FOLClauseSet(ClauseSet):
         :return: A new set which represents the difference of the two set
         :rtype: FOLClauseSet
         """
-        pass
+        new_expr_a = copy.deepcopy(self.expr)
+        new_expr_b = copy.deepcopy(other.expr)
+        try:
+            new_vars = self._combine_vars(self._vars, other._vars)
+        except:
+            LOG.error("The two set is defined under different variables with the same identifier!")
+        # TODO: catch the exception 
+        new_expr_b.clause_not()
+        new_expr_a.clause_and(new_expr_b)
+        new_instance = __class__.__new__(__class__)
+        new_instance._expr = new_expr_a
+        new_instance._vars = new_vars
+        new_instance._solver_type = self._solver_type
+        return new_instance
 
     def complement(self) -> FOLClauseSet:
         """ Complement opration on set 
@@ -98,7 +136,13 @@ class FOLClauseSet(ClauseSet):
         :return: A new set which represents the Complement of the set
         :rtype: FOLClauseSet
         """
-        pass
+        new_expr = copy.deepcopy(self.expr)
+        new_expr.clause_not()
+        new_instance = __class__.__new__(__class__)
+        new_instance._expr = new_expr
+        new_instance._vars = self._vars
+        new_instance._solver_type = self._solver_type
+        return new_instance
 
     def project(self, vars, is_refine = True):
         """ Projection opration on set 
@@ -170,6 +214,32 @@ class FOLClauseSet(ClauseSet):
         :rtype: bool
         """
         pass
+    
+    ######################
+    #   Internal Functions
+    ######################
+    @staticmethod
+    def _context_sync(self, a: FOLClauseSet, b: FOLClauseSet):
+        """ Syncrhonize both clause set such that they have the same variables internally
+        """
+        var_a = a._vars
+        var_b = b._vars
+
+        vars_set_a = set(a._vars)
+        vars_set_b = set(b._vars)
+        all_vars = vars_set_a.union(vars_set_b)      
+
+        # go through the symbols in clause to make sure get_symbols() will return consistent node 
+        node = b._expr.root
+        
+    @staticmethod
+    def _update_nodes(node: fol_lan.AST_Node, sync_table: dict):
+        for child in node.children:
+            if isinstance(child, fol_lan.Symbol):
+                child = sync_table[child.name]
+            else:
+                __class__._update_nodes(node=child)
+
 
     def _create_context(self, vars):
         context = {}

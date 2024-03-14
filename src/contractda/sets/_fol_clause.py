@@ -27,16 +27,7 @@ class FOLClause(Clause):
     def parse_clause(cls, description: str, ctx = None):
         root: fol_lan.AST_Node = fol_parser.parse(description, ctx)
         symbols: dict = root.get_symbols()
-        return cls(root = root, symbols=symbols)
-
-    def __copy__(self) :
-        """ Shallow copy"""
-        cls = self.__class__
-        result = cls.__new__(cls)
-        result._root = copy.deepcopy(self._root)
-        result._symbols = result._root.get_symbols()
-        return result
-        
+        return cls(root = root, symbols=symbols)        
 
     def get_symbols(self) -> dict:
         return self._symbols

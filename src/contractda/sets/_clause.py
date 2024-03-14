@@ -1,9 +1,6 @@
 from abc import ABC, abstractmethod
 from contractda.vars._var import Var
 
-ClauseSetVarType = list[Var]
-ClauseSetElementType = tuple
-
 
 
 class Clause(ABC):
@@ -15,10 +12,6 @@ class Clause(ABC):
     """
     def __init__(self, description: str, ctx: dict):
         self._root = None
-        pass
-    
-    @abstractmethod
-    def __copy__(self) :
         pass
     
     @abstractmethod

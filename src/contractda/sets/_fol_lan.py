@@ -2,7 +2,9 @@
 
 This source file defines the abstract syntax tree (AST) of First-order logic.
 """
+from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import Callable, Any
 import copy
 
 class AST_Node(ABC):
@@ -28,11 +30,26 @@ class AST_Node(ABC):
     @property
     def children(self):
         return self._children
+    
+    def recursive_process_preorder(self, process_func: Callable[..., Any], *args, **kwargs):
+        process_func(self, *args, **kwargs)
+        for child in self.children:
+            child.recursive_process_preorder(process_func, *args, **kwargs)
+
+    def recursive_process_postorder(self, process_func: Callable[..., Any], *args, **kwargs):
+        for child in self.children:
+            child.recursive_process_postorder(process_func, *args, **kwargs)
+        process_func(self, *args, **kwargs)
+
 
 
 def name_remap(name_map, node):
-    for name, s in node.get_symbols().items():
-        s.name = name_map[name]
+    def rename_recur_func(node: AST_Node, map: dict[str, str]):
+        if isinstance(node, Symbol):
+            name = node.name
+            node.name = name_map[name]
+
+    node.recursive_process_preorder(rename_recur_func, name_map)
 
 class PropositionNode(AST_Node):
     # Proposition: Proposition ==&&||-> Proposition
@@ -50,7 +67,7 @@ class PropositionNodeBinOp(PropositionNode):
         super().__init__(children=[exp1, exp2])
 
     def __str__(self):
-        return str(self._children[0]) + str(self.op) + str(self._children[1])
+        return f"({self._children[0]}{self.op}{self._children[1]})"
 
     def get_symbols(self):
         l_symbols = self._children[0].get_symbols()
@@ -91,7 +108,7 @@ class PropositionNodeUniOp(PropositionNode):#(!Proposition)
         super().__init__(children=[exp1])
 
     def __str__(self):
-        return str(self.op) + str(self._children[0])
+        return f"({self.op}{self._children[0]})"
 
     def get_symbols(self):
         return self._children[0].get_symbols()
@@ -107,7 +124,7 @@ class PropositionNodeParen(PropositionNode):#(!Proposition)
         super().__init__(children=[content])
 
     def __str__(self):
-        return "(" + str(self._children[0]) + ")"
+        return str(self._children[0])
 
     def get_symbols(self):
         return self._children[0].get_symbols()  
@@ -137,7 +154,7 @@ class ExpressionNodeParen(ExpressionNode): # (Expression)
         super().__init__(children=[content])
 
     def __str__(self):
-        return "(" + str(self._children[0]) + ")"
+        return str(self._children[0])
 
     def get_symbols(self):
         return self._children[0].get_symbols()   
@@ -153,7 +170,7 @@ class ExpressionNodeBinOp(ExpressionNode):
         super().__init__(children=[left, right])
 
     def __str__(self):
-        return str(self._children[0]) + str(self.op) + str(self._children[1])
+        return f"{self._children[0]}{str(self.op)}{self._children[1]}"
 
     def get_symbols(self):
         l_symbols = self._children[0].get_symbols()
@@ -183,7 +200,7 @@ class TFNode(AST_Node):
     def __str__(self):
         return self.val
     def get_symbols(self):
-        return {} 
+        return set() 
     
     def evaluate(self, value_table: dict):
         if self.val == "true":
@@ -201,7 +218,7 @@ class Symbol(AST_Node): # Literals
     def __str__(self):
         return self.name
     def get_symbols(self):
-        return {self.name: self}
+        return set([self.name])
     def evaluate(self, value_table: dict):
         value = value_table.get(self.name)
         if value is None:
@@ -216,6 +233,6 @@ class Constant(AST_Node): # Constant
     def __str__(self):
         return str(self.val)
     def get_symbols(self):
-        return {}
+        return set()
     def evaluate(self, value_table: dict):
         return self.val

@@ -167,11 +167,12 @@ class FOL_Parser(object):
 
     def p_symbol(self, p):
         '''symbol : LITERAL'''
-        if p[1] not in self._ctx:
-            p[0] = _fol_lan.Symbol(p[1])
-            self._ctx[p[1]] = p[0]
-        else:
-            p[0] = self._ctx[p[1]]
+        p[0] = _fol_lan.Symbol(p[1])
+        # if p[1] not in self._ctx:
+            
+        #     self._ctx[p[1]] = p[0]
+        # else:
+        #     p[0] = self._ctx[p[1]]
         
 
     def p_constant(self, p):

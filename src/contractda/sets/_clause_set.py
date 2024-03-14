@@ -1,14 +1,17 @@
 """ Class for ClauseSet
 """
 from __future__ import annotations
-from typing import Iterable, Callable
+from typing import Iterable, Callable, Any
 
 from contractda.sets._base import SetBase
 from contractda.vars._var import Var
-from contractda.sets._clause import Clause, ClauseSetVarType, ClauseSetElementType
+from contractda.sets._clause import Clause
 import random
 import copy
 import itertools
+
+ClauseSetVarType = list[Var]
+ClauseSetElementType = tuple
 
 class ClauseSet(SetBase):
     """ClauseSet
@@ -20,7 +23,12 @@ class ClauseSet(SetBase):
     When two clause are combined, rename by changing the astnode in the tree or reply on context when created
     """
     def __init__(self, vars: ClauseSetVarType, expr: str, ctx = None):
+        self._expr = None
         pass
+
+    @property
+    def expr(self):
+        return self._expr
 
     ######################
     #   Extraction
@@ -128,14 +136,6 @@ class ClauseSet(SetBase):
         :return: True if this set is satisfiable. False if not.
         :rtype: bool
         """
-        solver_instance = self._solver_type()
-        encoded_clause = self.encode(solver=solver_instance, vars=self._vars, clause=self._expr)
-        solver_instance.add_conjunction_clause(encoded_clause)
-        ret = solver_instance.check()
-        LOG.debug(f"solving with internal clauses: {solver_instance.assertions()}")
-        LOG.debug(f"Sat? {ret}")
-        LOG.debug(f"model: {solver_instance._model}")
-        return ret   
         pass
 
     def is_equivalence(self, other: ClauseSet) -> bool:
@@ -156,15 +156,32 @@ class ClauseSet(SetBase):
         """
         pass
 
+    @staticmethod
+    def _verify_unique_vars(vars: list[Var]) -> bool:
+        ids = [var.get_id() for var in vars]
+        return len(set(ids)) == len(ids)
+    
+    @staticmethod
+    def _combine_vars(a: list[Var], b: list[Var]) -> bool:
+        """ Combine the Vars, return a list of var which has no duplicated
 
-    def _check_context(self, vars: ClauseSetVarType, expr: Clause):
+        Raise an error when the there are two different vars with the same id
+        """
+        all_vars = set(a).union(set(b))
+        if not __class__._verify_unique_vars(all_vars):
+            raise Exception(f"Not unique veriable found in {all_vars}")
+        return all_vars
+
+
+    @staticmethod
+    def _check_context(vars: ClauseSetVarType, expr: Clause):
         """Check if the context is correctly specified in vars
 
         True if everything is OK
         False if something goes wrong
         Also return the list of failing vars
         """
-        symbols = set(expr.get_symbols().keys())
+        symbols = set(expr.get_symbols())
         var_ids = set([var.id for var in vars])
         failed_list = list(symbols - var_ids)
         result = not bool(failed_list)
