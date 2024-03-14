@@ -10,6 +10,12 @@
    
 
 
+.. rubric:: Attributes
+
+.. autosummary::
+
+   ~contractda.sets.ClauseSet.expr
+
 
 
 
