@@ -91,6 +91,25 @@ class Z3Interface(SolverInterface):
     def clause_implies(arg1, arg2):
         return z3.Implies(arg1, arg2)
 
+    @staticmethod
+    def clause_exists(vs, arg):
+        return z3.Exists(vs, arg)
+
+    @staticmethod
+    def clause_forall(vs, arg):
+        return z3.ForAll(vs, arg)
+
+    @staticmethod
+    def quantify_elimination(arg):
+        ret = z3.Tactic("qe")(arg)
+        return ret.as_expr()
+    
+    @staticmethod
+    def simplify_clause(arg):
+        ret1 = z3.Tactic("ctx-solver-simplify")(arg)
+        return ret1.as_expr()
+
+
     def add_conjunction_clause(self, *args):
         self._solver.add(*args)
 
@@ -103,9 +122,14 @@ class Z3Interface(SolverInterface):
         if ret == z3.sat:
             self._model = self._solver.model()
             return True
-        else:
+        elif ret == z3.unsat:
             self._model = None
             return False
+        elif ret == z3.unknown:
+            raise Exception("Unknonw by Z3")
+        else:
+            raise Exception("Not knowing what the checking result is")
+
 
     def set_timeout(self, timeout_millisecond=100000):
         self._solver.set("timeout", timeout_millisecond)

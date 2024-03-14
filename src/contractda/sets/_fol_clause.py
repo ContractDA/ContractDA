@@ -34,15 +34,29 @@ class FOLClause(Clause):
     
     def clause_not(self):
         self._root = fol_lan.PropositionNodeUniOp("!", self._root)
+        return self
 
     def clause_and(self, other):
         self._root = fol_lan.PropositionNodeBinOp("&&", self._root, other._root)
+        return self
 
     def clause_or(self, other):
         self._root = fol_lan.PropositionNodeBinOp("||", self._root, other._root)
+        return self
+
+    def clause_implies(self, other):
+        self._root = fol_lan.PropositionNodeBinOp("->", self._root, other._root)
+        return self
+
+    def clause_eq(self, other):
+        self._root = fol_lan.PropositionNodeBinOp("==", self._root, other._root)
+        return self
 
     def clasue_project(self, vars, is_refine = True):
         raise NotImplementedError()
+    
+    def evaluate(self, value_table):
+        return self._root.evaluate(value_table=value_table)
     
     @staticmethod
     def _symbols_sync(symb1, symb2) -> dict:

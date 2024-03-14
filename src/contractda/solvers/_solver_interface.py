@@ -68,6 +68,18 @@ class SolverInterface(ABC):
     def clause_implies(arg1, arg2):
         pass
 
+    @abstractstaticmethod
+    def clause_exists(vs, arg):
+        pass
+
+    @abstractstaticmethod
+    def clause_forall(vs, arg):
+        pass
+
+    @abstractstaticmethod
+    def quantify_elimination(arg):
+        pass
+
     @abstractmethod
     def add_conjunction_clause(self, *args):
         pass

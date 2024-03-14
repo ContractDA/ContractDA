@@ -181,7 +181,7 @@ class FOL_Parser(object):
 
     # Error rule for syntax errors
     def p_error(self, p):
-     print("Syntax error in input!")
+     print(f"Syntax error in input! {p}")
      raise Exception("Syntax Error")
  
  # Build the parser

@@ -144,24 +144,64 @@ class FOLClauseSet(ClauseSet):
         new_instance._solver_type = self._solver_type
         return new_instance
 
-    def project(self, vars, is_refine = True):
+    def project(self, vars: Iterable[Var], is_refine: bool = True, simplify = True) -> FOLClauseSet:
         """ Projection opration on set 
 
         :param vars: the list of variables to be the projection result.
         :param bool is_refine: whether the projection is to result in refinement or abstraction
+        :param bool simplify: whether the clause should be simplilfy
         :return: A new set which represents the Projection of the set on the input variables
         :rtype: FOLClauseSet
         """
-        pass
+        # check the variables are OK.
+        var_set = set(self._vars)
+        target_var_set = set(vars)
+        self._verify_unique_vars(var_set.union(target_var_set))
+        solver_instance = self._solver_type()
+        vars_map, encoded_clause = self.encode(solver=solver_instance, vars=self._vars, clause=self._expr)
 
-    def is_contain(self, element: Any) -> bool:
+        # find the eliminated vars
+        eliminated_vars = var_set.difference(target_var_set)
+        solver_vars = [vars_map[var.id] for var in eliminated_vars]
+
+        # quantifier elimination
+        ret = ""
+        if is_refine:
+            q_clause = solver_instance.clause_forall(solver_vars, encoded_clause)
+        else:
+            q_clause = solver_instance.clause_exists(solver_vars, encoded_clause)
+        LOG.debug(f"Attempting Qunatifier Elimination: {q_clause}")
+        try:
+            ret = solver_instance.quantify_elimination(q_clause)
+        except:
+            LOG.ERROR("Quantifier Elimination Failed")
+        LOG.debug(f"Quantifier Elimination Success: {ret}")
+        # TODO: the syntex seems to be different
+        if simplify:
+            LOG.debug(f"Attempting Clause Simplify: {q_clause}")
+            ret = solver_instance.simplify_clause(ret)
+            LOG.debug(f"Clause Simplify: {ret}")
+        return self.__class__(vars=vars, expr=str(ret))
+
+    def is_contain(self, element: dict) -> bool:
         """ Check if the set is contain the element
 
-        :param element: the element to be checked if it is contained in the set
+        :param element: A dictionary that maps variable to its values
         :return: True if the element is in the set. False if not.
         :rtype: bool
         """
-        pass
+        # if dictionary is using id
+        if element:
+            sample = list(element.keys())[0]
+            if isinstance(sample, str):
+                value_table = {var: val for var, val in element.items()}
+            elif isinstance(sample, Var):
+                value_table = {var.id: val for var, val in element.items()}
+            else:
+                raise Exception("Unsupported element type")
+            # empty table
+        # create value_table
+        return self._expr.evaluate(value_table=value_table)
 
     def is_subset(self, other: FOLClauseSet) -> bool:
         """ Check if the set is a subset of the other set
@@ -170,7 +210,17 @@ class FOLClauseSet(ClauseSet):
         :return: True if this set is a subset of the other set. False if not.
         :rtype: bool
         """
-        pass
+        try:
+            new_vars = self._combine_vars(self._vars, other._vars)
+        except:
+            LOG.error("The two set is defined under different variables with the same identifier!")
+        # if a and not b is unsatisfiable, then a is a subset ( there is no element in a but not in b i.e., all element is in b)
+        new_expr_a = copy.deepcopy(self.expr)
+        new_expr_b = copy.deepcopy(other.expr)
+
+        new_expr_a.clause_and(new_expr_b.clause_not())
+
+        return not self._clause_satisfiable(vars=self._vars, clause=new_expr_a)
 
     def is_proper_subset(self, other: FOLClauseSet) -> bool:
         """ Check if the set is a proper subset of the other set
@@ -179,7 +229,7 @@ class FOLClauseSet(ClauseSet):
         :return: True if this set is a proper subset of the other set. False if not.
         :rtype: bool
         """
-        pass
+        return self.is_subset(other=other) and not other.is_subset(other=self)
 
     def is_satifiable(self) -> bool:
         """ Check if the set is satisfiable, i.e., not empty
@@ -187,15 +237,7 @@ class FOLClauseSet(ClauseSet):
         :return: True if this set is satisfiable. False if not.
         :rtype: bool
         """
-        solver_instance = self._solver_type()
-        encoded_clause = self.encode(solver=solver_instance, vars=self._vars, clause=self._expr)
-        solver_instance.add_conjunction_clause(encoded_clause)
-        ret = solver_instance.check()
-        LOG.debug(f"solving with internal clauses: {solver_instance.assertions()}")
-        LOG.debug(f"Sat? {ret}")
-        LOG.debug(f"model: {solver_instance._model}")
-        return ret   
-        pass
+        return self._clause_satisfiable(vars=self._vars, clause=self._expr)
 
     def is_equivalence(self, other: FOLClauseSet) -> bool:
         """ Check if the set is equivalent to the other set
@@ -204,7 +246,27 @@ class FOLClauseSet(ClauseSet):
         :return: True if this set is equivalent to the other set. False if not.
         :rtype: bool
         """
-        pass
+ 
+        try:
+            new_vars = self._combine_vars(self._vars, other._vars)
+        except:
+            LOG.error("The two set is defined under different variables with the same identifier!")
+        
+        # find counter example of a and not b or b and not a
+        # we must show that it is unsat
+        # TODO: this can be more efficient as the generated expression do not used outside: it can be not a tree (share the subtrees)
+        # a -> b
+        new_expr1 = copy.deepcopy(self.expr)
+        new_expr_b1 = copy.deepcopy(other.expr)
+        new_expr1.clause_and(new_expr_b1.clause_not())
+        # b -> a
+        new_expr_a2 = copy.deepcopy(self.expr)
+        new_expr2 = copy.deepcopy(other.expr)
+        new_expr2.clause_and(new_expr_a2.clause_not())
+        # a -> b and b -> a
+        new_expr1.clause_or(new_expr2)
+        
+        return not self._clause_satisfiable(vars=self._vars, clause=new_expr1)
 
     def is_disjoint(self, other: FOLClauseSet) -> bool:
         """ Check if the set is disjoint to the other set
@@ -213,7 +275,14 @@ class FOLClauseSet(ClauseSet):
         :return: True if this set is disjoint to the other set. False if not.
         :rtype: bool
         """
-        pass
+
+        # find counter example that a and b (there should not be any element in both set)
+        new_expr_a = copy.deepcopy(self.expr)
+        new_expr_b = copy.deepcopy(other.expr)
+
+        new_expr_a.clause_and(new_expr_b)
+
+        return not self._clause_satisfiable(vars=self._vars, clause=new_expr_a)
     
     ######################
     #   Internal Functions
@@ -241,51 +310,56 @@ class FOLClauseSet(ClauseSet):
                 __class__._update_nodes(node=child)
 
 
-    def _create_context(self, vars):
-        context = {}
-        for v in vars:
-            pass
+    def _clause_satisfiable(self, vars: list[Var], clause: FOLClause):
+        solver_instance = self._solver_type()
+        _, encoded_clause = self.encode(solver=solver_instance, vars=vars, clause=clause)
+        solver_instance.add_conjunction_clause(encoded_clause)
+        ret = solver_instance.check()
+        LOG.debug(f"solving with internal clauses: {solver_instance.assertions()}")
+        LOG.debug(f"Sat? {ret}")
+        LOG.debug(f"model: {solver_instance._model}")
+        return ret   
 
     def encode(self, solver, vars: list[Var], clause: FOLClause):
-        """Encode a first order logic clause into Z3 clauses"""
-        # generate symbols in z3
+        """Encode a first order logic clause into solver clauses"""
+        # generate symbols in solver
         vars_map = {var.id: solver.get_fresh_variable(var.id, sort=var.type_str) for var in vars}
         # 
         root = clause.root
-        z3clause = self._encode(solver=solver, vars_map=vars_map, node=root)
-        return z3clause
+        solver_clause = self._encode(solver=solver, vars_map=vars_map, node=root)
+        return vars_map, solver_clause
 
     def _encode(self, solver, vars_map, node: fol_lan.AST_Node):
 
         # recursively encode the ast
         if isinstance(node, fol_lan.PropositionNodeBinOp):
-            z3_clause1 = self._encode(solver=solver, vars_map=vars_map, node=node.children[0])
-            z3_clause2 = self._encode(solver=solver, vars_map=vars_map, node=node.children[1])
+            solver_clause1 = self._encode(solver=solver, vars_map=vars_map, node=node.children[0])
+            solver_clause2 = self._encode(solver=solver, vars_map=vars_map, node=node.children[1])
             if node.op == "==":
-                return solver.clause_equal(z3_clause1, z3_clause2)
+                return solver.clause_equal(solver_clause1, solver_clause2)
             elif node.op == "<=":
-                return solver.clause_le(z3_clause1, z3_clause2)
+                return solver.clause_le(solver_clause1, solver_clause2)
             elif node.op == "<":
-                return solver.clause_lt(z3_clause1, z3_clause2)
+                return solver.clause_lt(solver_clause1, solver_clause2)
             elif node.op == ">":
-                return solver.clause_gt(z3_clause1, z3_clause2)
+                return solver.clause_gt(solver_clause1, solver_clause2)
             elif node.op == ">=":
-                return solver.clause_ge(z3_clause1, z3_clause2)
+                return solver.clause_ge(solver_clause1, solver_clause2)
             elif node.op == "!=":
-                return solver.clause_neq(z3_clause1, z3_clause2)
+                return solver.clause_neq(solver_clause1, solver_clause2)
             elif node.op == "&&":
-                return solver.clause_and(z3_clause1, z3_clause2)
+                return solver.clause_and(solver_clause1, solver_clause2)
             elif node.op == "||":
-                return solver.clause_or(z3_clause1, z3_clause2)
+                return solver.clause_or(solver_clause1, solver_clause2)
             elif node.op == "->":
-                return solver.clause_implies(z3_clause1, z3_clause2)
+                return solver.clause_implies(solver_clause1, solver_clause2)
             else:
                 raise Exception(f"Unsupported operator: {node.op}")
 
         elif isinstance(node, fol_lan.PropositionNodeUniOp):
-            z3_clause = self._encode(solver=solver, vars_map=vars_map, node=node.children[0])
+            solver_clause = self._encode(solver=solver, vars_map=vars_map, node=node.children[0])
             if node.op == "!":
-                return solver.clause_not(z3_clause)
+                return solver.clause_not(solver_clause)
             else:
                 raise Exception(f"Unsupported operator: {node.op}")
 
@@ -294,18 +368,18 @@ class FOLClauseSet(ClauseSet):
         elif isinstance(node, fol_lan.ExpressionNodeParen):
             return self._encode(solver=solver, vars_map=vars_map, node=node.children[0])
         elif isinstance(node, fol_lan.ExpressionNodeBinOp):
-            z3_clause1 = self._encode(solver=solver, vars_map=vars_map, node=node.children[0])
-            z3_clause2 = self._encode(solver=solver, vars_map=vars_map, node=node.children[1])
+            solver_clause1 = self._encode(solver=solver, vars_map=vars_map, node=node.children[0])
+            solver_clause2 = self._encode(solver=solver, vars_map=vars_map, node=node.children[1])
             if node.op == "+":
-                return z3_clause1 + z3_clause2
+                return solver_clause1 + solver_clause2
             elif node.op == "-":
-                return z3_clause1 - z3_clause2
+                return solver_clause1 - solver_clause2
             elif node.op == "*":
-                return z3_clause1 * z3_clause2
+                return solver_clause1 * solver_clause2
             elif node.op == "/":
-                return z3_clause1 / z3_clause2
+                return solver_clause1 / solver_clause2
             elif node.op == "^":
-                return z3_clause1 ** z3_clause2
+                return solver_clause1 ** solver_clause2
             else:
                 raise Exception(f"Unsupported operator: {node.op}")
             
@@ -324,9 +398,9 @@ class FOLClauseSet(ClauseSet):
             id = node.name
 
             # this should be handled by clause set, to be removed
-            z3var = vars_map.get(id, None)
-            if z3var is None:
+            solver_var = vars_map.get(id, None)
+            if solver_var is None:
                 raise Exception(f"Not specified varibles {id}") 
             
-            return z3var
+            return solver_var
 

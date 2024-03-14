@@ -28,6 +28,7 @@ class ClauseSet(SetBase):
 
     @property
     def expr(self):
+        """The clause body"""
         return self._expr
 
     ######################
@@ -162,7 +163,7 @@ class ClauseSet(SetBase):
         return len(set(ids)) == len(ids)
     
     @staticmethod
-    def _combine_vars(a: list[Var], b: list[Var]) -> bool:
+    def _combine_vars(a: list[Var], b: list[Var]) -> list[Var]:
         """ Combine the Vars, return a list of var which has no duplicated
 
         Raise an error when the there are two different vars with the same id
@@ -172,6 +173,12 @@ class ClauseSet(SetBase):
             raise Exception(f"Not unique veriable found in {all_vars}")
         return all_vars
 
+    @staticmethod
+    def _intersect_vars(a: list[Var], b: list[Var]) -> list[Var]:
+        all_vars = set(a).union(set(b))
+        if not __class__._verify_unique_vars(all_vars):
+            raise Exception(f"Not unique veriable found in {all_vars}")
+        return set(a).intersection(set(b))
 
     @staticmethod
     def _check_context(vars: ClauseSetVarType, expr: Clause):
