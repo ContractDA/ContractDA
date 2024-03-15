@@ -24,10 +24,13 @@ class FOLClauseSet(ClauseSet):
     When context is needed, go through the list of symbols and then store the Var in the astnode
     When two clause are combined, rename by changing the astnode in the tree or reply on context when created
     """
-    def __init__(self, vars: ClauseSetVarType, expr: str, ctx = None):
+    def __init__(self, vars: ClauseSetVarType, expr: str | FOLClause, ctx = None):
         """ clause_type: the """
         # create the context
-        self._expr: Clause = FOLClause(description = expr, ctx = ctx)
+        if isinstance(expr, str):
+            expr = FOLClause(description = expr, ctx = ctx)
+        
+        self._expr = expr
         # check if the variables are indeed mentioned in expr
         context_ok, failed_list = self._check_context(vars = vars, expr=self._expr)
         if not context_ok:
@@ -39,6 +42,8 @@ class FOLClauseSet(ClauseSet):
         self._solver_type = Z3Interface
         pass
 
+    def __str__(self):
+        return str(self.expr)
     ######################
     #   Extraction
     ######################

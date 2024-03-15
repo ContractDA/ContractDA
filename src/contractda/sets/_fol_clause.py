@@ -22,6 +22,9 @@ class FOLClause(Clause):
     def __init__(self, description: str, ctx: dict):
         self._root: fol_lan.AST_Node = fol_parser.parse(description, ctx)
         self._symbols: dict = self._root.get_symbols()
+    
+    def __str__(self):
+        return str(self._root)
 
     @classmethod
     def parse_clause(cls, description: str, ctx = None):
