@@ -1,4 +1,4 @@
-﻿contractda.sets.ClauseSet
+contractda.sets.ClauseSet
 =========================
 
 .. currentmodule:: contractda.sets

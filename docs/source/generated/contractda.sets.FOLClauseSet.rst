@@ -1,4 +1,4 @@
-﻿contractda.sets.FOLClauseSet
+contractda.sets.FOLClauseSet
 ============================
 
 .. currentmodule:: contractda.sets

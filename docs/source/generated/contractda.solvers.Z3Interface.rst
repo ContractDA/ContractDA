@@ -23,6 +23,8 @@ contractda.solvers.Z3Interface
    ~contractda.solvers.Z3Interface.check
    ~contractda.solvers.Z3Interface.clause_and
    ~contractda.solvers.Z3Interface.clause_equal
+   ~contractda.solvers.Z3Interface.clause_exists
+   ~contractda.solvers.Z3Interface.clause_forall
    ~contractda.solvers.Z3Interface.clause_ge
    ~contractda.solvers.Z3Interface.clause_gt
    ~contractda.solvers.Z3Interface.clause_implication
@@ -36,5 +38,7 @@ contractda.solvers.Z3Interface
    ~contractda.solvers.Z3Interface.get_constant_value
    ~contractda.solvers.Z3Interface.get_fresh_variable
    ~contractda.solvers.Z3Interface.get_model_for_var
+   ~contractda.solvers.Z3Interface.quantify_elimination
    ~contractda.solvers.Z3Interface.set_timeout
+   ~contractda.solvers.Z3Interface.simplify_clause
 

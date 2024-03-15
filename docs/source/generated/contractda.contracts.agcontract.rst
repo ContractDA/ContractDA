@@ -1,20 +1,21 @@
-contractda.contracts.agcontract
+contractda.contracts.AGContract
 ===============================
 
-.. automodule:: contractda.contracts.agcontract
+.. currentmodule:: contractda.contracts
 
-   
-   
-   
+.. add toctree option to make autodoc generate the pages
 
-   
-   
+.. autoclass:: AGContract
+   :members:
    
 
 
-   
-   
-   
 
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
 
 
