@@ -5,8 +5,8 @@ import pytest
 @pytest.fixture
 def all_vars():
     return {
-    "v": CategoricalVar("v", range(1,10)),
-    "w": CategoricalVar("w", range(1,10)),
+    "v": CategoricalVar("v", range(1,25)),
+    "w": CategoricalVar("w", range(1,12)),
     "x": CategoricalVar("x", range(1,10)),
     "y": CategoricalVar("y", range(1,10)),
     "z": CategoricalVar("z", range(1,10))
@@ -88,8 +88,13 @@ def set_b(vars_b, expr_b):
     return ExplicitSet(vars_b, expr_b)
 
 def test_explicit_set_intersect(set_a, set_b, all_vars):
+    # [(1, 2, 3), (2, 3, 4), (1, 3, 5), (3, 3, 2), (1, 10, 23)] x, w, v
+    # [(1, 2, 1), (2, 3, 4), (1, 3, 2)] y z x
     set_c = ExplicitSet.intersect(set_a, set_b)
     assert(set(set_c._vars) == set(all_vars.values()))
+    # check gold
+    gold = [(1, 2, 3, 1, 2), (2, 3, 4, 1, 3), (1, 3, 5, 1, 2), (1, 10, 23, 1, 2)]
+    assert(set_c.ordered_expr == set(gold))
 
 
 def test_explicit_set_project1(set_a, set_b, all_vars):

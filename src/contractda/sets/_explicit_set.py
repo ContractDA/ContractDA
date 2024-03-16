@@ -37,6 +37,11 @@ class ExplicitSet(SetBase):
         if not self._verify_finite_domain(vars):
             violated_var = [var for var in vars if not var.is_finite()]
             raise Exception(f"The created domain is not finite: Variables: {violated_var}")
+        
+        # check if the tuple is ok
+        for elem in expr:
+            if len(elem) != len(vars):
+                raise Exception(f"The number of variables does not match the tuple set")
         # sort the variables
         var_arg_sorted = argsort(vars)
         # _var_order: stores the information about how to restore the original variable order
@@ -61,7 +66,9 @@ class ExplicitSet(SetBase):
         """
         The ids for the variables, which is not sorted and may reflect the original input from designer
         """
-        return [self._vars[id] for id in self._var_order]
+        sorted_pair = sorted(zip(self._var_order, self._vars), key=lambda x: x[0])
+        return [val for _, val in sorted_pair]
+        #return [self._vars[id] for id in self._var_order]
 
     @property
     def internal_expr(self) -> ExplicitSetExpressionType:
@@ -116,7 +123,7 @@ class ExplicitSet(SetBase):
         :return: An iterable object that can produce all elements
         :rtype: Iterable
         """
-        return self._solver.get_enumeration(self._expr_internal)
+        return list(self._expr_internal)
     
     def sample(self):
         """ Sample an element in the set
@@ -160,7 +167,7 @@ class ExplicitSet(SetBase):
         ret = ExplicitSet(vars = set1._vars, expr=new_expr)
 
         new_var = self.ordered_vars
-        new_var += [var for var in set2.ordered_vars if var not in new_var]
+        new_var += [var for var in other.ordered_vars if var not in new_var]
         ret._reorder_vars(new_var)
         return ret
 
@@ -172,58 +179,29 @@ class ExplicitSet(SetBase):
         :return: A new set which represents the intersect of the two set
         :rtype: ExplicitSet
         """
-        # check the variables
+        # check vars
         set1 = self
         set2 = other
-        vars1 = set1._vars
-        vars2 = set2._vars
 
-        var_set1 = set(vars1)
-        var_set2 = set(vars2)
-        # special case 1, same variables set
-        if var_set1 == var_set2:
-            # no need to reorder as the they are sorted
-            expr = set1._expr_internal.intersection(set2._expr_internal)
-            return ExplicitSet(vars=vars1.copy(), expr=expr)
-            pass
+        var1_set = set(set1._vars)
+        var2_set = set(set2._vars)
+        all_vars = var1_set.union(var2_set)
 
-        # special case 2, one is contained by the other
-        # TODO: accerate by exploiting the special case
-        if var_set1.issubset(var_set1):
-            pass
-        if var_set2.issubset(var_set1):
-            pass
+        # projection to ensure the variables are the same
+        if all_vars != var1_set:
+            set1 = set1.project(list(all_vars))
+        if all_vars != var2_set:
+            set2 = set2.project(list(all_vars))
 
-        len1 = len(vars1)
+        # same variables
+        # compute the set intersect
+        new_expr = set1._expr_internal.intersection(set2._expr_internal)
+        ret = ExplicitSet(vars = set1._vars, expr=new_expr)
 
-        # get the intersection
-        
-        overlapped_vars = var_set1.intersection(var_set2)
-        overlapped_vars_idx1 = [i for i, var in enumerate(vars1) if var in overlapped_vars]
-        overlapped_vars_idx2 = [i for i, var in enumerate(vars2) if var in overlapped_vars]
-        unique_vars_idx2 = [i for i, var in enumerate(vars2) if var not in overlapped_vars]
-
-        vars2_unique = [var for var in vars2 if var not in overlapped_vars]
-        # get the new variables
-        vars = vars1.copy()
-        vars.extend(vars2_unique)
-
-        expr1 = set1._expr_internal
-        expr2 = set2._expr_internal
-
-        ret_expr = set()
-        for elem1 in expr1:
-            for elem2 in expr2:
-                #TODO: should create a set of overlapped expr to filter out those not in the intersection 
-                overlapped_expr1 = tuple([elem1[i] for i in overlapped_vars_idx1])
-                overlapped_expr2 = tuple([elem2[i] for i in overlapped_vars_idx2])
-                if overlapped_expr1 == overlapped_expr2:
-                    # same core, form an element in intersection
-                    elem_list = list(elem1) + [elem2[i] for i in unique_vars_idx2]
-                    new_elem = tuple(elem_list)
-                    ret_expr.add(new_elem)
-
-        return ExplicitSet(vars = vars, expr=ret_expr)
+        new_var = self.ordered_vars
+        new_var += [var for var in other.ordered_vars if var not in new_var]
+        ret._reorder_vars(new_var)
+        return ret
 
 
     def difference(self, other: ExplicitSet) -> ExplicitSet:
@@ -253,7 +231,7 @@ class ExplicitSet(SetBase):
         ret = ExplicitSet(vars = set1._vars, expr=new_expr)
 
         new_var = self.ordered_vars
-        new_var += [var for var in set2.ordered_vars if var not in new_var]
+        new_var += [var for var in other.ordered_vars if var not in new_var]
         ret._reorder_vars(new_var)
         return ret
 

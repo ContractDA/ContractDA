@@ -104,4 +104,34 @@ if __name__ == "__main__":
     ret_set = a_set.union(c_set)
     print("union of a_set and c_set: ", ret_set)
 
-    print(ret_set.enumerate())
+    print(ret_set.get_enumeration())
+
+    # intersect
+    # [(1, 2, 3), (2, 3, 4), (1, 3, 5), (3, 3, 2), (1, 10, 23)] x, w, v
+    # [(1, 2, 1), (2, 3, 4), (1, 3, 2)] y z x
+    v = CategoricalVar("v", range(1,10))
+    w = CategoricalVar("w", range(1,10))
+    x = CategoricalVar("x", range(1,10))
+    y = CategoricalVar("y", range(1,10))
+    z = CategoricalVar("z", range(1,10))
+    
+
+    print("intersection")
+    a_expr = [(1, 2, 3), (2, 3, 4), (1, 3, 5), (3, 3, 2), (1, 9, 7)]
+    a_vars = [x, w, v]
+
+    b_expr = [(1, 2, 1), (2, 3, 4), (1, 3, 2)]
+    b_vars = [y, z, x]
+
+    a_set = ExplicitSet(a_vars, a_expr)
+    b_set = ExplicitSet(b_vars, b_expr)
+    print(b_set.ordered_vars)
+    print(a_set.ordered_expr)
+    set_c = ExplicitSet.intersect(a_set, b_set)
+    print([var.id for var in set_c.ordered_vars])
+    print([var.id for var in b_set.ordered_vars])
+    assert(set(set_c._vars) == set([x, y, z, w, v]))
+    # check gold
+    gold = [(1, 2, 3, 1, 2), (2, 3, 4, 1, 3), (1, 3, 5, 1, 2), (1, 9, 7, 1, 2)]
+    print(set_c.ordered_expr)
+    assert(set_c.ordered_expr == set(gold))
