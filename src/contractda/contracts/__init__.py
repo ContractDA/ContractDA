@@ -17,9 +17,8 @@ from contractda.contracts._agcontract import AGContract
 from contractda.contracts._contract_operation import ContractOperation
 
 __all__ = [
-    "ExplicitSet",
-    "ClauseSet",
-    "FOLClauseSet",
-#    "LTLClause"
-    "SetBase",
+    "ContractBase",
+    "CBContract",
+    "AGContract",
+    "ContractOperation"
 ]

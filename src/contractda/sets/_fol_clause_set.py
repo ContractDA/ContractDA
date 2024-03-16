@@ -34,8 +34,7 @@ class FOLClauseSet(ClauseSet):
         # check if the variables are indeed mentioned in expr
         context_ok, failed_list = self._check_context(vars = vars, expr=self._expr)
         if not context_ok:
-            failed_id = [var.get_id() for var in failed_list]
-            raise Exception(f"Variables {failed_id} not specified in the description: {expr}")
+            raise Exception(f"Variables {failed_list} not specified in the description: {expr}")
         # store the 
         self._vars = vars
         # solver
@@ -225,7 +224,7 @@ class FOLClauseSet(ClauseSet):
 
         new_expr_a.clause_and(new_expr_b.clause_not())
 
-        return not self._clause_satisfiable(vars=self._vars, clause=new_expr_a)
+        return not self._clause_satisfiable(vars=new_vars, clause=new_expr_a)
 
     def is_proper_subset(self, other: FOLClauseSet) -> bool:
         """ Check if the set is a proper subset of the other set
@@ -271,7 +270,7 @@ class FOLClauseSet(ClauseSet):
         # a -> b and b -> a
         new_expr1.clause_or(new_expr2)
         
-        return not self._clause_satisfiable(vars=self._vars, clause=new_expr1)
+        return not self._clause_satisfiable(vars=new_vars, clause=new_expr1)
 
     def is_disjoint(self, other: FOLClauseSet) -> bool:
         """ Check if the set is disjoint to the other set
@@ -280,14 +279,17 @@ class FOLClauseSet(ClauseSet):
         :return: True if this set is disjoint to the other set. False if not.
         :rtype: bool
         """
-
+        try:
+            new_vars = self._combine_vars(self._vars, other._vars)
+        except:
+            LOG.error("The two set is defined under different variables with the same identifier!")
         # find counter example that a and b (there should not be any element in both set)
         new_expr_a = copy.deepcopy(self.expr)
         new_expr_b = copy.deepcopy(other.expr)
 
         new_expr_a.clause_and(new_expr_b)
 
-        return not self._clause_satisfiable(vars=self._vars, clause=new_expr_a)
+        return not self._clause_satisfiable(vars=new_vars, clause=new_expr_a)
     
     ######################
     #   Internal Functions

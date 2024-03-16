@@ -124,7 +124,7 @@ class PropositionNodeParen(PropositionNode):#(!Proposition)
         super().__init__(children=[content])
 
     def __str__(self):
-        return str(self._children[0])
+        return f"({self._children[0]})"
 
     def get_symbols(self):
         return self._children[0].get_symbols()  
@@ -154,7 +154,7 @@ class ExpressionNodeParen(ExpressionNode): # (Expression)
         super().__init__(children=[content])
 
     def __str__(self):
-        return str(self._children[0])
+        return f"({self._children[0]})"
 
     def get_symbols(self):
         return self._children[0].get_symbols()   

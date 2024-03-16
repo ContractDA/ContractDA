@@ -6,7 +6,7 @@ class CBContract(ContractBase):
     """Class for Constraint-Behavior Contract (CB Contract)
 
     A constraint-behavior contract defines the contract by constraint and intrinsic behavior.
-    The intrinsic behavior is the e responsibility of the component, typically expressed in physical quantities.
+    The intrinsic behavior is the responsibility of the component, typically expressed in physical quantities.
     Constraints define the conditions under which the behaviors apply.
     """
 
@@ -14,11 +14,12 @@ class CBContract(ContractBase):
         """Constructor
 
         :param list[Var] vars: the variables
-        :param constraint SetBase|str: the constraint
-        :param constraint SetBase|str: the intrinsic behavior
+        :param SetBase|str constraint: the constraint
+        :param SetBase|str behavior: the intrinsic behavior
         """
         self._constraint: SetBase = self._convert_to_sets_based_on_language(vars, constraint, language)
-        self._intrinsic_behavior: SetBase = self._convert_to_sets_based_on_language(vars, constraint, language)
+        self._intrinsic_behavior: SetBase = self._convert_to_sets_based_on_language(vars, behavior, language)
+        self._vars = vars
 
     def __str__(self):
         return f" CB Contract: Constraint: {self.constraint}, Behavior: {self.intrinsic_behavior}"
@@ -31,13 +32,19 @@ class CBContract(ContractBase):
     def intrinsic_behavior(self) -> SetBase:
         return self._intrinsic_behavior
     
+    @property
+    def vs(self) -> list[Var]:
+        return self._vars
+    
+    @property
     def environment(self) -> SetBase:
         """ The targeted environment specified by the contracts"""
-        pass
+        self.constraint.union(self.intrinsic_behavior.complement())
     
+    @property
     def implementation(self) -> SetBase:
         """ The allowed implementation specified by the contracts"""
-        pass
+        self.intrinsic_behavior
 
     ##################################
     #   Contract Property
@@ -46,6 +53,7 @@ class CBContract(ContractBase):
         """ Whether the contract is recptive
 
         Receptive means for each targeted environment, there is a allowed behavior.
+
         :return: True if the contract is receptive, False if not
         :rtype: bool
         """
@@ -56,6 +64,7 @@ class CBContract(ContractBase):
 
         A contract is compatible if the implementation set is not empty
         Receptive means for each targeted environment, there is a allowed behavior.
+
         :return: True if the contract is compatible, False if not
         :rtype: bool
         """
@@ -65,6 +74,7 @@ class CBContract(ContractBase):
         """ Whether the contract is consistent
 
         A contract is consistent if the environment set is not empty
+
         :return: True if the contract is consistent, False if not
         :rtype: bool
         """
@@ -93,9 +103,8 @@ class CBContract(ContractBase):
             behavior2 = other.intrinsic_behavior
             new_behavior = behavior1.intersect(behavior2)
 
-            self._constraint = new_constr
-            self._intrinsic_behavior = new_behavior
-            return self
+            #CBContract(vars=vars, constraint=new_constr, behavior=new_behavior)
+            return CBContract(vars=self.vs, constraint=new_constr, behavior=new_behavior)
         else:
             raise Exception("Not supported contract type")
     
@@ -160,6 +169,14 @@ class CBContract(ContractBase):
         """
         pass
 
+    def saturation(self) -> ContractBase:
+        """Saturate the contract"""
+        # C union (not B)
+        new_constr = self.constraint.union(self.intrinsic_behavior.complement())
+        new_behavior = self.intrinsic_behavior
+        return CBContract(vars=self._vars, constraint=new_constr, behavior=new_behavior)
+
+
     ##################################
     #   Contract Relations
     ##################################
@@ -167,14 +184,24 @@ class CBContract(ContractBase):
         """ Whether the contract is refined by the other contract
 
         Refinement means
+
         :param ContractBase others: all the subsystem contracts of :class:`~contract.contracts.ContractBase` 
         :return: True if the contract is refined by the others, False if not
         :rtype: bool
         """
-        if isinstance(other, self.__class__):
-            pass
-            # both CB contract
-        pass
+
+        # saturation does not matter for CB contract or AG contract
+        # TODO: prevent saturation if it is already saturated and flagged
+        c1_sat = self.saturation()
+        c2_sat = other.saturation()
+        constr1 = c1_sat.constraint
+        constr2 = c2_sat.constraint
+
+        behavior1 = self.intrinsic_behavior
+        behavior2 = other.intrinsic_behavior
+
+        return constr1.is_subset(constr2) and behavior2.is_subset(behavior1)
+
 
     def is_strongly_replaceable_by(self, other: ContractBase) -> bool:
         """ Check if the contract is strongly replaceable by the other contract
@@ -210,6 +237,7 @@ class CBContract(ContractBase):
         """ Check if the contract decomposition can allowed independent receptive refinement without causing vacuous design.
 
         TO BE ADDED (new contribution)
+
         :param ContractBase other1: one of the decomposition contract
         :param ContractBase other2: one of the decomposition contract
         :return: True if the contract is refined by other, False if not
