@@ -6,11 +6,14 @@ from typing import Iterable, Any
 from contractda.sets._base import SetBase
 from contractda.vars._var import Var
 
-from contractda.sets._explicit_set_def import ExplicitSetVarType, ExplicitSetElementType, ExplicitSetExpressionType
 
 import random
 import copy
 import itertools
+
+ExplicitSetVarType = list[Var]
+ExplicitSetElementType = tuple
+ExplicitSetExpressionType = Iterable[ExplicitSetElementType]
 
 class ExplicitSet(SetBase):
     """
@@ -40,8 +43,8 @@ class ExplicitSet(SetBase):
         
         # check if the tuple is ok
         for elem in expr:
-            if len(elem) != len(vars):
-                raise Exception(f"The number of variables does not match the tuple set")
+            self._verify_match_len_element(elem, len(vars))
+
         # sort the variables
         var_arg_sorted = argsort(vars)
         # _var_order: stores the information about how to restore the original variable order
@@ -148,18 +151,7 @@ class ExplicitSet(SetBase):
         :rtype: ExplicitSet
         """
         # check vars
-        set1 = self
-        set2 = other
-
-        var1_set = set(set1._vars)
-        var2_set = set(set2._vars)
-        all_vars = var1_set.union(var2_set)
-
-        # projection to ensure the variables are the same
-        if all_vars != var1_set:
-            set1 = set1.project(list(all_vars))
-        if all_vars != var2_set:
-            set2 = set2.project(list(all_vars))
+        set1, set2 = self._context_sync(self, other)
 
         # same variables
         # compute the set union
@@ -180,18 +172,7 @@ class ExplicitSet(SetBase):
         :rtype: ExplicitSet
         """
         # check vars
-        set1 = self
-        set2 = other
-
-        var1_set = set(set1._vars)
-        var2_set = set(set2._vars)
-        all_vars = var1_set.union(var2_set)
-
-        # projection to ensure the variables are the same
-        if all_vars != var1_set:
-            set1 = set1.project(list(all_vars))
-        if all_vars != var2_set:
-            set2 = set2.project(list(all_vars))
+        set1, set2 = self._context_sync(self, other)
 
         # same variables
         # compute the set intersect
@@ -212,18 +193,7 @@ class ExplicitSet(SetBase):
         :rtype: ExplicitSet
         """
         # check vars
-        set1 = self
-        set2 = other
-
-        var1_set = set(set1._vars)
-        var2_set = set(set2._vars)
-        all_vars = var1_set.union(var2_set)
-
-        # projection to ensure the variables are the same
-        if all_vars != var1_set:
-            set1 = set1.project(list(all_vars))
-        if all_vars != var2_set:
-            set2 = set2.project(list(all_vars))
+        set1, set2 = self._context_sync(self, other)
 
         # same variables
         # compute the set difference
@@ -339,7 +309,10 @@ class ExplicitSet(SetBase):
         :return: True if the element is in the set. False if not.
         :rtype: bool
         """
-        pass
+        self._verify_match_len_element(element, len(self.ordered_vars))
+        # convert to internal
+        element = self._convert_elem_to_internal(element)
+        return element in self.internal_expr
 
     def is_subset(self, other: ExplicitSet) -> bool:
         """ Check if the set is a subset of the other set
@@ -348,7 +321,9 @@ class ExplicitSet(SetBase):
         :return: True if this set is a subset of the other set. False if not.
         :rtype: bool
         """
-        pass
+        set1, set2 = self._context_sync(self, other)
+
+        return set1.internal_expr.issubset(set2.internal_expr)
 
     def is_proper_subset(self, other: ExplicitSet) -> bool:
         """ Check if the set is a proper subset of the other set
@@ -357,7 +332,9 @@ class ExplicitSet(SetBase):
         :return: True if this set is a proper subset of the other set. False if not.
         :rtype: bool
         """
-        pass
+        set1, set2 = self._context_sync(self, other)
+
+        return set1.internal_expr < set2.internal_expr
 
     def is_satifiable(self) -> bool:
         """ Check if the set is satisfiable, i.e., not empty
@@ -365,7 +342,7 @@ class ExplicitSet(SetBase):
         :return: True if this set is satisfiable. False if not.
         :rtype: bool
         """
-        pass
+        return bool(self.internal_expr)
 
     def is_equivalence(self, other: ExplicitSet) -> bool:
         """ Check if the set is equivalent to the other set
@@ -374,7 +351,9 @@ class ExplicitSet(SetBase):
         :return: True if this set is equivalent to the other set. False if not.
         :rtype: bool
         """
-        pass
+        set1, set2 = self._context_sync(self, other)
+
+        return set1.internal_expr == set2.internal_expr
 
     def is_disjoint(self, other: ExplicitSet) -> bool:
         """ Check if the set is disjoint to the other set
@@ -383,16 +362,42 @@ class ExplicitSet(SetBase):
         :return: True if this set is disjoint to the other set. False if not.
         :rtype: bool
         """
-        pass
+        set1, set2 = self._context_sync(self, other)
+
+        return set1.internal_expr.isdisjoint(set2.internal_expr)
 
     def len(self):
         return len(self._vars)
     
-    def _verify_unique_vars(self, vars: list[Var]) -> bool:
-        ids = [var.get_id() for var in vars]
-        return len(set(ids)) == len(ids)
+    @staticmethod
+    def _context_sync(set1: ExplicitSet, set2:ExplicitSet):
+        """Make to set at the same page by project their variable"""
+        # check vars
+        new_set1 = set1
+        new_set2 = set2
+
+        var1_set = set(set1._vars)
+        var2_set = set(set2._vars)
+        all_vars = var1_set.union(var2_set)
+
+        # projection to ensure the variables are the same
+        if all_vars != var1_set:
+            new_set1 = set1.project(list(all_vars))
+        if all_vars != var2_set:
+            new_set2 = set2.project(list(all_vars))
+        
+        return new_set1, new_set2
+
+    @staticmethod  
+    def _verify_match_len_element(element: ExplicitSetElementType, length: int) -> bool:
+        """Check if the tuple is ok"""
+        if len(element) != length:
+            raise Exception(f"The number of variables does not match the tuple set {len(element)} and {length}")
+        else:
+            return True
     
-    def _verify_finite_domain(self, vars: list[Var]) -> bool:
+    @staticmethod    
+    def _verify_finite_domain(vars: list[Var]) -> bool:
         return all([var.is_finite() for var in vars])
 
     def _convert_elem_to_external(self, elem: tuple) -> tuple:  

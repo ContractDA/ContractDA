@@ -156,11 +156,6 @@ class ClauseSet(SetBase):
         :rtype: bool
         """
         pass
-
-    @staticmethod
-    def _verify_unique_vars(vars: list[Var]) -> bool:
-        ids = [var.get_id() for var in vars]
-        return len(set(ids)) == len(ids)
     
     @staticmethod
     def _combine_vars(a: list[Var], b: list[Var]) -> list[Var]:

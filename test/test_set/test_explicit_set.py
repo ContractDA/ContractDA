@@ -188,6 +188,154 @@ def test_explicit_set_union():
     assert(gold == ret_set.ordered_expr)
     assert([y, x, z] == ret_set.ordered_vars)
 
+
+def test_explicit_set_is_subset():
+    x = CategoricalVar("x", range(1,5))
+    y = CategoricalVar("y", range(1,5))
+    z = CategoricalVar("z", range(1,4))
+
+    a_expr = [(1, 2), (2, 1), (3, 3), (3, 4)]
+    b_expr = [(2, 1), (1, 2), (3, 4)]
+    c_expr = [(1, 2), (2, 1), (3, 2)]   
+    d_expr = [(1, 2), (2, 1), (3, 4), (3, 3)]   
+    e_expr = [(1, 1), (1, 2), (1, 3), (1, 4), (2, 3)]
+    f_expr = [tuple([1])]
+
+    a_set = ExplicitSet([x, y], a_expr)
+    b_set = ExplicitSet([x, y], b_expr)
+    c_set = ExplicitSet([x, y], c_expr)
+    d_set = ExplicitSet([x, y], d_expr)
+    e_set = ExplicitSet([x, y], e_expr)
+    f_set = ExplicitSet([x], f_expr)
+    print()
+    assert(a_set.is_subset(b_set) == False)
+    assert(b_set.is_subset(a_set) == True)
+    assert(a_set.is_subset(c_set) == False)
+    assert(c_set.is_subset(a_set) == False)
+    assert(a_set.is_subset(d_set) == True)
+    assert(d_set.is_subset(a_set) == True)
+    assert(e_set.is_subset(f_set) == False)
+    assert(f_set.is_subset(e_set) == True)
+
+def test_explicit_set_is_proper_subset():
+    x = CategoricalVar("x", range(1,5))
+    y = CategoricalVar("y", range(1,5))
+    z = CategoricalVar("z", range(1,4))
+
+    a_expr = [(1, 2), (2, 1), (3, 3), (3, 4)]
+    b_expr = [(2, 1), (1, 2), (3, 4)]
+    c_expr = [(1, 2), (2, 1), (3, 2)]   
+    d_expr = [(1, 2), (2, 1), (3, 4), (3, 3)]   
+    e_expr = [(1, 1), (1, 2), (1, 3), (1, 4), (2, 3)]
+    f_expr = [tuple([1])]
+
+    a_set = ExplicitSet([x, y], a_expr)
+    b_set = ExplicitSet([x, y], b_expr)
+    c_set = ExplicitSet([x, y], c_expr)
+    d_set = ExplicitSet([x, y], d_expr)
+    e_set = ExplicitSet([x, y], e_expr)
+    f_set = ExplicitSet([x], f_expr)
+
+    assert(a_set.is_proper_subset(b_set) == False)
+    assert(b_set.is_proper_subset(a_set) == True)
+    assert(a_set.is_proper_subset(c_set) == False)
+    assert(c_set.is_proper_subset(a_set) == False)
+    assert(a_set.is_proper_subset(d_set) == False)
+    assert(d_set.is_proper_subset(a_set) == False)
+    assert(e_set.is_proper_subset(f_set) == False)
+    assert(f_set.is_proper_subset(e_set) == True)
+
+def test_explicit_set_is_contain():
+    x = CategoricalVar("x", range(1,5))
+    y = CategoricalVar("y", range(1,5))
+
+    a_expr = [(1, 2), (2, 1), (3, 3), (3, 4)]
+    a_set = ExplicitSet([x, y], a_expr)
+    assert(a_set.is_contain((1, 2)) == True)
+    assert(a_set.is_contain((1, 3)) == False)
+
+def test_explicit_set_is_satisfiable():
+    x = CategoricalVar("x", range(1,5))
+    y = CategoricalVar("y", range(1,5))
+
+    a_expr = [(1, 2), (2, 1), (3, 3), (3, 4)]
+    a_set = ExplicitSet([x, y], a_expr)
+    b_set = ExplicitSet([x, y], set())
+
+    assert(a_set.is_satifiable() == True)    
+    assert(b_set.is_satifiable() == False)    
+
+def test_explicit_set_is_disjoint():
+    x = CategoricalVar("x", range(1,5))
+    y = CategoricalVar("y", range(1,5))
+    z = CategoricalVar("z", range(1,4))
+
+    a_expr = [(1, 2), (2, 1), (3, 3), (3, 4)]
+    b_expr = [(2, 1), (1, 2), (3, 4)]
+    c_expr = [(1, 2), (2, 1), (3, 2)]   
+    d_expr = [(1, 2), (2, 1), (3, 4), (3, 3)]   
+    e_expr = [(1, 1), (1, 2), (1, 3), (1, 4), (2, 3)]
+    f_expr = [tuple([1])]
+    g_expr = [(4, 1), (2, 4)]
+
+    a_set = ExplicitSet([x, y], a_expr)
+    b_set = ExplicitSet([x, y], b_expr)
+    c_set = ExplicitSet([x, y], c_expr)
+    d_set = ExplicitSet([x, y], d_expr)
+    e_set = ExplicitSet([x, y], e_expr)
+    f_set = ExplicitSet([x], f_expr)
+    g_set = ExplicitSet([x, y], g_expr)
+
+    assert(a_set.is_disjoint(b_set) == False)
+    assert(b_set.is_disjoint(a_set) == False)
+    assert(a_set.is_disjoint(c_set) == False)
+    assert(c_set.is_disjoint(a_set) == False)
+    assert(a_set.is_disjoint(d_set) == False)
+    assert(d_set.is_disjoint(a_set) == False)
+    assert(e_set.is_disjoint(f_set) == False)
+    assert(f_set.is_disjoint(e_set) == False)  
+    assert(g_set.is_disjoint(a_set) == True)  
+    assert(a_set.is_disjoint(g_set) == True)  
+    assert(g_set.is_disjoint(b_set) == True)  
+    assert(b_set.is_disjoint(g_set) == True)  
+    assert(g_set.is_disjoint(c_set) == True)  
+    assert(c_set.is_disjoint(g_set) == True)  
+    assert(g_set.is_disjoint(d_set) == True)  
+    assert(d_set.is_disjoint(g_set) == True)  
+    assert(g_set.is_disjoint(e_set) == True)  
+    assert(e_set.is_disjoint(g_set) == True)  
+    assert(g_set.is_disjoint(f_set) == True)  
+    assert(f_set.is_disjoint(g_set) == True)  
+
+def test_explicit_set_is_equivalence():
+    x = CategoricalVar("x", range(1,5))
+    y = CategoricalVar("y", range(1,5))
+    z = CategoricalVar("z", range(1,4))
+
+    a_expr = [(1, 2), (2, 1), (3, 3), (3, 4)]
+    b_expr = [(2, 1), (1, 2), (3, 4)]
+    c_expr = [(1, 2), (2, 1), (3, 2)]   
+    d_expr = [(1, 2), (2, 1), (3, 4), (3, 3)]   
+    e_expr = [(1, 1), (1, 2), (1, 3), (1, 4), (2, 3)]
+    f_expr = [tuple([1])]
+
+    a_set = ExplicitSet([x, y], a_expr)
+    b_set = ExplicitSet([x, y], b_expr)
+    c_set = ExplicitSet([x, y], c_expr)
+    d_set = ExplicitSet([x, y], d_expr)
+    e_set = ExplicitSet([x, y], e_expr)
+    f_set = ExplicitSet([x], f_expr)
+
+    assert(a_set.is_equivalence(b_set) == False)
+    assert(b_set.is_equivalence(a_set) == False)
+    assert(a_set.is_equivalence(c_set) == False)
+    assert(c_set.is_equivalence(a_set) == False)
+    assert(a_set.is_equivalence(d_set) == True)
+    assert(d_set.is_equivalence(a_set) == True)
+    assert(e_set.is_equivalence(f_set) == False)
+    assert(f_set.is_equivalence(e_set) == False)    
+
+
 if __name__ == "__main__":
     test_explicit_set()
     test_explicit_set_iter()

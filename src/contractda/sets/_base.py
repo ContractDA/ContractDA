@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Callable, Any, Iterable
-
+from contractda.vars._var import Var
 
 
 
@@ -154,3 +154,7 @@ class SetBase(ABC):
         """
         pass
 
+    @staticmethod
+    def _verify_unique_vars(vars: list[Var]) -> bool:
+        ids = [var.get_id() for var in vars]
+        return len(set(ids)) == len(ids)
