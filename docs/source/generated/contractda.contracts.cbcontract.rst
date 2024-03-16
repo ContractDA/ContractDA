@@ -15,7 +15,10 @@ contractda.contracts.CBContract
 .. autosummary::
 
    ~contractda.contracts.CBContract.constraint
+   ~contractda.contracts.CBContract.environment
+   ~contractda.contracts.CBContract.implementation
    ~contractda.contracts.CBContract.intrinsic_behavior
+   ~contractda.contracts.CBContract.vs
 
 
 
@@ -27,8 +30,6 @@ contractda.contracts.CBContract
 
    ~contractda.contracts.CBContract.composition
    ~contractda.contracts.CBContract.conjunction
-   ~contractda.contracts.CBContract.environment
-   ~contractda.contracts.CBContract.implementation
    ~contractda.contracts.CBContract.implication
    ~contractda.contracts.CBContract.is_compatible
    ~contractda.contracts.CBContract.is_consistent
@@ -39,5 +40,6 @@ contractda.contracts.CBContract
    ~contractda.contracts.CBContract.is_strongly_replaceable_by
    ~contractda.contracts.CBContract.merging
    ~contractda.contracts.CBContract.quotient
+   ~contractda.contracts.CBContract.saturation
    ~contractda.contracts.CBContract.separation
 

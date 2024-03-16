@@ -20,6 +20,8 @@ contractda.contracts.ContractOperation
 
    ~contractda.contracts.ContractOperation.compose
    ~contractda.contracts.ContractOperation.conjunction
+   ~contractda.contracts.ContractOperation.convert_to_ag
+   ~contractda.contracts.ContractOperation.convert_to_cb
    ~contractda.contracts.ContractOperation.implication
    ~contractda.contracts.ContractOperation.merge
    ~contractda.contracts.ContractOperation.quotient

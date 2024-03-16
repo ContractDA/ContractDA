@@ -10,6 +10,16 @@ contractda.contracts.AGContract
    
 
 
+.. rubric:: Attributes
+
+.. autosummary::
+
+   ~contractda.contracts.AGContract.assumption
+   ~contractda.contracts.AGContract.environment
+   ~contractda.contracts.AGContract.guarantee
+   ~contractda.contracts.AGContract.implementation
+   ~contractda.contracts.AGContract.vs
+
 
 
 
@@ -18,4 +28,18 @@ contractda.contracts.AGContract
 
 .. autosummary::
 
+   ~contractda.contracts.AGContract.composition
+   ~contractda.contracts.AGContract.conjunction
+   ~contractda.contracts.AGContract.implication
+   ~contractda.contracts.AGContract.is_compatible
+   ~contractda.contracts.AGContract.is_consistent
+   ~contractda.contracts.AGContract.is_independent_decomposition_of
+   ~contractda.contracts.AGContract.is_receptive
+   ~contractda.contracts.AGContract.is_refined_by
+   ~contractda.contracts.AGContract.is_replaceable_by
+   ~contractda.contracts.AGContract.is_strongly_replaceable_by
+   ~contractda.contracts.AGContract.merging
+   ~contractda.contracts.AGContract.quotient
+   ~contractda.contracts.AGContract.saturation
+   ~contractda.contracts.AGContract.separation
 
