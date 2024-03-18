@@ -93,13 +93,10 @@ class AGContract(ContractBase):
         :return: the composition result
         :rtype: ContractBase
         """
-        c1_sat: ContractBase = self.saturation()
-        c2_sat: ContractBase = other.saturation()
-
-        a1 = c1_sat.assumption
-        a2 = c2_sat.assumption
-        g1 = c1_sat.guarantee
-        g2 = c2_sat.guarantee
+        a1 = self.environment
+        a2 = other.environment
+        g1 = self.implementation
+        g2 = other.implementation
 
         
         ret_g = g1.intersect(g2)
@@ -117,13 +114,10 @@ class AGContract(ContractBase):
         :return: the quotient result 
         :rtype: ContractBase
         """
-        c1_sat: ContractBase = self.saturation()
-        c2_sat: ContractBase = other.saturation()
-
-        a1 = c1_sat.assumption
-        a2 = c2_sat.assumption
-        g1 = c1_sat.guarantee
-        g2 = c2_sat.guarantee
+        a1 = self.environment
+        a2 = other.environment
+        g1 = self.implementation
+        g2 = other.implementation
 
         ret_a = a1.intersect(g2)
         ret_g = a2.intersect(g1).union(ret_a.complement())
@@ -140,13 +134,10 @@ class AGContract(ContractBase):
         :return: the conjunction result
         :rtype: ContractBase
         """
-        c1_sat: ContractBase = self.saturation()
-        c2_sat: ContractBase = other.saturation()
-
-        a1 = c1_sat.assumption
-        a2 = c2_sat.assumption
-        g1 = c1_sat.guarantee
-        g2 = c2_sat.guarantee
+        a1 = self.environment
+        a2 = other.environment
+        g1 = self.implementation
+        g2 = other.implementation
 
         ret_a = a1.union(a2)
         ret_g = g1.intersect(g2)
@@ -163,13 +154,10 @@ class AGContract(ContractBase):
         :return: the implication result
         :rtype: ContractBase
         """
-        c1_sat: ContractBase = self.saturation()
-        c2_sat: ContractBase = other.saturation()
-
-        a1 = c1_sat.assumption
-        a2 = c2_sat.assumption
-        g1 = c1_sat.guarantee
-        g2 = c2_sat.guarantee
+        a1 = self.environment
+        a2 = other.environment
+        g1 = self.implementation
+        g2 = other.implementation
 
         ret_g = g2.union(g1.complement())
         ret_a = a2.intersect(a1.complement).union(ret_g.complement())
@@ -187,13 +175,10 @@ class AGContract(ContractBase):
         :return: the merging result
         :rtype: ContractBase
         """
-        c1_sat: ContractBase = self.saturation()
-        c2_sat: ContractBase = other.saturation()
-
-        a1 = c1_sat.assumption
-        a2 = c2_sat.assumption
-        g1 = c1_sat.guarantee
-        g2 = c2_sat.guarantee
+        a1 = self.environment
+        a2 = other.environment
+        g1 = self.implementation
+        g2 = other.implementation
 
         ret_a = a1.intersect(a2)
         ret_g = g1.intersect(g2).union(ret_a.complement())
@@ -211,13 +196,10 @@ class AGContract(ContractBase):
         :return: the separation result
         :rtype: ContractBase
         """
-        c1_sat: ContractBase = self.saturation()
-        c2_sat: ContractBase = other.saturation()
-
-        a1 = c1_sat.assumption
-        a2 = c2_sat.assumption
-        g1 = c1_sat.guarantee
-        g2 = c2_sat.guarantee
+        a1 = self.environment
+        a2 = other.environment
+        g1 = self.implementation
+        g2 = other.implementation
 
         ret_g = a2.intersect(g1)
         ret_a = a1.intersect(g2).union(ret_g.complement())
@@ -245,13 +227,10 @@ class AGContract(ContractBase):
 
         # saturation does not matter for CB contract or AG contract
         # TODO: prevent saturation if it is already saturated and flagged
-        c1_sat = self.saturation()
-        c2_sat = other.saturation()
-
-        a1 = c1_sat.assumption
-        a2 = c2_sat.assumption
-        g1 = c1_sat.guarantee
-        g2 = c2_sat.guarantee
+        a1 = self.environment
+        a2 = other.environment
+        g1 = self.implementation
+        g2 = other.implementation
 
         return a1.is_subset(a2) and g2.is_subset(g1)
 
@@ -297,3 +276,7 @@ class AGContract(ContractBase):
         :rtype: bool
         """
         pass
+
+    def to_cb(self):
+        from contractda.contracts._cbcontract import CBContract
+        return CBContract(vars=self._vars, constraint=self.environment, behavior=self.implementation)

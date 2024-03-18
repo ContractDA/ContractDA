@@ -42,3 +42,6 @@ if __name__ == "__main__":
     print(c12)
     print(c1.saturation())
     print(c3.is_refined_by(c12))
+
+    c1.to_cb()
+    print(c1.to_cb(), type(c1.to_cb()))

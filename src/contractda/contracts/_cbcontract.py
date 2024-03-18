@@ -245,3 +245,6 @@ class CBContract(ContractBase):
         """
         pass
 
+    def to_ag(self):
+        from contractda.contracts._agcontract import AGContract
+        return AGContract(vars=self._vars, assumption=self.environment, guarantee=self.implementation)
