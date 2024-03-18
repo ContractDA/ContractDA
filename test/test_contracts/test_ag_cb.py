@@ -16,7 +16,7 @@ def test_cb_ag_compatibility():
 
 
 
-    # golden value sqrt(10) because at this point V = 2*sqrt(3), I1 + I2 = sqrt(3), I1 = 2/3*sqrt(3), I2 = 1/3 * sqrt(3)
+    # golden value 2*sqrt(3) because at this point V = 2*sqrt(3), I1 + I2 = sqrt(3), I1 = 2/3*sqrt(3), I2 = 1/3 * sqrt(3)
     # the constraint I2*V <= 2 reaches the boundary 
     for i100 in range(330,370, 2):
         i = i100/100.0
