@@ -24,9 +24,10 @@ $ cd docs
 $ make html
 ```
 
-To use pytest for unit test
+To use pytest for unit test and coverage report
 ```
 $pytest test/test_set/test_explicit_set.py
+$pytest --cov=contractda
 ```
 
 [CBcontract23]: https://ieeexplore.ieee.org/document/10316201
