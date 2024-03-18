@@ -39,12 +39,12 @@ class CBContract(ContractBase):
     @property
     def environment(self) -> SetBase:
         """ The targeted environment specified by the contracts"""
-        self.constraint.union(self.intrinsic_behavior.complement())
+        return self.constraint.union(self.intrinsic_behavior.complement())
     
     @property
     def implementation(self) -> SetBase:
         """ The allowed implementation specified by the contracts"""
-        self.intrinsic_behavior
+        return self.intrinsic_behavior
 
     ##################################
     #   Contract Property
@@ -93,7 +93,7 @@ class CBContract(ContractBase):
         :return: the composition result
         :rtype: ContractBase
         """
-        if isinstance(other, self.__class__):
+        if isinstance(other, CBContract):
             # both CB contract, perform operation
             constr1 = self.constraint
             constr2 = other.constraint
@@ -105,6 +105,14 @@ class CBContract(ContractBase):
 
             #CBContract(vars=vars, constraint=new_constr, behavior=new_behavior)
             return CBContract(vars=self.vs, constraint=new_constr, behavior=new_behavior)
+        elif isinstance(other, ContractBase):
+            e1 = self.environment
+            i1 = self.implementation
+            e2 = other.environment
+            i2 = other.implementation
+            new_e = e1.intersect(e2)
+            new_i = i1.intersect(i2)
+            return CBContract(vars=self.vs, constraint=new_e, behavior=new_i)
         else:
             raise Exception("Not supported contract type")
     
@@ -192,15 +200,12 @@ class CBContract(ContractBase):
 
         # saturation does not matter for CB contract or AG contract
         # TODO: prevent saturation if it is already saturated and flagged
-        c1_sat = self.saturation()
-        c2_sat = other.saturation()
-        constr1 = c1_sat.constraint
-        constr2 = c2_sat.constraint
+        c1 = self.environment
+        b1 = self.implementation
+        c2 = other.environment
+        b2 = other.implementation
 
-        behavior1 = self.intrinsic_behavior
-        behavior2 = other.intrinsic_behavior
-
-        return constr1.is_subset(constr2) and behavior2.is_subset(behavior1)
+        return c1.is_subset(c2) and b2.is_subset(b1)
 
 
     def is_strongly_replaceable_by(self, other: ContractBase) -> bool:

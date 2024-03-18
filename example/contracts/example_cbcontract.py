@@ -1,4 +1,4 @@
-from contractda.contracts import CBContract
+from contractda.contracts import CBContract, AGContract
 from contractda.vars import Var, RealVar
 
 if __name__ == "__main__":
@@ -36,3 +36,7 @@ if __name__ == "__main__":
     print(c3)
     print(c3.intrinsic_behavior)
     print(c3.is_refined_by(c12))
+
+    print(c3)
+    cag = AGContract(vars=[I1, I2, V], assumption="V <= 3.2 && V >= 0", guarantee="V == 2 * (I1 + I2)")
+    print(cag.is_refined_by(c3))
