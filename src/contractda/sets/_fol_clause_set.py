@@ -213,6 +213,7 @@ class FOLClauseSet(ClauseSet):
         :return: True if this set is a subset of the other set. False if not.
         :rtype: bool
         """
+        LOG.debug(f"Checking if {self} is a subset of {other}")
         try:
             new_vars = self._combine_vars(self._vars, other._vars)
         except:
@@ -222,8 +223,10 @@ class FOLClauseSet(ClauseSet):
         new_expr_b = copy.deepcopy(other.expr)
 
         new_expr_a.clause_and(new_expr_b.clause_not())
+        ret = not self._clause_satisfiable(vars=new_vars, clause=new_expr_a)
+        LOG.debug(f"Result: {ret}")
 
-        return not self._clause_satisfiable(vars=new_vars, clause=new_expr_a)
+        return ret
 
     def is_proper_subset(self, other: FOLClauseSet) -> bool:
         """ Check if the set is a proper subset of the other set

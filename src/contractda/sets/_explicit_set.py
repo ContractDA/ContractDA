@@ -5,7 +5,7 @@ from typing import Iterable, Any
 
 from contractda.sets._base import SetBase
 from contractda.vars._var import Var
-
+from contractda.logger._logger import LOG
 
 import random
 import copy
@@ -232,6 +232,7 @@ class ExplicitSet(SetBase):
         :return: A new set which represents the Projection of the set on the input variables
         :rtype: SetBase
         """
+        LOG.debug(f"Projection of Set {[var.id for var in self.ordered_vars]}{self.ordered_expr} to variables {[var.id for var in new_vars]}")
 
         # find overleapped variables:
         overlapped_vars = [var for var in new_vars if var in self._vars]
@@ -241,6 +242,7 @@ class ExplicitSet(SetBase):
         if added_vars:
             ret = ret._project_extend(added_vars)
         ret._reorder_vars(new_vars)
+        LOG.debug(f"Result: {[var.id for var in ret.ordered_vars]}{ret.ordered_expr}")
         return ret
     
     def _project_subset(self, new_vars: Iterable[Var], is_refine = False):

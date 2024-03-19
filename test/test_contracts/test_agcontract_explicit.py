@@ -4,6 +4,183 @@ from contractda.contracts import AGContract
 from contractda.vars import Var, RealVar, CategoricalVar
 from contractda.sets import ExplicitSet
 
+def test_contract_replaceble():
+    w = CategoricalVar("w", range(0,3))
+    x = CategoricalVar("x", range(0,3))
+    y = CategoricalVar("y", range(0,3))
+    z = CategoricalVar("z", range(0,3))
+
+
+    c1 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0])]),
+                    guarantee=ExplicitSet([x, y, z], [(0, 1, 2), (0, 0, 1)]))
+    
+    c2 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0]), tuple([1])]),
+                    guarantee=ExplicitSet([x, y, z], [(0, 1, 2), (1, 2, 1), (2, 2, 1)]))
+
+    c3 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0]), tuple([1])]),
+                    guarantee=ExplicitSet([x, y, z], [(0, 1, 2), (1, 2, 1)]))
+
+    c4 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0]), tuple([1])]),
+                    guarantee=ExplicitSet([x, y, z], [(1, 2, 1)]))
+    
+    c5 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0]), tuple([1]), tuple([2])]),
+                    guarantee=ExplicitSet([x, y, z], [(1, 2, 1), (2, 2, 1)]))
+    
+    c6 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0]), tuple([1]), tuple([2])]),
+                    guarantee=ExplicitSet([x, y, z], [(0, 0, 1), (1, 2, 1), (2, 2, 1)]))
+    
+    assert(c1.is_replaceable_by(c2))
+    assert(c1.is_replaceable_by(c3))
+    assert(c4.is_replaceable_by(c5))
+    assert(c3.is_replaceable_by(c5))
+    assert(not c1.is_replaceable_by(c4))
+    assert(not c1.is_replaceable_by(c5))
+    assert(c1.is_replaceable_by(c6))
+
+    c7 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 1, 2, 2), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (2, 0, 1, 1), (1, 2, 2, 2)]))
+    
+    c8 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0), (2, 1)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 1, 2, 2), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (2, 0, 1, 1), (1, 2, 2, 2), (2, 1, 2, 3)]))
+
+    c9 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0), (2, 1)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 1, 2, 2), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (1, 2, 2, 2), (2, 1, 2, 3)]))
+    
+    c10 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0), (2, 1), (2, 2)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 1, 2, 2), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (2, 0, 1, 1), (1, 2, 2, 2), (2, 1, 2, 3)]))
+    c11 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0), (2, 1), (2, 2)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 1, 2, 2), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (2, 0, 1, 1), (1, 2, 2, 2)]))
+    
+    c12 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0), (2, 1), (2, 2)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (2, 0, 1, 1), (1, 2, 2, 2)]))
+    assert(c7.is_replaceable_by(c8))
+    assert(c7.is_replaceable_by(c9))
+    assert(c7.is_replaceable_by(c10))
+    assert(c7.is_replaceable_by(c11))
+    assert(c7.is_replaceable_by(c12))    
+
+def test_contract_strongly_replaceable():
+    w = CategoricalVar("w", range(0,3))
+    x = CategoricalVar("x", range(0,3))
+    y = CategoricalVar("y", range(0,3))
+    z = CategoricalVar("z", range(0,3))
+
+
+    c1 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0])]),
+                    guarantee=ExplicitSet([x, y, z], [(0, 1, 2), (0, 0, 1)]))
+    
+    c2 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0]), tuple([1])]),
+                    guarantee=ExplicitSet([x, y, z], [(0, 1, 2), (1, 2, 1), (2, 2, 1)]))
+
+    c3 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0]), tuple([1])]),
+                    guarantee=ExplicitSet([x, y, z], [(0, 1, 2), (1, 2, 1)]))
+
+    c4 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0]), tuple([1])]),
+                    guarantee=ExplicitSet([x, y, z], [(1, 2, 1)]))
+    
+    c5 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0]), tuple([1]), tuple([2])]),
+                    guarantee=ExplicitSet([x, y, z], [(1, 2, 1), (2, 2, 1)]))
+    
+    c6 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0]), tuple([1]), tuple([2])]),
+                    guarantee=ExplicitSet([x, y, z], [(0, 0, 1), (1, 2, 1), (2, 2, 1)]))
+    
+    assert(c1.is_strongly_replaceable_by(c2))
+    assert(c1.is_strongly_replaceable_by(c3))
+    assert(not c1.is_strongly_replaceable_by(c4))
+    assert(not c1.is_strongly_replaceable_by(c5))
+    assert(c1.is_strongly_replaceable_by(c6))
+
+    c7 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 1, 2, 2), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (2, 0, 1, 1), (1, 2, 2, 2)]))
+    
+    c8 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0), (2, 1)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 1, 2, 2), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (2, 0, 1, 1), (1, 2, 2, 2), (2, 1, 2, 3)]))
+
+    c9 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0), (2, 1)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 1, 2, 2), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (1, 2, 2, 2), (2, 1, 2, 3)]))
+    
+    c10 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0), (2, 1), (2, 2)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 1, 2, 2), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (2, 0, 1, 1), (1, 2, 2, 2), (2, 1, 2, 3)]))
+    c11 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0), (2, 1), (2, 2)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 1, 2, 2), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (2, 0, 1, 1), (1, 2, 2, 2)]))
+    
+    c12 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0), (2, 1), (2, 2)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (2, 0, 1, 1), (1, 2, 2, 2)]))
+    assert(c7.is_strongly_replaceable_by(c8))
+    assert(not c7.is_strongly_replaceable_by(c9))
+    assert(c7.is_strongly_replaceable_by(c10))
+    assert(c7.is_strongly_replaceable_by(c11))
+    assert(not c7.is_strongly_replaceable_by(c12))
+
+def test_contract_receptiveness():
+    w = CategoricalVar("w", range(0,3))
+    x = CategoricalVar("x", range(0,3))
+    y = CategoricalVar("y", range(0,3))
+    z = CategoricalVar("z", range(0,3))
+
+
+    c1 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0]), tuple([1]), tuple([2])]),
+                    guarantee=ExplicitSet([x, y, z], [(0, 1, 2), (0, 0, 1), (1, 2, 1), (2, 2, 1)]))
+    assert(c1.is_receptive())
+
+    c2 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0]), tuple([1]), tuple([2])]),
+                    guarantee=ExplicitSet([x, y, z], [(0, 1, 2), (0, 0, 1), (2, 2, 1)]))
+    assert(not c2.is_receptive())
+
+    c3 = AGContract(vars=[x],
+                    assumption=ExplicitSet([x], [tuple([0]), tuple([2])]),
+                    guarantee=ExplicitSet([x, y, z], [(0, 1, 2), (0, 0, 1), (2, 2, 1)]))
+    assert(c3.is_receptive())
+
+    c4 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 1, 2, 2), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (2, 0, 1, 1), (1, 2, 2, 2)]))
+    assert(c4.is_receptive())
+
+    c5 = AGContract(vars=[w, x],
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0)]),
+                    guarantee=ExplicitSet([w, x, y, z], [(0, 0, 1, 2), (0, 0, 2, 1), (0, 2, 1, 0), 
+                                                         (1, 1, 2, 2), (2, 2, 1, 2), (2, 0, 1, 1), (1, 2, 2, 2), (1, 1, 1, 1)]))
+    assert(not c5.is_receptive())
 
 def test_contract_composition():
     w = CategoricalVar("w", range(0,5))

@@ -1,5 +1,5 @@
 from contractda.contracts._contract_base import ContractBase
-from contractda.sets import SetBase, FOLClauseSet
+from contractda.sets import SetBase, FOLClauseSet, ExplicitSet
 from contractda.vars import Var
 from contractda.solvers import SolverInterface
 
@@ -75,10 +75,11 @@ class AGContract(ContractBase):
         """
         # Check if there is counter example: some element satisfies A but has no corresponding behavior allowed by G
         # (A && ! Exists(v not in A, G))
-        if solver is None:
-            solver = self.assumption._solver_type()
+
         
         if isinstance(self.guarantee, FOLClauseSet):
+            if solver is None:
+                solver = self.assumption._solver_type()
             # ensure all variables are encoded
             vars_map = {v.id: solver.get_fresh_variable(v.id, sort=v.type_str) for v in self.vs}
             # encode both guarantee and assumption
@@ -99,6 +100,13 @@ class AGContract(ContractBase):
             solver.add_conjunction_clause(encoded_clause)
             exist_counter_example = solver.check()
             return not exist_counter_example  
+        elif isinstance(self.guarantee, ExplicitSet):
+            # Explicit set
+            # find the counter example that if there is a input without behavior
+            # we can use projection to achieve this
+            legal_env = self.guarantee.project(self.assumption.ordered_vars, is_refine=False)
+            ret = self.assumption.is_subset(legal_env)
+            return ret
         else:
             raise NotImplementedError
 
@@ -317,10 +325,10 @@ class AGContract(ContractBase):
         """
         # Check if there is counter example: some element satisfies A1 but has no corresponding behavior allowed by G2
         # (A! && ! Exists(v not in A1, G2))
-        if solver is None:
-            solver = self.assumption._solver_type()
         
         if isinstance(other.guarantee, FOLClauseSet):
+            if solver is None:
+                solver = self.assumption._solver_type()
             # ensure all variables are encoded
             vars_map = {v.id: solver.get_fresh_variable(v.id, sort=v.type_str) for v in self.vs}
             # encode both guarantee and assumption
@@ -341,6 +349,14 @@ class AGContract(ContractBase):
             solver.add_conjunction_clause(encoded_clause)
             exist_counter_example = solver.check()
             return not exist_counter_example  
+        elif isinstance(other.guarantee, ExplicitSet):
+            # Explicit set
+            # find the counter example that if there is a input without behavior
+            # we can use projection to achieve this
+            #print(other.guarantee.ordered_expr)
+            legal_env = other.guarantee.project(self.assumption.ordered_vars, is_refine=False)
+            ret = self.assumption.is_subset(legal_env)
+            return ret
         else:
             raise NotImplementedError
 
@@ -357,9 +373,7 @@ class AGContract(ContractBase):
         """
         # Check if there is a positive example: exist some element satisfies A1 and has corresponding behavior allowed by G2
         # (A! && ! Exists(v not in A1, G2))
-        if solver is None:
-            solver = self.assumption._solver_type()
-        else:
+        if solver is not None:
             raise NotImplementedError("I have not implement user specified solver for internal set operation")
         
         return self.assumption.intersect(other.guarantee).is_satifiable()
