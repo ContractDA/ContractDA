@@ -358,7 +358,7 @@ class AGContract(ContractBase):
             ret = self.assumption.is_subset(legal_env)
             return ret
         else:
-            raise NotImplementedError
+            raise NotImplementedError()
 
     def is_replaceable_by(self, other: ContractBase, solver: SolverInterface = None) -> bool:
         """ Check if the contract is replaceable by the other contract
@@ -373,10 +373,18 @@ class AGContract(ContractBase):
         """
         # Check if there is a positive example: exist some element satisfies A1 and has corresponding behavior allowed by G2
         # (A! && ! Exists(v not in A1, G2))
-        if solver is not None:
-            raise NotImplementedError("I have not implement user specified solver for internal set operation")
+
         
-        return self.assumption.intersect(other.guarantee).is_satifiable()
+        if isinstance(other.guarantee, FOLClauseSet):
+            if solver is not None:
+                raise NotImplementedError("I have not implement user specified solver for internal set operation")
+            return self.assumption.intersect(other.guarantee).is_satifiable()
+        elif isinstance(other.guarantee, ExplicitSet):
+            legal_env = other.guarantee.project(self.assumption.ordered_vars, is_refine=False)
+            ret = self.assumption.intersect(legal_env).is_satifiable()
+            return ret
+        else:
+            raise NotImplementedError()
 
     def is_independent_decomposition_of(self, other1: ContractBase, other2: ContractBase) -> bool:
         """ Check if the contract decomposition can allowed independent receptive refinement without causing vacuous design.

@@ -15,6 +15,7 @@ contractda.sets.ClauseSet
 .. autosummary::
 
    ~contractda.sets.ClauseSet.expr
+   ~contractda.sets.ClauseSet.vars
 
 
 

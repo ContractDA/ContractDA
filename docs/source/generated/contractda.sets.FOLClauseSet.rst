@@ -15,6 +15,7 @@ contractda.sets.FOLClauseSet
 .. autosummary::
 
    ~contractda.sets.FOLClauseSet.expr
+   ~contractda.sets.FOLClauseSet.vars
 
 
 
