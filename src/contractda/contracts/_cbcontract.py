@@ -46,6 +46,10 @@ class CBContract(ContractBase):
         """ The allowed implementation specified by the contracts"""
         return self.intrinsic_behavior
 
+    @property
+    def obligation(self) -> SetBase:
+        """ The contract obligation, see Beneviste et al. Multiple Viewpoint Contract-Based Specification and Design, FMCO07"""
+        return self.constraint.intersect(self.intrinsic_behavior)
     ##################################
     #   Contract Property
     ##################################
@@ -207,7 +211,28 @@ class CBContract(ContractBase):
 
         return c1.is_subset(c2) and b2.is_subset(b1)
 
+    def is_conformed_by(self, other: ContractBase) -> bool:
+        """Whether the contract is conformed by the other contract
+        
+        A contract is conformed by the other contract if the obligation of the other contract is contained by the original contract's obligation.
+    
+        :param ContractBase others: all the subsystem contracts of :class:`~contract.contracts.ContractBase` 
+        :return: True if the contract is conformed by the others, False if not
+        :rtype: bool
+        """
+        pass
 
+    def is_strongly_dominated_by(self, other: ContractBase) -> bool:
+        """Whether the contract is strongly dominated by the other contract
+        
+        Strong dominated mean both refined and conformed by the other contract.
+        
+        :param ContractBase others: all the subsystem contracts of :class:`~contract.contracts.ContractBase` 
+        :return: True if the contract is strongly dominated by the others, False if not
+        :rtype: bool
+        """
+        pass
+    
     def is_strongly_replaceable_by(self, other: ContractBase) -> bool:
         """ Check if the contract is strongly replaceable by the other contract
 

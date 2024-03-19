@@ -3,6 +3,7 @@ from typing import Callable
 import z3
 
 from contractda.solvers._solver_interface import SolverInterface
+from contractda.logger._logger import LOG
 
 class Z3Interface(SolverInterface):
     def __init__(self):
@@ -119,8 +120,12 @@ class Z3Interface(SolverInterface):
     def check(self) -> bool:
         #print(self._solver.assertions())
         ret = self._solver.check()
+        LOG.debug(f"solving with internal clauses: {self.assertions()}")
+        LOG.debug(f"Sat? {ret}")
+
         if ret == z3.sat:
             self._model = self._solver.model()
+            LOG.debug(f"model: {self._model}")
             return True
         elif ret == z3.unsat:
             self._model = None

@@ -22,6 +22,10 @@ class ContractBase(ABC):
         """ The allowed implementation specified by the contracts"""
         pass
 
+    @abstractproperty
+    def obligation(self) -> SetBase:
+        """ The contract obligation, see Beneviste et al. Multiple Viewpoint Contract-Based Specification and Design, FMCO07"""
+        pass 
     ##################################
     #   Contract Property
     ##################################
@@ -102,7 +106,7 @@ class ContractBase(ABC):
     def implication(self, other: ContractBase):
         """ Finding the missing condition
 
-        Given system contract a and know condition contract b, the implication finds the contract c such that the conjunction of b and c becomes a
+        Given system contract a (other) and know condition contract b (self), the implication finds the contract c such that the conjunction of b and c becomes a
         This method will update the contract of itself inplace.
 
         :param ContractBase other: the other contract to perform implication with this contract
@@ -148,6 +152,30 @@ class ContractBase(ABC):
         Refinement means
         :param ContractBaase others: all the subsystem contracts of :class:`~contract.contracts.ContractBase` 
         :return: True if the contract is refined by the others, False if not
+        :rtype: bool
+        """
+        pass
+
+    @abstractmethod
+    def is_conformed_by(self, other: ContractBase) -> bool:
+        """Whether the contract is conformed by the other contract
+        
+        A contract is conformed by the other contract if the obligation of the other contract is contained by the original contract's obligation.
+    
+        :param ContractBase others: all the subsystem contracts of :class:`~contract.contracts.ContractBase` 
+        :return: True if the contract is conformed by the others, False if not
+        :rtype: bool
+        """
+        pass
+
+    @abstractmethod
+    def is_strongly_dominated_by(self, other: ContractBase) -> bool:
+        """Whether the contract is strongly dominated by the other contract
+        
+        Strong dominated mean both refined and conformed by the other contract.
+        
+        :param ContractBase others: all the subsystem contracts of :class:`~contract.contracts.ContractBase` 
+        :return: True if the contract is strongly dominated by the others, False if not
         :rtype: bool
         """
         pass

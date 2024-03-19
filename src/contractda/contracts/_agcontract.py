@@ -1,6 +1,7 @@
 from contractda.contracts._contract_base import ContractBase
 from contractda.sets import SetBase, FOLClauseSet
 from contractda.vars import Var
+from contractda.solvers import SolverInterface
 
 class AGContract(ContractBase):
     """Class for Assume-Guarantee Contract (AG Contract)
@@ -45,11 +46,26 @@ class AGContract(ContractBase):
     def implementation(self) -> SetBase:
         """ The allowed implementation specified by the contracts"""
         return self.guarantee.union(self.assumption.complement())
+    
+    @property
+    def assumption_vs(self) -> list[Var]:
+        symbols = self.assumption.expr.get_symbols()
+        return [v for v in self.vs if v.id in symbols]
+    
+    @property
+    def non_assumption_vs(self) -> list[Var]:
+        assumption_symbols = self.assumption.expr.get_symbols()
+        return [v for v in self.vs if v.id not in assumption_symbols]        
+    
+    @property
+    def obligation(self) -> SetBase:
+        """ The contract obligation, see Beneviste et al. Multiple Viewpoint Contract-Based Specification and Design, FMCO07"""
+        return self.guarantee.intersect(self.assumption)
 
     ##################################
     #   Contract Property
     ##################################
-    def is_receptive(self) -> bool:
+    def is_receptive(self, solver: SolverInterface = None) -> bool:
         """ Whether the contract is recptive
 
         Receptive means for each targeted environment, there is a allowed behavior.
@@ -57,7 +73,34 @@ class AGContract(ContractBase):
         :return: True if the contract is receptive, False if not
         :rtype: bool
         """
-        pass
+        # Check if there is counter example: some element satisfies A but has no corresponding behavior allowed by G
+        # (A && ! Exists(v not in A, G))
+        if solver is None:
+            solver = self.assumption._solver_type()
+        
+        if isinstance(self.guarantee, FOLClauseSet):
+            # ensure all variables are encoded
+            vars_map = {v.id: solver.get_fresh_variable(v.id, sort=v.type_str) for v in self.vs}
+            # encode both guarantee and assumption
+            var_map, encoded_guarantee = self.guarantee.encode(solver=solver, vars=self.guarantee.vars, clause=self.guarantee.expr, vars_map=vars_map)
+            var_map, encoded_assumption = self.assumption.encode(solver=solver, vars=self.assumption.vars, clause=self.assumption.expr, vars_map=vars_map)
+            # prepare quantifier variables
+            exist_vs = [var_map[v.id] for v in self.non_assumption_vs]
+            # form the clause for checking
+            if exist_vs:
+                encoded_clause = solver.clause_and(encoded_assumption, 
+                                                solver.clause_not(
+                                                    solver.clause_exists(exist_vs, encoded_guarantee)))
+            else:
+                #empty due to same variables in assumption and guarantee
+                encoded_clause = solver.clause_and(encoded_assumption, 
+                                                solver.clause_not(encoded_guarantee))
+            # solve the existencde
+            solver.add_conjunction_clause(encoded_clause)
+            exist_counter_example = solver.check()
+            return not exist_counter_example  
+        else:
+            raise NotImplementedError
 
     def is_compatible(self) -> bool:
         """ Whether the contract is compatible
@@ -160,7 +203,7 @@ class AGContract(ContractBase):
         g2 = other.implementation
 
         ret_g = g2.union(g1.complement())
-        ret_a = a2.intersect(a1.complement).union(ret_g.complement())
+        ret_a = a2.intersect(a1.complement()).union(ret_g.complement())
         
 
         return AGContract(vars=self.vs, assumption=ret_a, guarantee=ret_g)
@@ -218,7 +261,8 @@ class AGContract(ContractBase):
     def is_refined_by(self, other: ContractBase) -> bool:
         """ Whether the contract is refined by the other contract
 
-        Refinement means
+        A contract is refined by the other contract if the all the implementations of the new contract satisfy the original contract 
+        and they can work under the environment required by the original contract.
 
         :param ContractBase others: all the subsystem contracts of :class:`~contract.contracts.ContractBase` 
         :return: True if the contract is refined by the others, False if not
@@ -234,8 +278,29 @@ class AGContract(ContractBase):
 
         return a1.is_subset(a2) and g2.is_subset(g1)
 
+    def is_conformed_by(self, other: ContractBase) -> bool:
+        """Whether the contract is conformed by the other contract
+        
+        A contract is conformed by the other contract if the obligation of the other contract is contained by the original contract's obligation.
+    
+        :param ContractBase others: all the subsystem contracts of :class:`~contract.contracts.ContractBase` 
+        :return: True if the contract is conformed by the others, False if not
+        :rtype: bool
+        """
+        return other.obligation.is_subset(self.obligation)
 
-    def is_strongly_replaceable_by(self, other: ContractBase) -> bool:
+    def is_strongly_dominated_by(self, other: ContractBase) -> bool:
+        """Whether the contract is strongly dominated by the other contract
+        
+        Strong dominated mean both refined and conformed by the other contract.
+
+        :param ContractBase others: all the subsystem contracts of :class:`~contract.contracts.ContractBase` 
+        :return: True if the contract is strongly dominated by the others, False if not
+        :rtype: bool
+        """
+        return self.is_conformed_by(other) and self.is_refined_by(other)
+
+    def is_strongly_replaceable_by(self, other: ContractBase, solver: SolverInterface = None) -> bool:
         """ Check if the contract is strongly replaceable by the other contract
 
         Contract A is strongly replaceable by contract B if contract B has behavior for all targeted environment of A.
@@ -250,9 +315,36 @@ class AGContract(ContractBase):
         :return: True if the contract is strongly replaceable by the other, False if not
         :rtype: bool
         """
-        pass
+        # Check if there is counter example: some element satisfies A1 but has no corresponding behavior allowed by G2
+        # (A! && ! Exists(v not in A1, G2))
+        if solver is None:
+            solver = self.assumption._solver_type()
+        
+        if isinstance(other.guarantee, FOLClauseSet):
+            # ensure all variables are encoded
+            vars_map = {v.id: solver.get_fresh_variable(v.id, sort=v.type_str) for v in self.vs}
+            # encode both guarantee and assumption
+            var_map, encoded_guarantee = other.guarantee.encode(solver=solver, vars=other.guarantee.vars, clause=other.guarantee.expr, vars_map=vars_map)
+            var_map, encoded_assumption = self.assumption.encode(solver=solver, vars=self.assumption.vars, clause=self.assumption.expr, vars_map=vars_map)
+            # prepare quantifier variables
+            exist_vs = [var_map[v.id] for v in other.non_assumption_vs]
+            # form the clause for checking
+            if exist_vs:
+                encoded_clause = solver.clause_and(encoded_assumption, 
+                                                solver.clause_not(
+                                                    solver.clause_exists(exist_vs, encoded_guarantee)))
+            else:
+                #empty due to same variables in assumption and guarantee
+                encoded_clause = solver.clause_and(encoded_assumption, 
+                                                solver.clause_not(encoded_guarantee))
+            # solve the existencde
+            solver.add_conjunction_clause(encoded_clause)
+            exist_counter_example = solver.check()
+            return not exist_counter_example  
+        else:
+            raise NotImplementedError
 
-    def is_replaceable_by(self, other: ContractBase) -> bool:
+    def is_replaceable_by(self, other: ContractBase, solver: SolverInterface = None) -> bool:
         """ Check if the contract is replaceable by the other contract
 
         Contract A is replaceable by contract B if contract B has behavior under some targeted environment of A.
@@ -263,7 +355,14 @@ class AGContract(ContractBase):
         :return: True if the contract is strongly replaceable by the other, False if not
         :rtype: bool
         """
-        pass
+        # Check if there is a positive example: exist some element satisfies A1 and has corresponding behavior allowed by G2
+        # (A! && ! Exists(v not in A1, G2))
+        if solver is None:
+            solver = self.assumption._solver_type()
+        else:
+            raise NotImplementedError("I have not implement user specified solver for internal set operation")
+        
+        return self.assumption.intersect(other.guarantee).is_satifiable()
 
     def is_independent_decomposition_of(self, other1: ContractBase, other2: ContractBase) -> bool:
         """ Check if the contract decomposition can allowed independent receptive refinement without causing vacuous design.

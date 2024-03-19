@@ -14,7 +14,6 @@ from contractda.solvers import Z3Interface
 from contractda.logger._logger import LOG
 
 
-
 class FOLClauseSet(ClauseSet):
     """ClauseSet
 
@@ -322,15 +321,13 @@ class FOLClauseSet(ClauseSet):
         _, encoded_clause = self.encode(solver=solver_instance, vars=vars, clause=clause)
         solver_instance.add_conjunction_clause(encoded_clause)
         ret = solver_instance.check()
-        LOG.debug(f"solving with internal clauses: {solver_instance.assertions()}")
-        LOG.debug(f"Sat? {ret}")
-        LOG.debug(f"model: {solver_instance._model}")
         return ret   
 
-    def encode(self, solver, vars: list[Var], clause: FOLClause):
+    def encode(self, solver, vars: list[Var], clause: FOLClause, vars_map: dict | None = None):
         """Encode a first order logic clause into solver clauses"""
         # generate symbols in solver
-        vars_map = {var.id: solver.get_fresh_variable(var.id, sort=var.type_str) for var in vars}
+        if vars_map is None:
+            vars_map = {var.id: solver.get_fresh_variable(var.id, sort=var.type_str) for var in vars}
         # 
         root = clause.root
         solver_clause = self._encode(solver=solver, vars_map=vars_map, node=root)

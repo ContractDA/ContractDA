@@ -24,6 +24,7 @@ class ClauseSet(SetBase):
     """
     def __init__(self, vars: ClauseSetVarType, expr: str, ctx = None):
         self._expr = None
+        self._vars = None
         pass
 
     @property
@@ -31,6 +32,10 @@ class ClauseSet(SetBase):
         """The clause body"""
         return self._expr
 
+    @property
+    def vars(self):
+        """The variables"""
+        return self._vars
     ######################
     #   Extraction
     ######################
