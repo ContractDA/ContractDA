@@ -1,7 +1,11 @@
+import copy
+
 from contractda.contracts._contract_base import ContractBase
 from contractda.sets import SetBase, FOLClauseSet, ExplicitSet
 from contractda.vars import Var
 from contractda.solvers import SolverInterface
+
+from contractda.logger._logger import LOG
 
 class AGContract(ContractBase):
     """Class for Assume-Guarantee Contract (AG Contract)
@@ -396,8 +400,142 @@ class AGContract(ContractBase):
         :return: True if the contract is refined by other, False if not
         :rtype: bool
         """
-        pass
+        # Given contract Cs, C1, C2 all of them are receptive contracts and C1 compose C2 refines Cs
+        # step 1: find type 1 fixed points, check if all targeted environment has a type 1 contract 
+        # A1 * G1 * A2 * G2 is the set of all fixed points
+        # formulation of type 1: An element ef in the fixed point set such that for any e such that project(I1)(ef) * G1 only contains ef
+        #                                                                   and for any e such that project(I2)(ef) * G2 only contains ef
+        if isinstance(self.guarantee, ExplicitSet):
+            all_fixed_points = other1.obligation.intersect(other2.obligation).intersect(self.assumption) # only consider the targeted env
+            all_fixed_points.reorder_vars(self.vs)
+            # # this is debug
+            # type_1_fixed_points = [] # forall (e of fresh all variables!), (e \in project(I1)(ef) and G1 and e == ef)
+            # type_2_fixed_points = []
+            # type_3_fixed_points = []
+            # LOG.debug(f"[INDE] All fixed point: {all_fixed_points}")
+            # for ef in all_fixed_points:
+            #     # form project(I1)(ef) and G1
+            #     LOG.debug(f"[INDE] Checking fixed point {ef}")
+            #     ef_set = ExplicitSet(self.vs, expr=[ef])
+            #     neighbor_behaviors_1 = ef_set.project(other1.assumption.ordered_vars, is_refine=False).intersect(other1.guarantee)
+            #     neighbor_behaviors_1.reorder_vars(self.vs)
+            #     LOG.debug(f"[INDE] Possible behaviors for C1 {neighbor_behaviors_1}")
+            #     neighbor_behaviors_2 = ef_set.project(other2.assumption.ordered_vars, is_refine=False).intersect(other2.guarantee)
+            #     neighbor_behaviors_2.reorder_vars(self.vs)
+            #     LOG.debug(f"[INDE] Possible behaviors for C2 {neighbor_behaviors_2}")
+            #     if ef_set.is_equivalence(neighbor_behaviors_1) and ef_set.is_equivalence(neighbor_behaviors_2):
+            #         LOG.debug(f"[INDE] {ef} is a type 1 fixed point")
+            #         type_1_fixed_points.append(ef)
+            #     else:
+            #         LOG.debug(f"[INDE] {ef} is not a type 1 fixed point")
+            #         if neighbor_behaviors_1.is_subset(all_fixed_points) and neighbor_behaviors_2.is_subset(all_fixed_points):
+            #             LOG.debug(f"[INDE] {ef} is a type 3 fixed point")
+            #             type_3_fixed_points.append(ef)
+            #         else:
+            #             LOG.debug(f"[INDE] {ef} is a type 2 fixed point")
+            #             type_2_fixed_points.append(ef)
 
+            # LOG.debug(f"[INDE] Type 1 Fixed point: {[elem for elem in type_1_fixed_points]}")
+            # LOG.debug(f"[INDE] Type 2 Fixed point: {[elem for elem in type_2_fixed_points]}")
+            # LOG.debug(f"[INDE] Type 3 Fixed point: {[elem for elem in type_3_fixed_points]}")
+
+            # real useful way to quickly identify - direclty start the search in the graph
+            LOG.debug(f"===================================================")
+            LOG.debug(f"[INDE] Better way to do")
+            # find common variables 
+            related_inputs_1 = set(other1.assumption.internal_vars).difference(set(self.assumption.internal_vars))
+            LOG.debug(f"[INDE] Related inputs 1: {[var.id for var in related_inputs_1]}")
+            related_inputs_2 = set(other2.assumption.internal_vars).difference(set(self.assumption.internal_vars))
+            LOG.debug(f"[INDE] Related inputs 2: {[var.id for var in related_inputs_2]}")
+            related_inputs = list(related_inputs_1.union(related_inputs_2))
+            related_inputs = sorted(related_inputs, key = lambda var: var.id)
+            LOG.debug(f"[INDE] Related inputs: {[var.id for var in related_inputs]}")
+            ret = True
+            for env in self.assumption.internal_expr:
+                LOG.debug(f"[INDE] Checking environment: {[var.id for var in self.assumption.internal_vars]} = {env}")
+                env_set = ExplicitSet(self.assumption.internal_vars, [env])
+                all_fixed_points = other1.obligation.intersect(other2.obligation).intersect(env_set) # only consider the targeted env
+                all_fixed_points = all_fixed_points.project(list(related_inputs)).internal_expr
+                print("All fixed points: ", all_fixed_points )
+
+                possible_fixed_point = []
+                candidates = set(copy.copy(all_fixed_points))
+                while candidates:
+                    LOG.debug(f"[INDE] Candidates: {candidates}")
+                    dirty_flag = False
+                    test_root = candidates.pop()
+                    LOG.debug(f"[INDE] Start Fixed point group search for {test_root}")
+                    group = [test_root]
+                    is_dirty = self._explored_fixed_point_explicit(other1, other2, explored_point=test_root, group=group, all_fixed_points=all_fixed_points, parent_node=None, related_inputs=related_inputs, env_set=env_set)
+                    if not is_dirty:
+                        possible_fixed_point.extend(group)
+                        LOG.debug(f"[INDE] Add possible fixed points: {possible_fixed_point}")
+                    candidates = candidates - set(group)
+                if possible_fixed_point:
+                    LOG.debug(f"[INDE] Exist possible fixed points: {possible_fixed_point}")
+                else:
+                    LOG.debug(f"[INDE] No possible fixed points for environement {[var.id for var in self.assumption.internal_vars]} = {env}")
+                    ret = False
+            return ret
+        
+        elif isinstance(self.guarantee, FOLClauseSet):
+            all_fixed_points = other1.obligation.intersect(other2.obligation).intersect(self.assumption)
+            # prepare variable set
+            var_Is = self.assumption.vars
+            # copy the variables
+            # remove ef in project(I1)(ef) and G1 to check if it is unsatisfiable
+        pass
+    
+    def _explored_fixed_point_explicit(self, other1: ContractBase, other2: ContractBase, explored_point, group: list, all_fixed_points, parent_node, related_inputs, env_set):
+        LOG.debug(f"[INDE] Exploring {explored_point}")
+        neighbor_behaviors_1 = self._get_neighbors_explicit(explored_point, other1, related_inputs=related_inputs, env_set=env_set)
+        LOG.debug(f"[INDE] Possible behaviors for C1 {neighbor_behaviors_1}")
+        neighbor_behaviors_2 = self._get_neighbors_explicit(explored_point, other2, related_inputs=related_inputs, env_set=env_set)
+        LOG.debug(f"[INDE] Possible behaviors for C2 {neighbor_behaviors_2}")
+
+        next_points, is_dirty1 = self._check_neighbors_explicit(neighbors=neighbor_behaviors_1, explored_point=explored_point, group=group, all_fixed_points=all_fixed_points, parent_node=parent_node)
+        next_points2, is_dirty2 = self._check_neighbors_explicit(neighbors=neighbor_behaviors_2, explored_point=explored_point, group=group, all_fixed_points=all_fixed_points, parent_node=parent_node)
+        next_points.extend(next_points2)
+        is_dirty = is_dirty1 or is_dirty2
+
+        for next_point in next_points:
+            is_dirty |= self._explored_fixed_point_explicit(other1=other1, other2=other2, explored_point=next_point, group=group, all_fixed_points=all_fixed_points, parent_node=explored_point, related_inputs=related_inputs, env_set=env_set)
+
+        return is_dirty
+
+    def _get_neighbors_explicit(self, fixed_point, other: ContractBase, related_inputs, env_set):
+        ef_set = ExplicitSet(related_inputs, expr=[fixed_point])
+        # get related inputs of the other
+        related_input_other = set(other.assumption.ordered_vars).intersection(set(related_inputs))
+        print(ef_set.project(list(related_input_other), is_refine=False))
+        print(ef_set.project(list(related_input_other), is_refine=False).intersect(other.guarantee))
+        neighbor_behaviors = ef_set.project(list(related_input_other), is_refine=False).intersect(other.guarantee)
+        neighbor_behaviors = neighbor_behaviors.project(related_inputs)
+        LOG.debug(f"[INDE] Possible behaviors {neighbor_behaviors}")
+        #LOG.debug(f"[INDE] Possible behaviors {neighbor_behaviors}")
+        return neighbor_behaviors.internal_expr
+
+
+
+    def _check_neighbors_explicit(self, neighbors, explored_point, group, all_fixed_points, parent_node):
+        next_points = []
+        dirty_flag = False
+        for elem in neighbors:
+            LOG.debug(f"[INDE] Checking Neighbor {elem}")
+            if elem != explored_point and elem != parent_node:
+                if elem in group:
+                    # loop found
+                    dirty_flag = True
+                    LOG.debug(f"[INDE] Loop Found ({elem} already explored), the group is under the risk of dissappearing after refinement")
+                else:
+                    if elem not in all_fixed_points:
+                        dirty_flag = True
+                        LOG.debug(f"[INDE] Found non fixed point {elem} as neighbor, the group is under the risk of dissappearing after refinement")
+                    else:
+                        group.append(elem)
+                        next_points.append(elem)
+                LOG.debug(f"[INDE] Next Collect: {next_points} Group: {group}, Dirty: {dirty_flag}")
+        return next_points, dirty_flag
     def to_cb(self):
         from contractda.contracts._cbcontract import CBContract
         return CBContract(vars=self._vars, constraint=self.environment, behavior=self.implementation)
