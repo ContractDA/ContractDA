@@ -47,7 +47,8 @@ def name_remap(name_map, node):
     def rename_recur_func(node: AST_Node, map: dict[str, str]):
         if isinstance(node, Symbol):
             name = node.name
-            node.name = name_map[name]
+            if name in name_map:
+                node.name = name_map[name]
 
     node.recursive_process_preorder(rename_recur_func, name_map)
 

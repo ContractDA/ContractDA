@@ -58,6 +58,10 @@ class ExplicitSet(SetBase):
         return f"{tuple([str(var)for var in self.ordered_vars])} = {str(self.ordered_expr)}"
 
     @property
+    def vars(self) -> set[Var]:
+        return self._vars
+    
+    @property
     def internal_vars(self) -> ExplicitSetVarType:
         """
         The ids for the variables, which is sorted

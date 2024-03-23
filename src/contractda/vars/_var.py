@@ -56,6 +56,11 @@ class Var(ABC):
         """
         return self._id
     
+    @id.setter
+    def id(self, value):
+        """Set the identifier of the variable"""
+        self._id = value
+
     @property
     def type_str(self) -> str:
         """ The identifier of the type

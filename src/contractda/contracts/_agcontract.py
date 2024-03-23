@@ -4,6 +4,7 @@ from contractda.contracts._contract_base import ContractBase
 from contractda.sets import SetBase, FOLClauseSet, ExplicitSet
 from contractda.vars import Var
 from contractda.solvers import SolverInterface
+from contractda.sets._fol_lan import name_remap
 
 from contractda.logger._logger import LOG
 
@@ -404,10 +405,26 @@ class AGContract(ContractBase):
         # step 1: find type 1 fixed points, check if all targeted environment has a type 1 contract 
         # A1 * G1 * A2 * G2 is the set of all fixed points
         # formulation of type 1: An element ef in the fixed point set such that for any e such that project(I1)(ef) * G1 only contains ef
-        #                                                                   and for any e such that project(I2)(ef) * G2 only contains ef
+        #                         
+        #                                           and for any e such that project(I2)(ef) * G2 only contains ef
+        LOG.debug(f"===================================================")
+        LOG.debug(f"=            Independent Design Check             =")
+        LOG.debug(f"===================================================")
+        LOG.debug(f"[INDE] Check Variables")
+        # find common variables 
+
+
+        ret = True
+        failed_env = []
         if isinstance(self.guarantee, ExplicitSet):
-            all_fixed_points = other1.obligation.intersect(other2.obligation).intersect(self.assumption) # only consider the targeted env
-            all_fixed_points.reorder_vars(self.vs)
+            related_inputs_1 = set(other1.assumption.vars).difference(set(self.assumption.vars))
+            LOG.debug(f"[INDE] Related inputs 1: {[var.id for var in related_inputs_1]}")
+            related_inputs_2 = set(other2.assumption.vars).difference(set(self.assumption.vars))
+            LOG.debug(f"[INDE] Related inputs 2: {[var.id for var in related_inputs_2]}")
+            related_inputs = list(related_inputs_1.union(related_inputs_2))
+            related_inputs = sorted(related_inputs, key = lambda var: var.id)
+            LOG.debug(f"[INDE] Related inputs: {[var.id for var in related_inputs]}")
+
             # # this is debug
             # type_1_fixed_points = [] # forall (e of fresh all variables!), (e \in project(I1)(ef) and G1 and e == ef)
             # type_2_fixed_points = []
@@ -440,17 +457,6 @@ class AGContract(ContractBase):
             # LOG.debug(f"[INDE] Type 3 Fixed point: {[elem for elem in type_3_fixed_points]}")
 
             # real useful way to quickly identify - direclty start the search in the graph
-            LOG.debug(f"===================================================")
-            LOG.debug(f"[INDE] Better way to do")
-            # find common variables 
-            related_inputs_1 = set(other1.assumption.internal_vars).difference(set(self.assumption.internal_vars))
-            LOG.debug(f"[INDE] Related inputs 1: {[var.id for var in related_inputs_1]}")
-            related_inputs_2 = set(other2.assumption.internal_vars).difference(set(self.assumption.internal_vars))
-            LOG.debug(f"[INDE] Related inputs 2: {[var.id for var in related_inputs_2]}")
-            related_inputs = list(related_inputs_1.union(related_inputs_2))
-            related_inputs = sorted(related_inputs, key = lambda var: var.id)
-            LOG.debug(f"[INDE] Related inputs: {[var.id for var in related_inputs]}")
-            ret = True
             for env in self.assumption.internal_expr:
                 LOG.debug(f"[INDE] Checking environment: {[var.id for var in self.assumption.internal_vars]} = {env}")
                 env_set = ExplicitSet(self.assumption.internal_vars, [env])
@@ -475,17 +481,184 @@ class AGContract(ContractBase):
                     LOG.debug(f"[INDE] Exist possible fixed points: {possible_fixed_point}")
                 else:
                     LOG.debug(f"[INDE] No possible fixed points for environement {[var.id for var in self.assumption.internal_vars]} = {env}")
+                    failed_env.append(env)
                     ret = False
-            return ret
-        
+                    
         elif isinstance(self.guarantee, FOLClauseSet):
             all_fixed_points = other1.obligation.intersect(other2.obligation).intersect(self.assumption)
-            # prepare variable set
-            var_Is = self.assumption.vars
-            # copy the variables
+            # find related inputs
+            all_var = set(self.vs).union(set(other1.vs)).union(set(other2.vs))
+            a1_var = other1.assumption.expr.get_symbols()
+            a2_var = other2.assumption.expr.get_symbols()
+            as_var = self.assumption.expr.get_symbols()
+            print(a1_var)
+            print(a2_var)
+            print(as_var)
+            
+            related_inputs_1 = a1_var.difference(as_var)
+            related_inputs_1 = set([v for v in all_var if v.id in related_inputs_1])
+            LOG.debug(f"[INDE] Related inputs 1: {[var.id for var in related_inputs_1]}")
+            related_inputs_2 = a2_var.difference(as_var)
+            related_inputs_2 = set([v for v in all_var if v.id in related_inputs_2])
+            LOG.debug(f"[INDE] Related inputs 2: {[var.id for var in related_inputs_2]}")
+            related_inputs = list(related_inputs_1.union(related_inputs_2))
+            related_inputs = sorted(related_inputs, key = lambda var: var.id)
+            LOG.debug(f"[INDE] Related inputs: {[var.id for var in related_inputs]}")
+
+            system_inputs = [v for v in all_var if v.id in as_var]
+            inde_outputs = all_var.difference(related_inputs).difference(system_inputs)
+            LOG.debug(f"[INDE] Independent Ouputs: {[var.id for var in inde_outputs]}")
+
+            solver = self.assumption._solver_type()
+            # Case 1 exist an environment has no fixed point, good for independent design
+            LOG.debug(f"[INDE 1] Check if there is an environment thas has no fixed points...")
+            # Find counter example that exists an environment that have no corresponding behavior satisfying fixed point
+            # ensure all variables are encoded
+            vars_map = {v.id: solver.get_fresh_variable(v.id, sort=v.type_str) for v in all_var}
+            # encode both assumption and the guarantee of the decomposed contracts
+            var_map, encoded_assumption = self.assumption.encode(solver=solver, vars=self.assumption.vars, clause=self.assumption.expr, vars_map=vars_map)
+            var_map, encoded_g1 = other1.guarantee.encode(solver=solver, vars=other1.guarantee.vars, clause=other1.guarantee.expr, vars_map=vars_map)
+            var_map, encoded_g2 = other2.guarantee.encode(solver=solver, vars=other2.guarantee.vars, clause=other2.guarantee.expr, vars_map=vars_map)
+            var_map, encoded_all_fp = all_fixed_points.encode(solver=solver, vars=all_fixed_points.vars, clause=all_fixed_points.expr, vars_map=vars_map)
+            print(encoded_all_fp)
+            all_vars_except_env = list(related_inputs) + list(inde_outputs)
+            all_vars_except_env_solver = [var_map[v.id] for v in all_vars_except_env]
+            print(all_vars_except_env_solver)
+            exist_fix_point = solver.clause_exists(all_vars_except_env_solver, encoded_all_fp)
+            check_clause = solver.clause_and(encoded_assumption, solver.clause_not(exist_fix_point))
+            solver.add_conjunction_clause(check_clause)
+            is_counter_env = solver.check()
+            if is_counter_env:
+                LOG.debug(f"[INDE] Exist an environment that does not have a fixed point: {solver._model}")
+                return False
+            LOG.debug(f"[INDE] All environment has fixed points, keep checking....")
+            # Case 2 check if all environment has a type 1 fixed points, which means it is good
+            LOG.debug(f"[INDE 2] Check if all environments has a type 1 fixed points...")
+            copied_related_inputs1 = []
+            copied_related_inputs2 = []
+            copied_related_inputs = []
+            # change their name to internal copy
+            rename_map = dict()
+            for v in related_inputs:
+                new_v = copy.copy(v)
+                new_v.id = "__copy__" + v.id
+                copied_related_inputs.append(new_v)
+                rename_map[v.id] = new_v.id
+                if v in related_inputs_1:
+                    copied_related_inputs1.append(new_v)
+                elif v in related_inputs_2:
+                    copied_related_inputs2.append(new_v)
+                else:
+                    raise Exception(f"Weird Var: not in both related input 1 and 2 {v.id}")
+
+            LOG.debug(f"[INDE] Copied Variables Related 1 {[v.id for v in copied_related_inputs1]}")
+            LOG.debug(f"[INDE] Copied Variables Related 2 {[v.id for v in copied_related_inputs2]}")
+            LOG.debug(f"[INDE] Copied Variables Related All {[v.id for v in copied_related_inputs]}")
+
+            # Find counter example: Find the environment that has two fixed point sharing the related inputs 1 or related inputs 2
+            # collect z3 var
+            solver_var_related_inputs = [var_map[v.id] for v in related_inputs]
+            copied_var_map = {v.id: solver.get_fresh_variable(v.id, sort=v.type_str) for v in copied_related_inputs}
+            var_map.update(copied_var_map)
+            solver_var_copied_related_inputs = [var_map[v.id] for v in copied_related_inputs]
+            # Exist two fixed point that share inputs one
+            # copy the fixed point clause
+            copied_all_fixed_points = self._copy_clause_with_copied_var(all_fixed_points, rename_map, copied_related_inputs + list(system_inputs) + list(inde_outputs))
+            copied_obligation1 = self._copy_clause_with_copied_var(other1.obligation, rename_map, related_inputs + copied_related_inputs + list(system_inputs) + list(inde_outputs))
+            copied_obligation2 = self._copy_clause_with_copied_var(other2.obligation, rename_map, related_inputs + copied_related_inputs + list(system_inputs) + list(inde_outputs))
+            
+            var_map, encoded_all_fp = all_fixed_points.encode(solver=solver, vars=all_fixed_points.vars, clause=all_fixed_points.expr, vars_map=vars_map)
+            var_map, encoded_all_fp_copied = copied_all_fixed_points.encode(solver=solver, vars=copied_all_fixed_points.vars, clause=copied_all_fixed_points.expr, vars_map=vars_map)
+            var_map, encoded_copied_obligation1 = copied_obligation1.encode(solver=solver, vars=copied_obligation1.vars, clause=copied_obligation1.expr, vars_map=vars_map)
+            var_map, encoded_copied_obligation2 = copied_obligation2.encode(solver=solver, vars=copied_obligation2.vars, clause=copied_obligation2.expr, vars_map=vars_map)
+            LOG.debug(f"[INDE] All_fixed_point = {encoded_all_fp}")
+            LOG.debug(f"[INDE] All_fixed_point copied = {encoded_all_fp_copied}")
+            LOG.debug(f"[INDE] obligation1 = {encoded_copied_obligation1}")
+            LOG.debug(f"[INDE] obligation2 = {encoded_copied_obligation2}")
+            # rename to copied vars
+            # create clause that states: related inputs 1 is the same but there are some related inputs 2 different
+            # This check finds the fixed point and env such that no other neighbor exist
+            same_1 = None
+            same_2 = None
+            for v1, v2 in zip(related_inputs, copied_related_inputs):
+                eq_clause = var_map[v1.id] == var_map[v2.id]
+                if v1 in related_inputs_1:
+                    if same_1 is not None:
+                        same_1 = solver.clause_and(same_1, eq_clause)
+                    else:
+                        same_1 = eq_clause
+                elif v1 in related_inputs_2:
+                    if same_2 is not None:
+                        same_2 = solver.clause_and(same_2, eq_clause)
+                    else:
+                        same_2 = eq_clause                 
+            LOG.debug(f"[INDE] SAME 1 = {same_1}")
+            LOG.debug(f"[INDE] SAME 2 = {same_2}")
+            neighbor_clause_1 = solver.clause_and(same_1, encoded_copied_obligation1)
+            neighbor_clause_2 = solver.clause_and(same_2, encoded_copied_obligation2)
+            has_type_1_fp_clause = solver.clause_forall(solver_var_copied_related_inputs, 
+                                                        solver.clause_and(solver.clause_implies(neighbor_clause_1, same_2),
+                                                                          solver.clause_implies(neighbor_clause_2, same_1))
+                                                                          )
+            check_clause = solver.clause_and(encoded_assumption, solver.clause_not(solver.clause_exists(solver_var_related_inputs, has_type_1_fp_clause)))
+            LOG.debug(f"[INDE] check clause: {check_clause}")
+            solver.reset()
+            solver.add_conjunction_clause(check_clause)
+            is_counter_env = solver.check()
+            if not is_counter_env:
+                LOG.debug(f"[INDE] All environment has a type 1 fixed point")
+                return True
+            
+            LOG.debug(f"[INDE 2] Environment {solver._model} does not have a type 1 fixed point, keep checking...")
+            # Case 3 Check if there is an environment that only contains type 2 fixed points
+            LOG.debug(f"[INDE 3] Check if there is an environment that only contains type 2 fixed point...")
+            # To check this, we find an environment as a counter example
+            #  Under this environment, all the fixed points have all their neighbors, except for themselves, are all non-fixed points.
+            # encoding of given a fixed point, all their neighbors are non-fixed points
+            type_2_fp_1 = solver.clause_implies(neighbor_clause_1, solver.clause_or(same_2, solver.clause_not(encoded_all_fp_copied)))
+            type_2_fp_2 = solver.clause_implies(neighbor_clause_2, solver.clause_or(same_1, solver.clause_not(encoded_all_fp_copied)))
+            only_non_fp_neighbor = solver.clause_forall(solver_var_copied_related_inputs, solver.clause_and(type_2_fp_1, type_2_fp_2))
+            # for all fixed points, they are type 2
+            only_type_2_fp = solver.clause_forall(solver_var_related_inputs, solver.clause_implies(encoded_all_fp, only_non_fp_neighbor))
+            check_clause = solver.clause_and(encoded_assumption, only_type_2_fp)
+            LOG.debug(f"[INDE] check clause: {check_clause}")
+            solver.reset()
+            solver.add_conjunction_clause(check_clause)
+            is_counter_env = solver.check()
+            if is_counter_env:
+                LOG.debug(f"[INDE] The environment {solver._model} has only type 2 fixed points...")
+                return False
+            
+            # Case 4: unroll the constraints to find OK trees with depth...
+            LOG.debug(f"[INDE 4] Unrolled to find a legal trees...")
+
+            # Case 5: Handle infinite length paths with bounds (if there is a path longer than certain )
+            # General Ideas, find a counter example that does not have a good fixed point group in trees 
+            # Exist env, 
+            # copy the variables in related variables
+
+            # tatic 1 check if 
+            # find counter example of the environment
+            # for 
             # remove ef in project(I1)(ef) and G1 to check if it is unsatisfiable
-        pass
+        else:
+            raise NotImplementedError("Not supported sets")
+        LOG.debug(f"===================================================")
+        LOG.debug(f"=            Independent Design Result            =")
+        LOG.debug(f"===================================================")
+        LOG.debug(f"Result: {ret}")
+        if failed_env:
+            LOG.debug(f"Reason: {failed_env} do not have possible fixed points")
+        return ret
     
+    def _copy_clause_with_copied_var(self, clause: FOLClauseSet, rename_map, copied_expr_var):
+        copied_clause_expr = copy.deepcopy(clause.expr)
+        name_remap(rename_map, copied_clause_expr.root)
+        copied_clause_expr._symbols = copied_clause_expr.root.get_symbols()
+        # create new fol clause set for it
+        copied_clause = FOLClauseSet(vars = copied_expr_var, expr=copied_clause_expr)
+        return copied_clause
+
     def _explored_fixed_point_explicit(self, other1: ContractBase, other2: ContractBase, explored_point, group: list, all_fixed_points, parent_node, related_inputs, env_set):
         LOG.debug(f"[INDE] Exploring {explored_point}")
         neighbor_behaviors_1 = self._get_neighbors_explicit(explored_point, other1, related_inputs=related_inputs, env_set=env_set)
@@ -507,9 +680,9 @@ class AGContract(ContractBase):
         ef_set = ExplicitSet(related_inputs, expr=[fixed_point])
         # get related inputs of the other
         related_input_other = set(other.assumption.ordered_vars).intersection(set(related_inputs))
-        print(ef_set.project(list(related_input_other), is_refine=False))
-        print(ef_set.project(list(related_input_other), is_refine=False).intersect(other.guarantee))
-        neighbor_behaviors = ef_set.project(list(related_input_other), is_refine=False).intersect(other.guarantee)
+        # #TODO: Debug this, the environment is not completely removed from this
+        # print([v.id for v in related_input_other])
+        neighbor_behaviors = ef_set.project(list(related_input_other), is_refine=False).intersect(env_set).intersect(other.guarantee)
         neighbor_behaviors = neighbor_behaviors.project(related_inputs)
         LOG.debug(f"[INDE] Possible behaviors {neighbor_behaviors}")
         #LOG.debug(f"[INDE] Possible behaviors {neighbor_behaviors}")

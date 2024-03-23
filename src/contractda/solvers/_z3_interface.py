@@ -110,6 +110,8 @@ class Z3Interface(SolverInterface):
         ret1 = z3.Tactic("ctx-solver-simplify")(arg)
         return ret1.as_expr()
 
+    def reset(self):
+        self._solver.reset()
 
     def add_conjunction_clause(self, *args):
         self._solver.add(*args)
