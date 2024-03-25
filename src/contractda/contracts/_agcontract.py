@@ -462,7 +462,6 @@ class AGContract(ContractBase):
                 env_set = ExplicitSet(self.assumption.internal_vars, [env])
                 all_fixed_points = other1.obligation.intersect(other2.obligation).intersect(env_set) # only consider the targeted env
                 all_fixed_points = all_fixed_points.project(list(related_inputs)).internal_expr
-                print("All fixed points: ", all_fixed_points )
 
                 possible_fixed_point = []
                 candidates = set(copy.copy(all_fixed_points))
@@ -491,9 +490,6 @@ class AGContract(ContractBase):
             a1_var = other1.assumption.expr.get_symbols()
             a2_var = other2.assumption.expr.get_symbols()
             as_var = self.assumption.expr.get_symbols()
-            print(a1_var)
-            print(a2_var)
-            print(as_var)
             
             related_inputs_1 = a1_var.difference(as_var)
             related_inputs_1 = set([v for v in all_var if v.id in related_inputs_1])
@@ -517,42 +513,30 @@ class AGContract(ContractBase):
             vars_map = {v.id: solver.get_fresh_variable(v.id, sort=v.type_str) for v in all_var}
             # encode both assumption and the guarantee of the decomposed contracts
             var_map, encoded_assumption = self.assumption.encode(solver=solver, vars=self.assumption.vars, clause=self.assumption.expr, vars_map=vars_map)
-            var_map, encoded_g1 = other1.guarantee.encode(solver=solver, vars=other1.guarantee.vars, clause=other1.guarantee.expr, vars_map=vars_map)
-            var_map, encoded_g2 = other2.guarantee.encode(solver=solver, vars=other2.guarantee.vars, clause=other2.guarantee.expr, vars_map=vars_map)
             var_map, encoded_all_fp = all_fixed_points.encode(solver=solver, vars=all_fixed_points.vars, clause=all_fixed_points.expr, vars_map=vars_map)
-            print(encoded_all_fp)
+
             all_vars_except_env = list(related_inputs) + list(inde_outputs)
             all_vars_except_env_solver = [var_map[v.id] for v in all_vars_except_env]
-            print(all_vars_except_env_solver)
+
             exist_fix_point = solver.clause_exists(all_vars_except_env_solver, encoded_all_fp)
             check_clause = solver.clause_and(encoded_assumption, solver.clause_not(exist_fix_point))
             solver.add_conjunction_clause(check_clause)
             is_counter_env = solver.check()
             if is_counter_env:
-                LOG.debug(f"[INDE] Exist an environment that does not have a fixed point: {solver._model}")
-                return False
+                ret = False
+                LOG.debug(f"===================================================")
+                LOG.debug(f"=            Independent Design Result            =")
+                LOG.debug(f"===================================================")
+                LOG.debug(f"Result: {ret}")
+                LOG.debug(f"[INDE 1] Exist an environment that does not have a fixed point: {solver._model}")
+                return ret
+
             LOG.debug(f"[INDE] All environment has fixed points, keep checking....")
             # Case 2 check if all environment has a type 1 fixed points, which means it is good
             LOG.debug(f"[INDE 2] Check if all environments has a type 1 fixed points...")
-            copied_related_inputs1 = []
-            copied_related_inputs2 = []
-            copied_related_inputs = []
-            # change their name to internal copy
-            rename_map = dict()
-            for v in related_inputs:
-                new_v = copy.copy(v)
-                new_v.id = "__copy__" + v.id
-                copied_related_inputs.append(new_v)
-                rename_map[v.id] = new_v.id
-                if v in related_inputs_1:
-                    copied_related_inputs1.append(new_v)
-                elif v in related_inputs_2:
-                    copied_related_inputs2.append(new_v)
-                else:
-                    raise Exception(f"Weird Var: not in both related input 1 and 2 {v.id}")
 
-            LOG.debug(f"[INDE] Copied Variables Related 1 {[v.id for v in copied_related_inputs1]}")
-            LOG.debug(f"[INDE] Copied Variables Related 2 {[v.id for v in copied_related_inputs2]}")
+            copied_related_inputs, rename_map = self._copy_related_var_and_update_var_map(related_inputs=related_inputs, copied_time=1)
+
             LOG.debug(f"[INDE] Copied Variables Related All {[v.id for v in copied_related_inputs]}")
 
             # Find counter example: Find the environment that has two fixed point sharing the related inputs 1 or related inputs 2
@@ -567,7 +551,6 @@ class AGContract(ContractBase):
             copied_obligation1 = self._copy_clause_with_copied_var(other1.obligation, rename_map, related_inputs + copied_related_inputs + list(system_inputs) + list(inde_outputs))
             copied_obligation2 = self._copy_clause_with_copied_var(other2.obligation, rename_map, related_inputs + copied_related_inputs + list(system_inputs) + list(inde_outputs))
             
-            var_map, encoded_all_fp = all_fixed_points.encode(solver=solver, vars=all_fixed_points.vars, clause=all_fixed_points.expr, vars_map=vars_map)
             var_map, encoded_all_fp_copied = copied_all_fixed_points.encode(solver=solver, vars=copied_all_fixed_points.vars, clause=copied_all_fixed_points.expr, vars_map=vars_map)
             var_map, encoded_copied_obligation1 = copied_obligation1.encode(solver=solver, vars=copied_obligation1.vars, clause=copied_obligation1.expr, vars_map=vars_map)
             var_map, encoded_copied_obligation2 = copied_obligation2.encode(solver=solver, vars=copied_obligation2.vars, clause=copied_obligation2.expr, vars_map=vars_map)
@@ -578,36 +561,34 @@ class AGContract(ContractBase):
             # rename to copied vars
             # create clause that states: related inputs 1 is the same but there are some related inputs 2 different
             # This check finds the fixed point and env such that no other neighbor exist
-            same_1 = None
-            same_2 = None
-            for v1, v2 in zip(related_inputs, copied_related_inputs):
-                eq_clause = var_map[v1.id] == var_map[v2.id]
-                if v1 in related_inputs_1:
-                    if same_1 is not None:
-                        same_1 = solver.clause_and(same_1, eq_clause)
-                    else:
-                        same_1 = eq_clause
-                elif v1 in related_inputs_2:
-                    if same_2 is not None:
-                        same_2 = solver.clause_and(same_2, eq_clause)
-                    else:
-                        same_2 = eq_clause                 
+            same_1, same_2 = self._generated_neighbor_constraint(solver=solver, 
+                                                                related_inputs=related_inputs,
+                                                                related_inputs_1=related_inputs_1,
+                                                                related_inputs_2=related_inputs_2,
+                                                                vars1=related_inputs,
+                                                                vars2=copied_related_inputs,
+                                                                var_map=var_map)               
             LOG.debug(f"[INDE] SAME 1 = {same_1}")
             LOG.debug(f"[INDE] SAME 2 = {same_2}")
             neighbor_clause_1 = solver.clause_and(same_1, encoded_copied_obligation1)
             neighbor_clause_2 = solver.clause_and(same_2, encoded_copied_obligation2)
-            has_type_1_fp_clause = solver.clause_forall(solver_var_copied_related_inputs, 
+            is_type_1_fp_clause = solver.clause_forall(solver_var_copied_related_inputs, 
                                                         solver.clause_and(solver.clause_implies(neighbor_clause_1, same_2),
                                                                           solver.clause_implies(neighbor_clause_2, same_1))
                                                                           )
-            check_clause = solver.clause_and(encoded_assumption, solver.clause_not(solver.clause_exists(solver_var_related_inputs, has_type_1_fp_clause)))
+            check_clause = solver.clause_and(encoded_assumption, solver.clause_not(solver.clause_exists(solver_var_related_inputs, is_type_1_fp_clause)))
             LOG.debug(f"[INDE] check clause: {check_clause}")
             solver.reset()
             solver.add_conjunction_clause(check_clause)
             is_counter_env = solver.check()
             if not is_counter_env:
-                LOG.debug(f"[INDE] All environment has a type 1 fixed point")
-                return True
+                ret = True
+                LOG.debug(f"===================================================")
+                LOG.debug(f"=            Independent Design Result            =")
+                LOG.debug(f"===================================================")
+                LOG.debug(f"Result: {ret}")
+                LOG.debug(f"[INDE 2] All environment has a type 1 fixed point")
+                return ret
             
             LOG.debug(f"[INDE 2] Environment {solver._model} does not have a type 1 fixed point, keep checking...")
             # Case 3 Check if there is an environment that only contains type 2 fixed points
@@ -626,21 +607,79 @@ class AGContract(ContractBase):
             solver.add_conjunction_clause(check_clause)
             is_counter_env = solver.check()
             if is_counter_env:
-                LOG.debug(f"[INDE] The environment {solver._model} has only type 2 fixed points...")
-                return False
+                ret = False
+                LOG.debug(f"===================================================")
+                LOG.debug(f"=            Independent Design Result            =")
+                LOG.debug(f"===================================================")
+                LOG.debug(f"Result: {ret}")
+                LOG.debug(f"[INDE 3] The environment {solver._model} has only type 2 fixed points...")
+                return ret
             
             # Case 4: unroll the constraints to find OK trees with depth...
             LOG.debug(f"[INDE 4] Unrolled to find a legal trees...")
+            # level = 3: has OK trees: exist a fixed points, all its neighbor are either only itself or all fixed points and these neighbor's neighbor go to the same value of inputs
+            # copy the variables again
+            copied_2_related_inputs, rename_map_2 = self._copy_related_var_and_update_var_map(related_inputs=related_inputs, copied_time=2)
+            copied_var_map = {v.id: solver.get_fresh_variable(v.id, sort=v.type_str) for v in copied_2_related_inputs}
+            var_map.update(copied_var_map)
+            solver_var_copied_2_related_inputs = [var_map[v.id] for v in copied_2_related_inputs]
+            # create basic clauses
+            copied_2_all_fixed_points = self._copy_clause_with_copied_var(all_fixed_points, rename_map_2, copied_2_related_inputs + list(system_inputs) + list(inde_outputs))
+            copied_2_obligation1 = self._copy_clause_with_copied_var(other1.obligation, rename_map_2, related_inputs + copied_2_related_inputs + list(system_inputs) + list(inde_outputs))
+            copied_2_obligation2 = self._copy_clause_with_copied_var(other2.obligation, rename_map_2, related_inputs + copied_2_related_inputs + list(system_inputs) + list(inde_outputs))
+            
+            var_map, encoded_all_fp_copied_2 = copied_2_all_fixed_points.encode(solver=solver, vars=copied_2_all_fixed_points.vars, clause=copied_2_all_fixed_points.expr, vars_map=vars_map)
+            var_map, encoded_copied_2_obligation1 = copied_2_obligation1.encode(solver=solver, vars=copied_2_obligation1.vars, clause=copied_2_obligation1.expr, vars_map=vars_map)
+            var_map, encoded_copied_2_obligation2 = copied_2_obligation2.encode(solver=solver, vars=copied_2_obligation2.vars, clause=copied_2_obligation2.expr, vars_map=vars_map)
+
+            same_1_2_1, same_1_2_2 = self._generated_neighbor_constraint(solver=solver, 
+                                                           related_inputs=related_inputs,
+                                                           related_inputs_1=related_inputs_1,
+                                                           related_inputs_2=related_inputs_2,
+                                                           vars1=copied_related_inputs,
+                                                           vars2=copied_2_related_inputs,
+                                                           var_map=var_map)
+            
+            same_0_2_1, same_0_2_2 = self._generated_neighbor_constraint(solver=solver, 
+                                                           related_inputs=related_inputs,
+                                                           related_inputs_1=related_inputs_1,
+                                                           related_inputs_2=related_inputs_2,
+                                                           vars1=related_inputs,
+                                                           vars2=copied_2_related_inputs,
+                                                           var_map=var_map)       
+
+            LOG.debug(f"[INDE] SAME 2 1 = {same_1_2_1}")
+            LOG.debug(f"[INDE] SAME 2 2 = {same_1_2_2}")
+
+            neighbor_2_clause_1 = solver.clause_and(same_1_2_1, encoded_copied_2_obligation1)
+            neighbor_2_clause_2 = solver.clause_and(same_1_2_2, encoded_copied_2_obligation2)
+
+            neighbor_2_is_good_1 = solver.clause_forall(solver_var_copied_2_related_inputs, solver.clause_implies(neighbor_2_clause_2, same_0_2_1))
+            neighbor_2_is_godd_2 = solver.clause_forall(solver_var_copied_2_related_inputs, solver.clause_implies(neighbor_2_clause_1, same_0_2_2))
+            neighbor_2_are_good = solver.clause_forall(solver_var_copied_related_inputs, solver.clause_and(
+                solver.clause_implies(neighbor_clause_1, solver.clause_and(encoded_all_fp_copied, solver.clause_or(same_2, neighbor_2_is_good_1))),
+                solver.clause_implies(neighbor_clause_2, solver.clause_and(encoded_all_fp_copied, solver.clause_or(same_1, neighbor_2_is_godd_2)))
+                )
+                )
+            exist_good_fixed_point_group = solver.clause_exists(solver_var_related_inputs, solver.clause_and(encoded_all_fp, solver.clause_or(is_type_1_fp_clause, neighbor_2_are_good)))
+            check_clause = solver.clause_and(encoded_assumption, solver.clause_not(exist_good_fixed_point_group))
+            solver.reset()
+            solver.add_conjunction_clause(check_clause)
+            is_counter_env = solver.check()
+
+            if is_counter_env:
+                LOG.debug(f"[INDE 4] The environment {solver._model} does not possess a good fixed point group within 3 neighbors")
+                LOG.debug(f"[INDE 4] Note that there might be good fixed point group for more neighbors, but the contracts are not recommended until it is proved")
+                ret = False
+            else:
+                ret = True
+                LOG.debug(f"[INDE 4] Every targeted environment has a fixed point group smaller than depth 3")
+
+
+            #TODO: extend the method to more depth of the tree
+            #TODO: add the independent output existence to the obligation
 
             # Case 5: Handle infinite length paths with bounds (if there is a path longer than certain )
-            # General Ideas, find a counter example that does not have a good fixed point group in trees 
-            # Exist env, 
-            # copy the variables in related variables
-
-            # tatic 1 check if 
-            # find counter example of the environment
-            # for 
-            # remove ef in project(I1)(ef) and G1 to check if it is unsatisfiable
         else:
             raise NotImplementedError("Not supported sets")
         LOG.debug(f"===================================================")
@@ -651,6 +690,35 @@ class AGContract(ContractBase):
             LOG.debug(f"Reason: {failed_env} do not have possible fixed points")
         return ret
     
+    def _generated_neighbor_constraint(self, solver, related_inputs, related_inputs_1, related_inputs_2, vars1, vars2, var_map):
+        same_1 = None
+        same_2 = None
+        for v1, v2, v3 in zip(related_inputs, vars1, vars2):
+            eq_clause = var_map[v2.id] == var_map[v3.id]
+            if v1 in related_inputs_1:
+                if same_1 is not None:
+                    same_1 = solver.clause_and(same_1, eq_clause)
+                else:
+                    same_1 = eq_clause
+            elif v1 in related_inputs_2:
+                if same_2 is not None:
+                    same_2 = solver.clause_and(same_2, eq_clause)
+                else:
+                    same_2 = eq_clause   
+
+        return same_1, same_2
+
+    def _copy_related_var_and_update_var_map(self, related_inputs, copied_time:int):
+        copied_related_inputs = []
+        # change their name to internal copy
+        rename_map = dict()
+        for v in related_inputs:
+            new_v = copy.copy(v)
+            new_v.id = f"__copy{copied_time}__" + v.id
+            copied_related_inputs.append(new_v)
+            rename_map[v.id] = new_v.id
+        return copied_related_inputs, rename_map
+
     def _copy_clause_with_copied_var(self, clause: FOLClauseSet, rename_map, copied_expr_var):
         copied_clause_expr = copy.deepcopy(clause.expr)
         name_remap(rename_map, copied_clause_expr.root)
