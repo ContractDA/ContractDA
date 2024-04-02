@@ -47,7 +47,28 @@ def test_inde_explicit_case_1():
     
     assert(cs.is_independent_decomposition_of(c1, c2))
 
-def test_inde_explicit_classic_case_1():
+def test_inde_explicit_case_2():
+    w = CategoricalVar("w", range(0, 5))
+    x = CategoricalVar("x", range(0, 7))
+    y = CategoricalVar("y", range(0, 8))
+    z = CategoricalVar("z", range(0, 3))
+
+    c1 = AGContract([w, x, y], 
+                    assumption=ExplicitSet([w, x], [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6)]),
+                    guarantee=ExplicitSet([w, x, y], [(0, 0, 0), (0, 0, 1), (0, 1, 1), (0, 2, 1)]))
+    
+    c2 = AGContract([x, y], 
+                    assumption=ExplicitSet([y], [tuple([0]), tuple([1]), tuple([2]), tuple([3]), tuple([4]), tuple([5]), tuple([6])]),
+                    guarantee=ExplicitSet([x, y], [(0, 0), (0, 1), (1, 1), (2, 1)]))
+    
+    cs = AGContract([w, x, y], 
+                    assumption=ExplicitSet([w], [tuple([0])]),
+                    guarantee=ExplicitSet([x, y], [(0, 0), (0, 1), (1, 1), (2, 1)]))
+    
+    assert(cs.is_independent_decomposition_of(c1, c2))
+    #assert(False)
+
+def test_inde_explicit_hard_case_1():
     x = CategoricalVar("x", range(0, 2))
     y = CategoricalVar("y", range(0, 5))
     z = CategoricalVar("z", range(0, 5))
@@ -71,7 +92,7 @@ def test_inde_explicit_classic_case_1():
     # assert(False)
 
 
-def test_inde_explicit_classic_case_2():
+def test_inde_explicit_hard_case_2():
     x = CategoricalVar("x", range(0, 2))
     y = CategoricalVar("y", range(0, 5))
     z = CategoricalVar("z", range(0, 5))
@@ -94,7 +115,7 @@ def test_inde_explicit_classic_case_2():
     
     assert(not cs.is_independent_decomposition_of(c1, c2))
 
-def test_inde_explicit_classic_case_3():
+def test_inde_explicit_hard_case_3():
     x = CategoricalVar("x", range(0, 2))
     y = CategoricalVar("y", range(0, 5))
     z = CategoricalVar("z", range(0, 5))
@@ -117,7 +138,7 @@ def test_inde_explicit_classic_case_3():
     
     assert(not cs.is_independent_decomposition_of(c1, c2))
 
-def test_inde_explicit_classic_case_4():
+def test_inde_explicit_hard_case_4():
     # This cannot be done in explicit set as it is bounded...
     # x = CategoricalVar("x", range(0, 2))
     # y = CategoricalVar("y", range(0, 5))

@@ -88,13 +88,13 @@ def test_inde_clause_hard_case_2():
 
     c1 = AGContract([x, y, z], 
                     assumption="x == x && y == y",
-                    guarantee="z <= x + y + 3 && z >= x + y + 2")
+                    guarantee="z <= x + y + 2.5 && z >= x + y + 2")
     c2 = AGContract([y, z], 
                     assumption="z == z",
-                    guarantee="(y >= 3 && y <= 4)")
+                    guarantee="(y >= 3 && y <= 3.5)")
     cs = AGContract([x, z], 
                     assumption="x >= -3",
-                    guarantee="(z >= x + 5 && z <= x + 7)")
+                    guarantee="(z >= x + 5 && z <= x + 6)")
     
     assert(not cs.is_independent_decomposition_of(c1, c2))
     # should be False

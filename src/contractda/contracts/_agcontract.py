@@ -471,7 +471,7 @@ class AGContract(ContractBase):
                     test_root = candidates.pop()
                     LOG.debug(f"[INDE] Start Fixed point group search for {test_root}")
                     group = [test_root]
-                    is_dirty = self._explored_fixed_point_explicit(other1, other2, explored_point=test_root, group=group, all_fixed_points=all_fixed_points, parent_node=None, related_inputs=related_inputs, env_set=env_set)
+                    is_dirty = self._explored_fixed_point_explicit(other1, other2, explored_point=test_root, group=group, all_fixed_points=all_fixed_points, related_inputs=related_inputs, env_set=env_set)
                     if not is_dirty:
                         possible_fixed_point.extend(group)
                         LOG.debug(f"[INDE] Add possible fixed points: {possible_fixed_point}")
@@ -596,8 +596,8 @@ class AGContract(ContractBase):
             # To check this, we find an environment as a counter example
             #  Under this environment, all the fixed points have all their neighbors, except for themselves, are all non-fixed points.
             # encoding of given a fixed point, all their neighbors are non-fixed points
-            type_2_fp_1 = solver.clause_implies(neighbor_clause_1, solver.clause_or(same_2, solver.clause_not(encoded_all_fp_copied)))
-            type_2_fp_2 = solver.clause_implies(neighbor_clause_2, solver.clause_or(same_1, solver.clause_not(encoded_all_fp_copied)))
+            type_2_fp_1 = solver.clause_implies(solver.clause_and(neighbor_clause_1, solver.clause_not(same_2)), solver.clause_not(encoded_all_fp_copied))
+            type_2_fp_2 = solver.clause_implies(solver.clause_and(neighbor_clause_2, solver.clause_not(same_1)), solver.clause_not(encoded_all_fp_copied))
             only_non_fp_neighbor = solver.clause_forall(solver_var_copied_related_inputs, solver.clause_and(type_2_fp_1, type_2_fp_2))
             # for all fixed points, they are type 2
             only_type_2_fp = solver.clause_forall(solver_var_related_inputs, solver.clause_implies(encoded_all_fp, only_non_fp_neighbor))
@@ -727,21 +727,28 @@ class AGContract(ContractBase):
         copied_clause = FOLClauseSet(vars = copied_expr_var, expr=copied_clause_expr)
         return copied_clause
 
-    def _explored_fixed_point_explicit(self, other1: ContractBase, other2: ContractBase, explored_point, group: list, all_fixed_points, parent_node, related_inputs, env_set):
+    def _explored_fixed_point_explicit(self, other1: ContractBase, other2: ContractBase, explored_point, group: list, all_fixed_points, related_inputs, env_set, direction = None):
         LOG.debug(f"[INDE] Exploring {explored_point}")
-        neighbor_behaviors_1 = self._get_neighbors_explicit(explored_point, other1, related_inputs=related_inputs, env_set=env_set)
-        LOG.debug(f"[INDE] Possible behaviors for C1 {neighbor_behaviors_1}")
-        neighbor_behaviors_2 = self._get_neighbors_explicit(explored_point, other2, related_inputs=related_inputs, env_set=env_set)
-        LOG.debug(f"[INDE] Possible behaviors for C2 {neighbor_behaviors_2}")
 
-        next_points, is_dirty1 = self._check_neighbors_explicit(neighbors=neighbor_behaviors_1, explored_point=explored_point, group=group, all_fixed_points=all_fixed_points, parent_node=parent_node)
-        next_points2, is_dirty2 = self._check_neighbors_explicit(neighbors=neighbor_behaviors_2, explored_point=explored_point, group=group, all_fixed_points=all_fixed_points, parent_node=parent_node)
-        next_points.extend(next_points2)
+        next_points1 = set()
+        next_points2 = set()
+        is_dirty1 = False
+        is_dirty2 = False
+        if direction == 1 or direction is None:
+            neighbor_behaviors_1 = self._get_neighbors_explicit(explored_point, other1, related_inputs=related_inputs, env_set=env_set)
+            LOG.debug(f"[INDE] Possible behaviors for C1 {neighbor_behaviors_1}")
+            next_points1, is_dirty1 = self._check_neighbors_explicit(neighbors=neighbor_behaviors_1, explored_point=explored_point, group=group, all_fixed_points=all_fixed_points)
+        if direction == 2 or direction is None:
+            neighbor_behaviors_2 = self._get_neighbors_explicit(explored_point, other2, related_inputs=related_inputs, env_set=env_set)
+            LOG.debug(f"[INDE] Possible behaviors for C2 {neighbor_behaviors_2}")
+            next_points2, is_dirty2 = self._check_neighbors_explicit(neighbors=neighbor_behaviors_2, explored_point=explored_point, group=group, all_fixed_points=all_fixed_points)
+
         is_dirty = is_dirty1 or is_dirty2
 
-        for next_point in next_points:
-            is_dirty |= self._explored_fixed_point_explicit(other1=other1, other2=other2, explored_point=next_point, group=group, all_fixed_points=all_fixed_points, parent_node=explored_point, related_inputs=related_inputs, env_set=env_set)
-
+        for next_point in next_points1:
+            is_dirty |= self._explored_fixed_point_explicit(other1=other1, other2=other2, explored_point=next_point, group=group, all_fixed_points=all_fixed_points, related_inputs=related_inputs, env_set=env_set, direction=2)
+        for next_point in next_points2:
+            is_dirty |= self._explored_fixed_point_explicit(other1=other1, other2=other2, explored_point=next_point, group=group, all_fixed_points=all_fixed_points, related_inputs=related_inputs, env_set=env_set, direction=1)
         return is_dirty
 
     def _get_neighbors_explicit(self, fixed_point, other: ContractBase, related_inputs, env_set):
@@ -758,12 +765,12 @@ class AGContract(ContractBase):
 
 
 
-    def _check_neighbors_explicit(self, neighbors, explored_point, group, all_fixed_points, parent_node):
+    def _check_neighbors_explicit(self, neighbors, explored_point, group, all_fixed_points):
         next_points = []
         dirty_flag = False
         for elem in neighbors:
             LOG.debug(f"[INDE] Checking Neighbor {elem}")
-            if elem != explored_point and elem != parent_node:
+            if elem != explored_point:
                 if elem in group:
                     # loop found
                     dirty_flag = True
