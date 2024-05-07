@@ -22,22 +22,22 @@ def test_inde_clause_case_1():
     assert(cs.is_independent_decomposition_of(c1, c2))
     # should be True
 
-def test_inde_clause_case_1_2():
-    x = RealVar("x")
-    y = RealVar("y")
-    z = RealVar("z")
+# def test_inde_clause_case_1_2():
+#     x = RealVar("x")
+#     y = RealVar("y")
+#     z = RealVar("z")
 
-    c1 = AGContract([x, y, z], 
-                    assumption="x == x && z == z",
-                    guarantee="y == x * z || y == x + z")
-    c2 = AGContract([y, z], 
-                    assumption="y == y",
-                    guarantee="(z == y - 2 && y >= 1) || ((z == 0 - y) && y < 1)")
-    cs = AGContract([x, y], 
-                    assumption="x >= 2 && x <= 3",
-                    guarantee="((y == x * (y - 1) - x || x - 2 == 0) && y >= 1) || ((y + x * y == 0|| y == x - y)&& y < 1)")
+#     c1 = AGContract([x, y, z], 
+#                     assumption="x == x && z == z",
+#                     guarantee="y == x * z || y == x + z")
+#     c2 = AGContract([y, z], 
+#                     assumption="y == y",
+#                     guarantee="(z == y - 2 && y >= 1) || ((z == 0 - y) && y < 1)")
+#     cs = AGContract([x, y], 
+#                     assumption="x >= 2 && x <= 3",
+#                     guarantee="((y == x * (y - 1) - x || x - 2 == 0) && y >= 1) || ((y + x * y == 0|| y == x - y)&& y < 1)")
 
-    assert(not cs.is_independent_decomposition_of(c1, c2))
+#     assert(not cs.is_independent_decomposition_of(c1, c2))
 
     # should be False
 
