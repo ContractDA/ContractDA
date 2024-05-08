@@ -101,34 +101,34 @@ if __name__ == "__main__":
 
     # # # should be False
 
-    # # classic testcase 4 (infinite type 3 chain)
-    # c1 = AGContract([x, y, z], 
-    #                 assumption="x == x && y == y",
-    #                 guarantee="z == y + 1 || z == y - 1")
-    # c2 = AGContract([y, z], 
-    #                 assumption="z == z",
-    #                 guarantee="(y == z + 1 || y == z - 1)")
-    # cs = AGContract([x, z], 
-    #                 assumption="x >= 0",
-    #                 guarantee="z == z")
+    # classic testcase 4 (infinite type 3 chain)
+    c1 = AGContract([x, y, z], 
+                    assumption="x == x && y == y",
+                    guarantee="z == y + 1 || z == y - 1")
+    c2 = AGContract([y, z], 
+                    assumption="z == z",
+                    guarantee="(y == z + 1 || y == z - 1)")
+    cs = AGContract([x, z], 
+                    assumption="x >= 0",
+                    guarantee="z == z")
     
-    # cs.is_independent_decomposition_of(c1, c2)
+    cs.is_independent_decomposition_of(c1, c2)
 
     # # # should be False
 
     # # # Amplifier (unstable fixed point)
-    c1 = AGContract([x, y, z], 
-                    assumption="x == x && z == z",
-                    #guarantee="((z < 0.5*x) -> (y == 105*(x-z))) && ((z > 0.5*x) -> (y == 95*(x-z)))")
-                    guarantee="(y <= 105*(x-z)) && (y >= 95*(x-z))")
-    c2 = AGContract([y, z], 
-                    assumption="y == y",
-                    guarantee="z == 0.01*y")
-    cs = AGContract([x, y], 
-                    assumption="x == x",
-                    guarantee="y<=55*x && y >= 45*x")
+    # c1 = AGContract([x, y, z], 
+    #                 assumption="x == x && z == z",
+    #                 #guarantee="((z < 0.5*x) -> (y == 105*(x-z))) && ((z > 0.5*x) -> (y == 95*(x-z)))")
+    #                 guarantee="(y <= 105*(x-z)) && (y >= 95*(x-z))")
+    # c2 = AGContract([y, z], 
+    #                 assumption="y == y",
+    #                 guarantee="z == 0.01*y")
+    # cs = AGContract([x, y], 
+    #                 assumption="x == x",
+    #                 guarantee="y<=55*x && y >= 45*x")
     
-    is_refine = cs.is_refined_by(c1.composition(c2))
-    is_indepedent_safe = cs.is_independent_decomposition_of(c1, c2)
-    print(is_refine)
-    print(is_indepedent_safe)
+    # is_refine = cs.is_refined_by(c1.composition(c2))
+    # is_indepedent_safe = cs.is_independent_decomposition_of(c1, c2)
+    # print(is_refine)
+    # print(is_indepedent_safe)
