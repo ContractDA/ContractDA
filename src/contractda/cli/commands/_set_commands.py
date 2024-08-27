@@ -1,0 +1,1 @@
+from contractda.cli.commands._cmd_mgr import BaseCommand
