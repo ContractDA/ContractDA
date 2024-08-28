@@ -1,6 +1,7 @@
 import inspect
 
 from abc import ABC
+from typing import Iterable
 from contractda.logger._logger import LOG
 from contractda.cli.commands._base_command import BaseCommand
 import contractda.cli.commands._basic_commands as basic_commands
@@ -28,6 +29,10 @@ class CommandManager():
         if name in self._command_map:
             LOG.error(f"Command {name} already exists, the original one will be replaced...")
         self._command_map[name] = new_command
+
+    def add_commands(self, new_commands: Iterable[BaseCommand]):
+        for command in new_commands:
+            self.add_command(command)
 
     def get_command_names(self):
         return self._command_map.keys()

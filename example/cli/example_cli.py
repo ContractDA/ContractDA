@@ -1,15 +1,16 @@
 from contractda.cli import ContractDACmdShell
 from contractda.cli.commands._cmd_mgr import CommandManager
-from contractda.cli.commands._basic_commands import TestCommand, Test2Command, ExitCommand
-import contractda.cli.commands._basic_commands as basic_commands
+from contractda.cli.commands._cli_commands import HelpCommand, HistoryCommand
 
 
 if __name__ == "__main__":
 
     mgr = CommandManager()
-
     shell = ContractDACmdShell()
-    shell.initialize(mgr)
+
+    shell_commands = [HelpCommand(shell), HistoryCommand(shell)]
+
+    shell.initialize(mgr, shell_level_commands=shell_commands)
     shell.interactive_shell()
 
 

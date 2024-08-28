@@ -2,18 +2,23 @@ from contractda.cli.commands._cmd_mgr import BaseCommand
 
 class ExitCommand(BaseCommand):
     def __init__(self):
+        super().__init__()
         self.name = "exit"
     def exec(self, *args):
         return exit()
     
-class HistoryCommand(BaseCommand):
+class ReportStatusCommand(BaseCommand):
     def __init__(self):
-        self.name = "history"
+        super().__init__()
+        self.name = "report_status"
     def exec(self, *args):
-        raise NotImplementedError
+        self.context.report()
+
+
 
 class TestCommand(BaseCommand):
     def __init__(self):
+        super().__init__()
         self.name = "test"
     
     def exec(self, *args):
@@ -21,6 +26,7 @@ class TestCommand(BaseCommand):
 
 class Test2Command(BaseCommand):
     def __init__(self):
+        super().__init__()
         self.name = "test2"
     
     def exec(self, *args):
