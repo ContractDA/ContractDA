@@ -10,7 +10,12 @@ class ContractBase(ABC):
     """
 
     def __init__(self):
+        self._name:str  = ""
         pass
+
+    @abstractproperty
+    def name(self) -> str:
+        return self._name
     
     @abstractproperty
     def environment(self) -> SetBase:

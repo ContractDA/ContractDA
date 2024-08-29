@@ -1,6 +1,6 @@
 from contractda.cli import ContractDACmdShell
 from contractda.cli.commands._cmd_mgr import CommandManager
-from contractda.cli.commands._cli_commands import HelpCommand, HistoryCommand
+from contractda.cli._cli_commands import HelpCommand, HistoryCommand
 
 
 if __name__ == "__main__":

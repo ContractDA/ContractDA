@@ -1,9 +1,11 @@
 from contractda.cli.commands._cmd_mgr import BaseCommand
 
-class AddComponentCommand(BaseCommand):
+class AddSystemCommand(BaseCommand):
     def __init__(self):
-        self.name = "add_component"
+        super().__init__()
+        self.name = "add_system"
     
     def exec(self, *args):
-        print("add_components")
+        print("add_system")
+        self.context._design_mgr.create_empty_design()
         raise NotImplementedError()

@@ -1,4 +1,4 @@
-contractda.solvers.Z3Interface
+﻿contractda.solvers.Z3Interface
 ==============================
 
 .. currentmodule:: contractda.solvers
@@ -39,6 +39,7 @@ contractda.solvers.Z3Interface
    ~contractda.solvers.Z3Interface.get_fresh_variable
    ~contractda.solvers.Z3Interface.get_model_for_var
    ~contractda.solvers.Z3Interface.quantify_elimination
+   ~contractda.solvers.Z3Interface.reset
    ~contractda.solvers.Z3Interface.set_timeout
    ~contractda.solvers.Z3Interface.simplify_clause
 

@@ -1,4 +1,4 @@
-contractda.contracts.CBContract
+﻿contractda.contracts.CBContract
 ===============================
 
 .. currentmodule:: contractda.contracts
@@ -18,6 +18,7 @@ contractda.contracts.CBContract
    ~contractda.contracts.CBContract.environment
    ~contractda.contracts.CBContract.implementation
    ~contractda.contracts.CBContract.intrinsic_behavior
+   ~contractda.contracts.CBContract.name
    ~contractda.contracts.CBContract.obligation
    ~contractda.contracts.CBContract.vs
 

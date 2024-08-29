@@ -11,9 +11,10 @@ The :mod:`contract.sets` module defines a base class for set object as described
     ~contractda.vars.IntVar
     ~contractda.vars.BoolVar
     ~contractda.vars.CategoricalVar
+    ~contractda.vars.VarType
 """
 
-from contractda.vars._var import Var, IntVar, BoolVar, RealVar, CategoricalVar
+from contractda.vars._var import Var, IntVar, BoolVar, RealVar, CategoricalVar, VarType
 
 __all__ = [
     "Var",
@@ -21,4 +22,5 @@ __all__ = [
     "BoolVar",
     "RealVar",
     "CategoricalVar",
+    "VarType"
 ]

@@ -1,4 +1,4 @@
-contractda.sets.ExplicitSet
+﻿contractda.sets.ExplicitSet
 ===========================
 
 .. currentmodule:: contractda.sets
@@ -19,6 +19,7 @@ contractda.sets.ExplicitSet
    ~contractda.sets.ExplicitSet.internal_vars
    ~contractda.sets.ExplicitSet.ordered_expr
    ~contractda.sets.ExplicitSet.ordered_vars
+   ~contractda.sets.ExplicitSet.vars
 
 
 

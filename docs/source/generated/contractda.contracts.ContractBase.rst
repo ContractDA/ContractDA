@@ -1,4 +1,4 @@
-contractda.contracts.ContractBase
+﻿contractda.contracts.ContractBase
 =================================
 
 .. currentmodule:: contractda.contracts
@@ -16,6 +16,7 @@ contractda.contracts.ContractBase
 
    ~contractda.contracts.ContractBase.environment
    ~contractda.contracts.ContractBase.implementation
+   ~contractda.contracts.ContractBase.name
    ~contractda.contracts.ContractBase.obligation
 
 
