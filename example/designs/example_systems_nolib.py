@@ -2,6 +2,7 @@ from contractda.design._system import System, LibSystem
 from contractda.design._connections import Connection, Port
 from contractda.design._port import VarType, PortDirection
 from contractda.contracts import AGContract
+import json
 
 if __name__ == "__main__":
     p_a = Port(port_name="a", port_type=VarType.REAL, direction=PortDirection.INPUT)
@@ -18,12 +19,7 @@ if __name__ == "__main__":
     sub1 = System(system_name="sub1", ports=[p_1a, p_1b, p_1t1], contracts=None)
     sub2 = System(system_name="sub2", ports=[p_2c, p_2d, p_2t2], contracts=None)
 
-    libsys = LibSystem(name="test_sys_lib", ports=[p_a, p_b, p_c, p_x], contracts=None)
-    print("Lib System Dict:", libsys.to_dict())
-    newlibsys = LibSystem.from_dict(dict_obj=libsys.to_dict())
-    newlibsys.report()
-
-    sys = System(system_name="test_sys", lib_system=libsys)
+    sys = System(system_name="test_sys", ports=[p_a, p_b, p_c, p_x], contracts=None)
 
     conn1 = Connection(name="net1", terminals=[sys.ports["a"], p_1a])
     conn2 = Connection(name="net2", terminals=[sys.ports["b"], p_1b])
@@ -42,11 +38,17 @@ if __name__ == "__main__":
     sys.add_subsystem(sub1)
     sys.add_subsystem(sub2)
 
-    libsys.report()
     sys.report()
     for subsystem in sys.subsystems.values():
         subsystem.report()
 
-    print(sys.to_dict())
-    
+    json_obj = sys.to_dict()
+    print(json_obj)
+    print(" read json obj")
+    newsys = System.from_dict(dict_obj=json_obj)
+    newsys.report()
+    print(newsys.to_dict())
 
+
+    with open("./example/design_files/simple_design.json", "w") as file:
+        json.dump(newsys.to_dict(), file, indent=4)

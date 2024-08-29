@@ -1,0 +1,111 @@
+{
+    "system_name": "test_sys",
+    "ports": [
+        {
+            "port_name": "a",
+            "port_type": "REAL",
+            "direction": "INPUT"
+        },
+        {
+            "port_name": "b",
+            "port_type": "REAL",
+            "direction": "INPUT"
+        },
+        {
+            "port_name": "c",
+            "port_type": "REAL",
+            "direction": "INPUT"
+        },
+        {
+            "port_name": "x",
+            "port_type": "REAL",
+            "direction": "OUTPUT"
+        }
+    ],
+    "subsystems": [
+        {
+            "system_name": "sub1",
+            "ports": [
+                {
+                    "port_name": "1a",
+                    "port_type": "REAL",
+                    "direction": "INPUT"
+                },
+                {
+                    "port_name": "b",
+                    "port_type": "REAL",
+                    "direction": "INPUT"
+                },
+                {
+                    "port_name": "t1",
+                    "port_type": "REAL",
+                    "direction": "OUTPUT"
+                }
+            ],
+            "subsystems": [],
+            "connections": [],
+            "contracts": []
+        },
+        {
+            "system_name": "sub2",
+            "ports": [
+                {
+                    "port_name": "c",
+                    "port_type": "REAL",
+                    "direction": "INPUT"
+                },
+                {
+                    "port_name": "d",
+                    "port_type": "REAL",
+                    "direction": "INPUT"
+                },
+                {
+                    "port_name": "t2",
+                    "port_type": "REAL",
+                    "direction": "OUTPUT"
+                }
+            ],
+            "subsystems": [],
+            "connections": [],
+            "contracts": []
+        }
+    ],
+    "connections": [
+        {
+            "name": "net1",
+            "terminals": [
+                "test_sys.a",
+                "sub1.1a"
+            ]
+        },
+        {
+            "name": "net2",
+            "terminals": [
+                "test_sys.b",
+                "sub1.b"
+            ]
+        },
+        {
+            "name": "net3",
+            "terminals": [
+                "test_sys.c",
+                "sub2.c"
+            ]
+        },
+        {
+            "name": "net4",
+            "terminals": [
+                "test_sys.x",
+                "sub2.t2"
+            ]
+        },
+        {
+            "name": "net5",
+            "terminals": [
+                "sub1.t1",
+                "sub2.d"
+            ]
+        }
+    ],
+    "contracts": []
+}

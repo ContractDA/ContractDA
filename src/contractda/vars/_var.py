@@ -18,12 +18,15 @@ class VarType(Enum):
     BOOL = 2,
     CATEGORICAL = 3
 
-var_type_string_map = {VarType.INTEGER: "integer", VarType.REAL: "real", VarType.BOOL: "boolean", VarType.CATEGORICAL: "categorical"}
+    def __str__(self) -> str:
+        return self.name
 
 class Var(ABC):
+    
     """
     Abstract Base class for variables in the set
     """
+
     def __init__(self, id: str, var_type: str): 
         self._id = id
         self._var_type = var_type
