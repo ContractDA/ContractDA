@@ -3,26 +3,26 @@ from typing import Iterable
 import copy
 from jsonschema import validate, ValidationError
 
-from contractda.contracts import ContractBase
 from contractda.design._port import Port
 from contractda.design._connections import Connection
 from contractda.logger._logger import LOG
+from contractda.design._system_contracts import SystemContract
 
 class FrozenSystemExcpetion(Exception):
     pass
 
 class LibSystem(object):
     """A class that defines the requirement of a system"""
-    def __init__(self, name: str, ports: Iterable[Port] | None = None, contracts: Iterable[ContractBase] | None = None):
+    def __init__(self, name: str, ports: Iterable[Port] | None = None, contracts: Iterable[SystemContract] | None = None):
         self._name: str = name
 
         self._ports: dict[str, Port] = dict()
         if ports is not None:
             self._ports = {port.port_name: port for port in ports}      
 
-        self._contracts: set[ContractBase] = {}
+        self._contracts: set[SystemContract] = {}
         if contracts is not None:
-            self._contracts: set[ContractBase] = {contract for contract in contracts}
+            self._contracts: set[SystemContract] = {contract for contract in contracts}
 
     schema = {
         "type": "object",
@@ -76,7 +76,7 @@ class LibSystem(object):
         return self._ports
     
     @property
-    def contracts(self) -> set[ContractBase]:
+    def contracts(self) -> set[SystemContract]:
         return self._contracts
     
 
@@ -117,7 +117,7 @@ class System(object):
                  lib_system: LibSystem = None, 
                  port_rename = None, 
                  ports: Iterable[Port] | None = None, 
-                 contracts: Iterable[ContractBase] | None = None):
+                 contracts: Iterable[SystemContract] | None = None):
         """Test"""
         #self._check_parameters()
 
@@ -143,7 +143,9 @@ class System(object):
         
             
         # contracts from template # be careful for the port name changed
-        self._contracts: set[ContractBase] = dict()
+        self._contracts: set[SystemContract] = {}
+        if contracts is not None:
+            self._contracts: set[SystemContract] = {contract for contract in contracts}
 
         self._connections: dict[str, Connection] = dict()
 
@@ -180,7 +182,7 @@ class System(object):
             },
             "contracts": {
                 "type": "array",
-                "items": {"type": "string"}
+                "items": SystemContract.schema
             }
 
         },
@@ -211,7 +213,7 @@ class System(object):
             "ports": [port.to_dict() for port in self._ports.values()],
             "subsystems": [subsystem.to_dict() for subsystem in self._subsystems.values()],
             "connections": connections_obj,
-            "contracts": ["contract" for contract in self._contracts]
+            "contracts": [contract.to_dict() for contract in self._contracts]
         }
         if self._lib_system:
             ret_dict["lib_system"] = self._lib_system.name
@@ -232,10 +234,16 @@ class System(object):
         for port_def in port_defs:
             ports.append(Port.from_dict(port_def))
 
+        # reading contracts
+        contracts = []
+        contract_defs = dict_obj["contracts"]
+        for contract_def in contract_defs:
+            contracts.append(SystemContract.from_dict(contract_def))
+
         new_inst = cls(system_name=system_name, 
             lib_system = None,
             ports = ports, 
-            contracts = None)
+            contracts = contracts)
         
         # reading subsystems
         subsystems = []
@@ -270,9 +278,6 @@ class System(object):
             libsystem = dict_obj["lib_system"]
             if libsystem not in libs:
                 LOG.error(f"LibSystem {libsystem} not found!")
-        
-        # reading contracts
-        contracts = {}
             
         
         return new_inst
@@ -322,7 +327,7 @@ class System(object):
         print(f"System Report: {self.system_name} compile status: {self.is_frozen()}")
         print(f"  Ports: ")
         for port in self.ports.values():
-            print(f"    {port.port_name}")
+            print(f"    {port}")
         print(f"  Subsystems: ")
         for subsystem in self.subsystems.values():
             print(f"    {subsystem.system_name}")

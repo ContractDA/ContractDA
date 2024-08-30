@@ -150,3 +150,16 @@ def is_subtype(a, b) -> bool:
     """
     #TODO:
     return NotImplementedError
+
+
+def create_var(id: str, var_type: VarType, **kwargs):
+    if var_type == VarType.INTEGER:
+        return IntVar(id)
+    elif var_type == VarType.REAL:
+        return RealVar(id)
+    elif var_type == VarType.BOOL:
+        return BoolVar(id)
+    elif var_type == VarType.CATEGORICAL:
+        return CategoricalVar(id, value_range=kwargs["value_range"])
+    else:
+        raise Exception(f"create_var: Not supported variable types")

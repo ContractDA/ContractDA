@@ -27,7 +27,7 @@
             "system_name": "sub1",
             "ports": [
                 {
-                    "port_name": "1a",
+                    "port_name": "a1",
                     "port_type": "REAL",
                     "direction": "INPUT"
                 },
@@ -44,7 +44,22 @@
             ],
             "subsystems": [],
             "connections": [],
-            "contracts": []
+            "contracts": [
+                {
+                    "name": "C2",
+                    "type": "AG",
+                    "content": {
+                        "assumption": {
+                            "set_type": "FOL",
+                            "description": "a1 >= 0"
+                        },
+                        "guarantee": {
+                            "set_type": "FOL",
+                            "description": "t1 = a1 + b"
+                        }
+                    }
+                }
+            ]
         },
         {
             "system_name": "sub2",
@@ -67,7 +82,22 @@
             ],
             "subsystems": [],
             "connections": [],
-            "contracts": []
+            "contracts": [
+                {
+                    "name": "C3",
+                    "type": "AG",
+                    "content": {
+                        "assumption": {
+                            "set_type": "FOL",
+                            "description": "true"
+                        },
+                        "guarantee": {
+                            "set_type": "FOL",
+                            "description": "t2 = c + d"
+                        }
+                    }
+                }
+            ]
         }
     ],
     "connections": [
@@ -75,7 +105,7 @@
             "name": "net1",
             "terminals": [
                 "test_sys.a",
-                "sub1.1a"
+                "sub1.a1"
             ]
         },
         {
@@ -107,5 +137,20 @@
             ]
         }
     ],
-    "contracts": []
+    "contracts": [
+        {
+            "name": "C1",
+            "type": "AG",
+            "content": {
+                "assumption": {
+                    "set_type": "FOL",
+                    "description": "a >= 0"
+                },
+                "guarantee": {
+                    "set_type": "FOL",
+                    "description": "x = a+b+c"
+                }
+            }
+        }
+    ]
 }

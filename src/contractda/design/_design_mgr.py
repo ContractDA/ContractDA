@@ -11,11 +11,14 @@ class DesignLevelManager():
         self._connections = dict()
         self._map_port_to_system = dict()
 
+
     def read_design_json(self, json_obj):
-        # TODO 1: read all systems in the design file
+        # TODO 1: read all systems (subsystems) in the design file
+
         system = System.from_dict(json_obj)
         self._systems[system.system_name] = system
-        # 
+        # TODO 2: read all ports in the design file
+        # TODO 3: read all connections in the deseign file (require access to ports)
         pass
 
     def read_system_json(self, json_obj):

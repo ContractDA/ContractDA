@@ -1,7 +1,7 @@
 from enum import Enum
 from jsonschema import validate, ValidationError
 
-from contractda.vars import VarType, Var
+from contractda.vars import VarType, Var, create_var
 from contractda.logger._logger import LOG
 
 class PortDirection(Enum):
@@ -18,7 +18,7 @@ class PortDirection(Enum):
 
 class Port(object):
     """A port is the basic element that a system interact with external environment"""
-    def __init__(self, port_name: str, port_type: VarType | str, direction: PortDirection | str):
+    def __init__(self, port_name: str, port_type: VarType | str, direction: PortDirection | str, **kwargs):
         self._port_name: str  = port_name
 
         if isinstance(port_type, str):
@@ -30,7 +30,10 @@ class Port(object):
             direction = PortDirection[direction]
         self._dir: PortDirection = direction
 
-        self._var: Var = None
+        self._var: Var = create_var(port_name, port_type, **kwargs) # do not use this, need context to avoid duplicate name
+
+    def __str__(self) -> str:
+        return f"{self._port_type.name} {self._dir.name} {self._port_name}"
 
     # json schema
     schema = {

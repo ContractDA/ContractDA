@@ -1,25 +1,73 @@
 from contractda.design._system import System, LibSystem
 from contractda.design._connections import Connection, Port
 from contractda.design._port import VarType, PortDirection
-from contractda.contracts import AGContract
+from contractda.design._system_contracts import SystemContract
 import json
+
+json_obj1 = {
+    "name": "C1",
+    "type": "AG",
+    "content": {
+        "assumption": {
+            "set_type": "FOL",
+            "description": "a >= 0"
+        },
+        "guarantee": {
+            "set_type": "FOL",
+            "description": "x = a+b+c"
+        }
+    }
+}
+
+json_obj2 = {
+    "name": "C2",
+    "type": "AG",
+    "content": {
+        "assumption": {
+            "set_type": "FOL",
+            "description": "a1 >= 0"
+        },
+        "guarantee": {
+            "set_type": "FOL",
+            "description": "t1 = a1 + b"
+        }
+    }
+}
+
+
+json_obj3 = {
+    "name": "C3",
+    "type": "AG",
+    "content": {
+        "assumption": {
+            "set_type": "FOL",
+            "description": "true"
+        },
+        "guarantee": {
+            "set_type": "FOL",
+            "description": "t2 = c + d"
+        }
+    }
+}
 
 if __name__ == "__main__":
     p_a = Port(port_name="a", port_type=VarType.REAL, direction=PortDirection.INPUT)
     p_b = Port(port_name="b", port_type=VarType.REAL, direction=PortDirection.INPUT)
     p_c = Port(port_name="c", port_type=VarType.REAL, direction=PortDirection.INPUT)
     p_x = Port(port_name="x", port_type=VarType.REAL, direction=PortDirection.OUTPUT)
-    p_1a = Port(port_name="1a", port_type=VarType.REAL, direction=PortDirection.INPUT)
+
+    sys = System(system_name="test_sys", ports=[p_a, p_b, p_c, p_x], contracts=[SystemContract.from_dict(json_obj1)])
+
+    p_1a = Port(port_name="a1", port_type=VarType.REAL, direction=PortDirection.INPUT)
     p_1b = Port(port_name="b", port_type=VarType.REAL, direction=PortDirection.INPUT)
     p_1t1 = Port(port_name="t1", port_type=VarType.REAL, direction=PortDirection.OUTPUT)
     p_2c = Port(port_name="c", port_type=VarType.REAL, direction=PortDirection.INPUT)
     p_2d = Port(port_name="d", port_type=VarType.REAL, direction=PortDirection.INPUT)
     p_2t2 = Port(port_name="t2", port_type=VarType.REAL, direction=PortDirection.OUTPUT)
 
-    sub1 = System(system_name="sub1", ports=[p_1a, p_1b, p_1t1], contracts=None)
-    sub2 = System(system_name="sub2", ports=[p_2c, p_2d, p_2t2], contracts=None)
+    sub1 = System(system_name="sub1", ports=[p_1a, p_1b, p_1t1], contracts=[SystemContract.from_dict(json_obj2)])
+    sub2 = System(system_name="sub2", ports=[p_2c, p_2d, p_2t2], contracts=[SystemContract.from_dict(json_obj3)])
 
-    sys = System(system_name="test_sys", ports=[p_a, p_b, p_c, p_x], contracts=None)
 
     conn1 = Connection(name="net1", terminals=[sys.ports["a"], p_1a])
     conn2 = Connection(name="net2", terminals=[sys.ports["b"], p_1b])
