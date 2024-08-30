@@ -1,6 +1,9 @@
 
-from typing import Iterable
+from typing import Iterable, TYPE_CHECKING
 from jsonschema import validate, ValidationError
+
+if TYPE_CHECKING:
+    from contractda.design._system import System
 
 from contractda.design._port import Port
 
@@ -9,6 +12,10 @@ class Connection(object):
     def __init__(self, name: str, terminals: Iterable[Port]) -> None:
         self._terminals = terminals
         self._name: str = name
+        self._system: System = None
+
+    def __str__(self) -> str:
+        return f"{self._name} [" + ", ".join([term.level_name for term in self._terminals])+ "]"
 
     schema = {
         "type": "object",
@@ -45,3 +52,6 @@ class Connection(object):
     @property
     def name(self) -> str:
         return self._name
+    
+    def _set_system(self, system: "System"):
+        self._system = system

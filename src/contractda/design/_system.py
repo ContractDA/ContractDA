@@ -18,7 +18,9 @@ class LibSystem(object):
 
         self._ports: dict[str, Port] = dict()
         if ports is not None:
-            self._ports = {port.port_name: port for port in ports}      
+            self._ports = {port.port_name: port for port in ports}   
+            for port in ports:
+                port._set_system(self)   
 
         self._contracts: set[SystemContract] = {}
         if contracts is not None:
@@ -132,10 +134,12 @@ class System(object):
         if self._lib_system:
             for port_name, port in self._lib_system.ports.items():
                 port_instance = copy.deepcopy(port)
+                port._set_system(self)
                 self._ports[port_name] = port_instance
         else:
             for port in ports:
                 self._ports[port.port_name] = port
+                port._set_system(self)
 
                 # if port_name in port_rename:
                 #     self._ports[port_name] = 
@@ -232,7 +236,8 @@ class System(object):
         ports = []
         port_defs = dict_obj["ports"]
         for port_def in port_defs:
-            ports.append(Port.from_dict(port_def))
+            port = Port.from_dict(port_def)
+            ports.append(port)
 
         # reading contracts
         contracts = []
@@ -244,6 +249,9 @@ class System(object):
             lib_system = None,
             ports = ports, 
             contracts = contracts)
+        
+        for port_name, port in new_inst.ports.items():
+            port._set_system(new_inst)
         
         # reading subsystems
         subsystems = []
@@ -336,7 +344,7 @@ class System(object):
             print(f"    {contract}")
         print(f"  Connections: ")
         for connection in self.connections.values():
-            print(f"    {connection.name}")       
+            print(f"    {connection}")       
 
 
     @property
@@ -384,6 +392,7 @@ class System(object):
         if connection.name not in self._connections:
             # TODO: check if the connection terminals are all specify in this 
             self._connections[connection.name] = connection
+            connection._set_system = self
         else:
             LOG.error(f"Duplicated connection {connection.name}!")
 

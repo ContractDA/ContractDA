@@ -1,8 +1,12 @@
 from enum import Enum
 from jsonschema import validate, ValidationError
+from typing import TYPE_CHECKING
 
 from contractda.vars import VarType, Var, create_var
 from contractda.logger._logger import LOG
+
+if TYPE_CHECKING:
+    from contractda.design._system import System
 
 class PortDirection(Enum):
     """ Enum for port directions
@@ -29,11 +33,21 @@ class Port(object):
         if isinstance(direction, str):
             direction = PortDirection[direction]
         self._dir: PortDirection = direction
+        self._system: System = None
 
         self._var: Var = create_var(port_name, port_type, **kwargs) # do not use this, need context to avoid duplicate name
 
     def __str__(self) -> str:
         return f"{self._port_type.name} {self._dir.name} {self._port_name}"
+    
+    @property
+    def level_name(self) -> str:
+        hier = [self._port_name]
+        if self._system is not None:
+            hier.append(self._system.system_name)
+
+        hier.reverse()
+        return ".".join(hier)
 
     # json schema
     schema = {
@@ -77,5 +91,10 @@ class Port(object):
     
     def report(self) -> None:
         print(f"Port Report: {self.port_name}, Type: {self.port_type}, Direction: {self.direction}")
+
+    def _set_system(self, system: "System"):
+        self._system = system
+
+
 
     
