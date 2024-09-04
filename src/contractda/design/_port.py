@@ -93,6 +93,8 @@ class Port(object):
         print(f"Port Report: {self.port_name}, Type: {self.port_type}, Direction: {self.direction}")
 
     def _set_system(self, system: "System"):
+        if self._set_system is not None:
+            pass #TODO help prevent port being misused
         self._system = system
 
 

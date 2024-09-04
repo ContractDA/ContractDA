@@ -11,8 +11,14 @@ from contractda.design._system_contracts import SystemContract
 class FrozenSystemExcpetion(Exception):
     pass
 
+class Module(object):
+    """A class that defines a system for reuse purpose"""
+    def __init__(self, name: str, ports: Iterable[Port] | None = None, contracts: Iterable[SystemContract] | None = None):
+        port_maps = dict() # maps something like d1.a d2.a to the same ports if d1 and d2 are of the same module but require different instance in the system.
+        pass
+
 class LibSystem(object):
-    """A class that defines the requirement of a system"""
+    """A class that defines library system, which is a module without submodule"""
     def __init__(self, name: str, ports: Iterable[Port] | None = None, contracts: Iterable[SystemContract] | None = None):
         self._name: str = name
 
@@ -36,7 +42,7 @@ class LibSystem(object):
             },
             "contracts": {
                 "type": "array",
-                "items": {"type": "string"}
+                "items": SystemContract.schema
             }
 
         },
@@ -47,27 +53,37 @@ class LibSystem(object):
         ret_dict = {
             "lib_system_name": self._name,
             "ports": [port.to_dict() for port in self._ports.values()],
-            "contracts": ["contract" for contract in self._contracts]
+            "contracts": [contract.to_dict() for contract in self._contracts]
         }
         return ret_dict
     
     @classmethod
-    def from_dict(cls, dict_obj, libs = None):
+    def from_dict(cls, dict_obj):
         try:
             validate(instance=dict_obj, schema=cls.schema)
         except ValidationError as e:
             LOG.error(f"System Definition Error", e)
             return None
-        
+        # reading system name
+        name = dict_obj["lib_system_name"]
         # reading ports
         ports = []
         port_defs = dict_obj["ports"]
         for port_def in port_defs:
-            ports.append(Port.from_dict(port_def))
-            
+            port = Port.from_dict(port_def)
+            ports.append(port)
+
         # reading contracts
-        contracts = {}
-        return cls(name=dict_obj["lib_system_name"], ports=ports, contracts=contracts)
+        contracts = []
+        contract_defs = dict_obj["contracts"]
+        for contract_def in contract_defs:
+            contracts.append(SystemContract.from_dict(contract_def))
+
+        new_inst = cls(name=name, 
+            ports = ports, 
+            contracts = contracts)
+        
+        return new_inst
     
     @property
     def name(self) -> str:
@@ -87,6 +103,7 @@ class LibSystem(object):
             return 
         if port.port_name not in self._ports:
             self._ports[port.port_name] = port
+            port._set_system(self)  
         else:
             LOG.error(f"Duplicated port name {port.port_name}!")
         
@@ -102,7 +119,7 @@ class LibSystem(object):
         print(f"LibSystem Report: {self.name}")
         print(f"  Ports: ")
         for port in self.ports.values():
-            print(f"    {port.port_name}")
+            print(f"    {port}")
         print(f"  Contracts: ")
         for contract in self.contracts:
             print(f"    {contract}")
@@ -152,6 +169,7 @@ class System(object):
             self._contracts: set[SystemContract] = {contract for contract in contracts}
 
         self._connections: dict[str, Connection] = dict()
+        #TODO copy libsystem connections
 
         self._frozen: bool = False
 
