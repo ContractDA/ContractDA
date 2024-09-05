@@ -1,0 +1,38 @@
+{
+    "module_name": "adder1",
+    "ports": [
+        {
+            "port_name": "a",
+            "port_type": "REAL",
+            "direction": "INPUT"
+        },
+        {
+            "port_name": "b",
+            "port_type": "REAL",
+            "direction": "INPUT"
+        },
+        {
+            "port_name": "x",
+            "port_type": "REAL",
+            "direction": "OUTPUT"
+        }
+    ],
+    "submodules": [],
+    "connections": [],
+    "contracts": [
+        {
+            "name": "C2",
+            "type": "AG",
+            "content": {
+                "assumption": {
+                    "set_type": "FOL",
+                    "description": "a >= 0"
+                },
+                "guarantee": {
+                    "set_type": "FOL",
+                    "description": "x = a + b"
+                }
+            }
+        }
+    ]
+}

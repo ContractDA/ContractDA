@@ -1,4 +1,5 @@
-from contractda.design._system import System, LibSystem
+from contractda.design._system import System
+from contractda.design._libsystem import LibSystem
 from contractda.design._connections import Connection, Port
 from contractda.design._port import VarType, PortDirection
 from contractda.design._system_contracts import SystemContract

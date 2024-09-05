@@ -4,79 +4,56 @@ import copy
 from jsonschema import validate, ValidationError
 
 from contractda.design._port import Port
-from contractda.design._connections import Connection
+from contractda.design._connections import Connection, ModuleConnection
 from contractda.logger._logger import LOG
 from contractda.design._system_contracts import SystemContract
-from contractda.design._libsystem import LibSystem
 
-class FrozenSystemExcpetion(Exception):
+class FrozenModuleExcpetion(Exception):
     pass
 
-class System(object):
-    """A class that describes (Sub)systems in a designs.
-    
-    A system is a part of a design that can include ports and contracts specifying the system.
-    System can be further decomposed into mutiple (sub)systems.
-    The subsystems are also systems which can be reused in other designs for promoting reuse of components.
-    """
-    def __init__(self, 
-                 system_name: str, 
-                 lib_system: LibSystem = None, 
-                 port_rename = None, 
-                 ports: Iterable[Port] | None = None, 
-                 contracts: Iterable[SystemContract] | None = None):
-        """Test"""
-        #self._check_parameters()
-
-        self._system_name: str = system_name
-        self._lib_system: LibSystem = lib_system
-        self._subsystems: dict[str, System] = dict()
+class Module(object):
+    """A class that defines a system for reuse purpose"""
+    def __init__(self, name: str, ports: Iterable[Port] | None = None, contracts: Iterable[SystemContract] | None = None):
+        port_maps = dict() # maps something like d1.a d2.a to the same ports if d1 and d2 are of the same module but require different instance in the system.
+        self._name: str = name
+        self._submodules: dict[str, Module] = dict()
+        # dictionary that maps instance name to the module, so the name can be different
 
         # instantiate the ports for the systems
         # if port_rename is None:
         #     port_rename = dict()
         self._ports: dict[str, Port] = dict()
-        if self._lib_system:
-            for port_name, port in self._lib_system.ports.items():
-                port_instance = copy.deepcopy(port)
-                port._set_system(self)
-                self._ports[port_name] = port_instance
-        else:
+        if ports is not None:
+            self._ports = {port.port_name: port for port in ports}   
             for port in ports:
-                self._ports[port.port_name] = port
-                port._set_system(self)
+                port._set_system(self)   
 
-                # if port_name in port_rename:
-                #     self._ports[port_name] = 
-            
-        
-            
-        # contracts from template # be careful for the port name changed
         self._contracts: set[SystemContract] = {}
         if contracts is not None:
             self._contracts: set[SystemContract] = {contract for contract in contracts}
 
-        self._connections: dict[str, Connection] = dict()
-        #TODO copy libsystem connections
-
+        self._connections: dict[str, ModuleConnection] = dict()
         self._frozen: bool = False
 
     # json schema
     schema = {
         "type": "object",
         "properties": {
-            "system_name": {"type": "string"},
+            "module_name": {"type": "string"},
             "ports": {
                 "type": "array",
                 "items": Port.schema
             },
-            "subsystems": {
+            "submodules": {
                 "type": "array",
                 "items": {
-                    "$ref": "#"
+                    "type": "object",
+                    "properties": {
+                        "module": {"type": "string"},
+                        "instance_name": {"type": "string"}
+                    }
                 }
             },
-            "libsystems": {"type": "string"},
             "connections": {
                 "type": "array",
                 "items": {
@@ -96,36 +73,36 @@ class System(object):
             }
 
         },
-        "required": ["system_name", "ports", "subsystems", "connections", "contracts"]
+        "required": ["module_name", "ports", "submodules", "connections", "contracts"]
     }
 
     def to_dict(self) -> dict:
         connections_obj = []
+        
         for connection in self._connections.values():
             conn_obj = {"name": connection.name}
-            conn_obj["terminals"] = [term.level_name for term in connection.terminals]
+            conn_obj["terminals"] = list(connection.level_name_list)
             connections_obj.append(conn_obj)
 
+
         ret_dict = {
-            "system_name": self._system_name,
+            "module_name": self._name,
             "ports": [port.to_dict() for port in self._ports.values()],
-            "subsystems": [subsystem.to_dict() for subsystem in self._subsystems.values()],
+            "submodules": [{"module": module.name ,"instance_name": instance_name} for instance_name, module in self._submodules.items()],
             "connections": connections_obj,
             "contracts": [contract.to_dict() for contract in self._contracts]
         }
-        if self._lib_system:
-            ret_dict["lib_system"] = self._lib_system.name
         return ret_dict
     
     @classmethod
-    def from_dict(cls, dict_obj, libs = None):
+    def from_dict(cls, dict_obj, modules:dict = None):
         try:
             validate(instance=dict_obj, schema=cls.schema)
         except ValidationError as e:
             LOG.error(f"System Definition Error", e)
             return None
         # reading system name
-        system_name = dict_obj["system_name"]
+        module_name = dict_obj["module_name"]
         # reading ports
         ports = []
         port_defs = dict_obj["ports"]
@@ -139,8 +116,7 @@ class System(object):
         for contract_def in contract_defs:
             contracts.append(SystemContract.from_dict(contract_def))
 
-        new_inst = cls(system_name=system_name, 
-            lib_system = None,
+        new_inst = cls(name=module_name, 
             ports = ports, 
             contracts = contracts)
         
@@ -149,42 +125,39 @@ class System(object):
         
         # reading subsystems
         subsystems = []
-        subsys_defs = dict_obj["subsystems"]
-        for subsys_def in subsys_defs:
-            new_inst.add_subsystem(System.from_dict(subsys_def))
+        submod_defs = dict_obj["submodules"]
+        for submod_def in submod_defs: 
+            module_name = submod_def["module"]
+            instance_name = submod_def["instance_name"]
+            module_ref = modules[module_name]
+            new_inst.add_submodule(submodule=module_ref, instance_name=instance_name)
 
         # reading connections
         conn_defs = dict_obj["connections"]
         for conn_def in conn_defs:
             conn_name = conn_def["name"]
             terminals = []
+            instance_names = []
             for term_name in conn_def["terminals"]:
                 # parse terminal name
                 tokens = term_name.split(".")
                 if len(tokens) != 2:
                     LOG.error(f"Terminal name error! {term_name}, {len(term_name)}, {tokens}")
-                sys_name = tokens[0]
+                instance_name = tokens[0]
                 port_name = tokens[1]
 
-                if sys_name == system_name:
+                if instance_name == new_inst.module_name:
                     port = new_inst.ports[port_name]
                 else:
-                    port = new_inst.subsystems[sys_name].ports[port_name]
+                    port = new_inst.submodules[instance_name].ports[port_name]
                 terminals.append(port)
+                instance_names.append(instance_name)
 
-            conn = Connection(name=conn_name, terminals=terminals)
+            conn = ModuleConnection(name=conn_name, terminals=terminals, instance_names=instance_names)
             new_inst.add_connection(conn)
-            
-        # reading libsystem
-        if "lib_system" in dict_obj:
-            libsystem = dict_obj["lib_system"]
-            if libsystem not in libs:
-                LOG.error(f"LibSystem {libsystem} not found!")
-            
-        
+
         return new_inst
-
-
+    
     def set_ports(self):
         """Setting the ports """
         if self._check_is_frozen_before_modify():
@@ -198,41 +171,14 @@ class System(object):
             return 
         pass
 
-    def flatten(self):
-        """Make the systems consist of only the lowest level subsystems"""
-        raise NotImplementedError
-
-    def allow_modify(self):
-        self._frozen = False
-
-    def is_frozen(self):
-        return self._frozen
-    
-    def _check_is_frozen_before_modify(self):
-        if self.is_frozen():
-            LOG.error(f"System Instance {self.system_name} is frozen! Please call System.allow_modify() before modification.")
-            raise FrozenSystemExcpetion(f"System Instance {self.system_name} is frozen! Please call System.allow_modify() before modification.")
-            return True
-        else:
-            return False
-
-
-    def _check_well_define(self):
-        # 1. check connections connect through subsystem ports and self ports
-        # 2. if there is subsystem, the system must be covered by subsystems (all ports are mapped)
-        # 3. check output ports cannot connect to output ports
-
-        # check ports
-        pass
-
     def report(self) -> None:
-        print(f"System Report: {self.system_name} compile status: {self.is_frozen()}")
+        print(f"Module Report: {self._name} compile status: {self.is_frozen()}")
         print(f"  Ports: ")
         for port in self.ports.values():
             print(f"    {port}")
         print(f"  Subsystems: ")
-        for subsystem in self.subsystems.values():
-            print(f"    {subsystem.system_name}")
+        for instance_name, submodule in self.submodules.items():
+            print(f"    {submodule.module_name} {instance_name}")
         print(f"  Contracts: ")
         for contract in self.contracts:
             print(f"    {contract}")
@@ -242,23 +188,16 @@ class System(object):
 
 
     @property
-    def system_name(self):
-        return self._system_name
+    def name(self):
+        return self._name
     
     @property
-    def lib_system(self) -> LibSystem | None:
-        return self._lib_system
+    def module_name(self):
+        return self._name
     
     @property
-    def template_name(self) -> str:
-        if self._lib_system:
-            return self._lib_system.name
-        else:
-            return ""
-    
-    @property
-    def subsystems(self):
-        return self._subsystems
+    def submodules(self):
+        return self._submodules
     
     @property
     def ports(self):
@@ -272,15 +211,15 @@ class System(object):
     def connections(self):
         return self._connections
 
-    def add_subsystem(self, subsystem: System) -> None:
+    def add_submodule(self, submodule: Module, instance_name: str) -> None:
         if self._check_is_frozen_before_modify():
             return 
-        if subsystem.system_name not in self._subsystems:
-            self._subsystems[subsystem.system_name] = subsystem
+        if instance_name not in self._submodules:
+            self._submodules[instance_name] = submodule
         else:
-            LOG.error(f"Duplicated subsystem {subsystem.system_name}!")
+            LOG.error(f"Duplicated submodule instance name {instance_name}!")
 
-    def add_connection(self, connection: Connection) -> None:
+    def add_connection(self, connection: ModuleConnection) -> None:
         if self._check_is_frozen_before_modify():
             return 
         if connection.name not in self._connections:
@@ -290,6 +229,16 @@ class System(object):
         else:
             LOG.error(f"Duplicated connection {connection.name}!")
 
-class CompiledSystem(System):
-    """A system that is fixed
-    """
+    def allow_modify(self):
+        self._frozen = False
+
+    def is_frozen(self):
+        return self._frozen
+
+    def _check_is_frozen_before_modify(self):
+        if self.is_frozen():
+            LOG.error(f"Module {self._name} is frozen! Please call Module.allow_modify() before modification.")
+            raise FrozenModuleExcpetion(f"Module {self._name} is frozen! Please call Module.allow_modify() before modification.")
+            return True
+        else:
+            return False

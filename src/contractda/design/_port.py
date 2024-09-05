@@ -48,6 +48,12 @@ class Port(object):
 
         hier.reverse()
         return ".".join(hier)
+    
+    def _level_name_by_instance_name(self, instance_name:str) -> str:
+        hier = [self._port_name]
+        hier.append(instance_name)
+        hier.reverse()
+        return ".".join(hier)
 
     # json schema
     schema = {

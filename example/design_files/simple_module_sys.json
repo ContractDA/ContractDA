@@ -1,0 +1,97 @@
+{
+    "module_name": "test_sys",
+    "ports": [
+        {
+            "port_name": "a",
+            "port_type": "REAL",
+            "direction": "INPUT"
+        },
+        {
+            "port_name": "b",
+            "port_type": "REAL",
+            "direction": "INPUT"
+        },
+        {
+            "port_name": "c",
+            "port_type": "REAL",
+            "direction": "INPUT"
+        },
+        {
+            "port_name": "d",
+            "port_type": "REAL",
+            "direction": "INPUT"
+        },
+        {
+            "port_name": "x",
+            "port_type": "REAL",
+            "direction": "OUTPUT"
+        }
+    ],
+    "submodules": [
+        {
+            "module": "adder1",
+            "instance_name": "add1"
+        },
+        {
+            "module": "adder1",
+            "instance_name": "add2"
+        },
+        {
+            "module": "adder2",
+            "instance_name": "add3"
+        }
+    ],
+    "connections": [
+        {
+            "name": "net1",
+            "terminals": [
+                "test_sys.a",
+                "add1.a"
+            ]
+        },
+        {
+            "name": "net2",
+            "terminals": [
+                "test_sys.b",
+                "add1.b"
+            ]
+        },
+        {
+            "name": "net3",
+            "terminals": [
+                "add1.x",
+                "add2.a"
+            ]
+        },
+        {
+            "name": "net4",
+            "terminals": [
+                "test_sys.c",
+                "add2.b"
+            ]
+        },
+        {
+            "name": "net5",
+            "terminals": [
+                "add2.x",
+                "add3.a"
+            ]
+        }
+    ],
+    "contracts": [
+        {
+            "name": "C1",
+            "type": "AG",
+            "content": {
+                "assumption": {
+                    "set_type": "FOL",
+                    "description": "a >= 0"
+                },
+                "guarantee": {
+                    "set_type": "FOL",
+                    "description": "x = a+b+c+d"
+                }
+            }
+        }
+    ]
+}
