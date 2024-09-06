@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Iterable
+from typing import Iterable, TYPE_CHECKING
 import copy
 from jsonschema import validate, ValidationError
 
@@ -8,6 +8,7 @@ from contractda.design._connections import Connection
 from contractda.logger._logger import LOG
 from contractda.design._system_contracts import SystemContract
 from contractda.design._libsystem import LibSystem
+
 
 class FrozenSystemExcpetion(Exception):
     pass
@@ -31,6 +32,8 @@ class System(object):
         self._system_name: str = system_name
         self._lib_system: LibSystem = lib_system
         self._subsystems: dict[str, System] = dict()
+        self._upsystem: System = None
+        self._hier_name: str = None
 
         # instantiate the ports for the systems
         # if port_rename is None:
@@ -226,7 +229,7 @@ class System(object):
         pass
 
     def report(self) -> None:
-        print(f"System Report: {self.system_name} compile status: {self.is_frozen()}")
+        print(f"System Report: {self.hier_name} compile status: {self.is_frozen()}")
         print(f"  Ports: ")
         for port in self.ports.values():
             print(f"    {port}")
@@ -271,12 +274,17 @@ class System(object):
     @property
     def connections(self):
         return self._connections
+    
+    @property
+    def hier_name(self) -> str:
+        return self._hier_name
 
     def add_subsystem(self, subsystem: System) -> None:
         if self._check_is_frozen_before_modify():
             return 
         if subsystem.system_name not in self._subsystems:
             self._subsystems[subsystem.system_name] = subsystem
+            subsystem._upsystem = self
         else:
             LOG.error(f"Duplicated subsystem {subsystem.system_name}!")
 
@@ -289,6 +297,12 @@ class System(object):
             connection._set_system = self
         else:
             LOG.error(f"Duplicated connection {connection.name}!")
+
+    def _set_hier_name(self, hier_name:str):
+        if self._hier_name is None:
+            self._hier_name = hier_name
+        else:
+            LOG.error(f"Hier name has been set {self.system_name} {self.hier_name}")
 
 class CompiledSystem(System):
     """A system that is fixed

@@ -41,14 +41,23 @@ class Connection(object):
         pass
 
     def report(self) -> None:
-        print(f"Connection Report: ")
-        for terminal in self.terminals:
-            print(f"   {terminal.port_name}")
+        print(f"Connection Report: {self.hier_name}")
+        for term in self.terminals:
+            print(f"   {term.hier_name}")
             
     @property
     def terminals(self) -> Iterable[Port]:
         return self._terminals
     
+    @property
+    def hier_name(self) -> str:
+        hier = [self._name]
+        if self._system is not None:
+            hier.append(self._system.hier_name)
+
+        hier.reverse()
+        return ".".join(hier)
+
     @property
     def name(self) -> str:
         return self._name
@@ -58,7 +67,7 @@ class Connection(object):
 
     @property
     def level_name_list(self) -> Iterable[str]:
-            return [term.level_name for term in self._terminals]
+        return [term.level_name for term in self._terminals]
 
 class ModuleConnection(Connection):
     """Connection for module"""

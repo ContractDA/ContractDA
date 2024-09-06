@@ -49,12 +49,13 @@ class ReportSystemCommand(BaseCommand):
             return -1
         
         system_name = parsed_args.system_name      
-        if system_name not in self.context._design_mgr._systems:
-            err_msg = "system does not exist!"
+        system = self.context._design_mgr.get_system(system_name)
+        if system is None:
+            err_msg = f"system {system_name} does not exist!"
             LOG.error(err_msg)
             print(err_msg)
             return -1
-        self.context._design_mgr._systems[system_name].report()
+        system.report()
         return 0
     
 class ReportSystemsCommand(BaseCommand):
@@ -76,6 +77,66 @@ class ReportSystemsCommand(BaseCommand):
             return -1
         
         print(len(self.context._design_mgr._systems.values()), "systems")
-        for sys in self.context._design_mgr._systems.values():
-            sys.report()
+        for sys in self.context._design_mgr._systems.keys():
+            print(sys.hier_name)
+        return 0
+    
+class ReportPortCommand(BaseCommand):
+    def __init__(self):
+        super().__init__()
+        self.name = "report_port"
+    
+    def exec(self, *args):
+        parser = argparse.ArgumentParser(prog=self.name, exit_on_error=False)
+        parser.add_argument("port_name", type=str, help="port name")
+        try:
+            parsed_args = parser.parse_args(args)
+        except SystemExit as e:
+            return -1
+        except argparse.ArgumentError as e:
+            print(e)
+            return -1
+        except Exception as e:
+            print("?????")
+            print(type(e))
+            return -1
+        
+        port_name = parsed_args.port_name      
+        port = self.context._design_mgr.get_port(port_name)
+        if port is None:
+            err_msg = f"port {port_name} does not exist!"
+            LOG.error(err_msg)
+            print(err_msg)
+            return -1
+        port.report()
+        return 0
+    
+class ReportConnectionCommand(BaseCommand):
+    def __init__(self):
+        super().__init__()
+        self.name = "report_connection"
+    
+    def exec(self, *args):
+        parser = argparse.ArgumentParser(prog=self.name, exit_on_error=False)
+        parser.add_argument("connection_name", type=str, help="connection name")
+        try:
+            parsed_args = parser.parse_args(args)
+        except SystemExit as e:
+            return -1
+        except argparse.ArgumentError as e:
+            print(e)
+            return -1
+        except Exception as e:
+            print("?????")
+            print(type(e))
+            return -1
+        
+        conn_name = parsed_args.connection_name      
+        conn = self.context._design_mgr.get_connection(conn_name)
+        if conn is None:
+            err_msg = f"connection {conn_name} does not exist!"
+            LOG.error(err_msg)
+            print(err_msg)
+            return -1
+        conn.report()
         return 0

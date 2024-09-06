@@ -1,25 +1,23 @@
 from contractda.design._design import Design
-from contractda.design._system import System
+from contractda.design._system import System, Port, Connection
 from contractda.logger._logger import LOG
 import json
 
 class DesignLevelManager():
+    """The manager for all objects and the interface to perform system level task
+    Mapping of names uses hierarchical names to avoid conflicts.
+    """
     def __init__(self):
-        self._design = dict()
         self._systems = dict()
         self._ports = dict()
         self._connections = dict()
-        self._map_port_to_system = dict()
+        self._modules = dict()
+        self._libs = dict()
 
 
     def read_design_json(self, json_obj):
-        # TODO 1: read all systems (subsystems) in the design file
-
-        system = System.from_dict(json_obj)
-        self._systems[system.system_name] = system
-        # TODO 2: read all ports in the design file
-        # TODO 3: read all connections in the deseign file (require access to ports)
-        pass
+        system = System.from_dict(json_obj, self)
+        self.register_system(system=system)
 
     def read_system_json(self, json_obj):
         pass
@@ -49,3 +47,82 @@ class DesignLevelManager():
 
     def set_objective():
         pass
+
+    def register_system(self, system: System):
+        """Puts the systems, ports, and connections in the manager
+        Recursively put them in the manager for every subsystem
+        """
+        tmp_sys: dict = dict() 
+        tmp_ports:  dict = dict() 
+        tmp_connections:  dict = dict() 
+        hier_names = []
+
+        self._register_system(system, tmp_sys, tmp_ports, tmp_connections, hier_names)
+
+        try:
+            self._systems.update(tmp_sys)
+            self._ports.update(tmp_ports)
+            self._connections.update(tmp_connections)
+        except Exception:
+            LOG.error("Unknown error when registering systems.")
+
+        return 
+
+    @staticmethod
+    def _register_system(system: System, tmp_sys, tmp_ports, tmp_connections, hier_names):
+        # systems
+        LOG.debug(f"Registering system {system.system_name}")
+        
+
+        hier_names_level = list(hier_names)
+        hier_names_level.append(system.system_name)
+        
+        tmp_sys[_build_hier_name(hier_names_level)] = system
+        system._set_hier_name(_build_hier_name(hier_names_level))
+        # ports
+        for port in system.ports.values():
+            hier_names_port = hier_names_level + [port.port_name]
+            tmp_ports[_build_hier_name(hier_names_port)] = port
+        # connection
+        for connection in system.connections.values():
+            hier_names_conn = hier_names_level + [connection.name]
+            tmp_connections[_build_hier_name(hier_names_conn)] = connection
+
+        # recursive for subsystems
+        for subsystem in system.subsystems.values():
+            DesignLevelManager._register_system(subsystem, tmp_sys, tmp_ports, tmp_connections, hier_names_level)
+
+    def summary(self):
+        print(f"======== Design Manager Summary ========")
+        print(f"     Systems: {len(self._systems)}")
+        print(f"     Ports: {len(self._ports)}")
+        print(f"     Connections: {len(self._connections)}")
+
+    def get_system(self, name: str) -> System | None:
+        if name in self._systems:
+            return self._systems[name]
+        else:
+            return None
+        
+    def get_port(self, name: str) -> Port | None:
+        if name in self._ports:
+            return self._ports[name]
+        else:
+            return None
+
+    def get_connection(self, name: str) -> Connection | None:
+        if name in self._connections:
+            return self._connections[name]
+        else:
+            return None
+
+
+def _build_hier_name(hier_names):
+    return ".".join(hier_names)
+    
+
+def _decode_hier_name(hier_name):
+    return hier_name.split(".")
+
+
+

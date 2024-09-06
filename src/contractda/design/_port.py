@@ -48,6 +48,15 @@ class Port(object):
 
         hier.reverse()
         return ".".join(hier)
+
+    @property
+    def hier_name(self) -> str:
+        hier = [self._port_name]
+        if self._system is not None:
+            hier.append(self._system.hier_name)
+
+        hier.reverse()
+        return ".".join(hier)
     
     def _level_name_by_instance_name(self, instance_name:str) -> str:
         hier = [self._port_name]
@@ -96,7 +105,7 @@ class Port(object):
         return self._dir
     
     def report(self) -> None:
-        print(f"Port Report: {self.port_name}, Type: {self.port_type}, Direction: {self.direction}")
+        print(f"Port Report: {self.hier_name}, Type: {self.port_type}, Direction: {self.direction}")
 
     def _set_system(self, system: "System"):
         if self._set_system is not None:
