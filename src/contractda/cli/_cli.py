@@ -1,6 +1,7 @@
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter, PathCompleter, Completer, merge_completers
 from prompt_toolkit.document import Document
+from prompt_toolkit.buffer import Buffer
 from contractda.cli.commands._cmd_mgr import CommandManager
 from contractda.cli.commands._base_command import BaseCommand
 from contractda.logger._logger import LOG
@@ -27,6 +28,7 @@ class ContractDACmdShell():
     def __init__(self):
         self._intro = "ContractDA: a design automation tool for contract-based design"
         self._prompt = "> "
+        self._buffer = [] # store the additional commands to be executed
 
     def initialize(self, command_mgr: CommandManager, shell_level_commands: list[BaseCommand]):
         """Initialize the shell with supported commands
@@ -51,7 +53,37 @@ class ContractDACmdShell():
         """Starts the shell for receiving user inputs and execute the corresponding commands"""
         while True:
             try: 
-                user_input = self._session.prompt(self._prompt)
+                if len(self._buffer) != 0:
+                    user_input = self._buffer.pop()
+                    #print(self._buffer)
+                    print(self._prompt + user_input)
+                else:
+                    user_input = self._session.prompt(self._prompt)
+                # retrieve command name
+                tokens = user_input.split()
+                if not tokens:
+                    continue
+                
+                command_name = tokens[0]
+                args = tokens[1:]
+                self._command_mgr.execute_command(command_name, *args)
+
+            except KeyboardInterrupt:
+                break
+            except EOFError:
+                break
+
+    def batch_operation(self, file:str):
+        """Starts the shell for running batch"""
+        with open(file, "r") as batch_file:
+            self._buffer = [line for line in batch_file]
+            self._buffer.reverse()
+
+        while len(self._buffer) != 0:
+            try: 
+                # TODO: handle the buffer
+                user_input = self._buffer.pop()
+                print(self._prompt + user_input)
                 # retrieve command name
                 tokens = user_input.split()
                 if not tokens:

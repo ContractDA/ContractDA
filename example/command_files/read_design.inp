@@ -1,0 +1,7 @@
+read_design_from_file -f ./example/design_files/simple_design.json
+report_design test_sys
+report_systems
+report_system test_sys.sub1
+report_system test_sys.sub2
+report_connection test_sys.net3
+report_port test_sys.sub1.a1
