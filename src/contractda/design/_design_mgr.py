@@ -1,4 +1,4 @@
-from contractda.design._design import Design
+
 from contractda.design._system import System, Port, Connection
 from contractda.logger._logger import LOG
 import json
@@ -14,14 +14,15 @@ class DesignLevelManager():
         self._modules = dict()
         self._libs = dict()
 
+        self._designs: dict[str, System] = dict()# the entry to the top level systems
+
 
     def read_design_json(self, json_obj):
         system = System.from_dict(json_obj, self)
-        self.register_system(system=system)
-
-    def read_system_json(self, json_obj):
-        pass
-
+        if system.system_name in self._designs:
+            LOG.error(f"Design name {system.system_name} already existed! Reading aborted!")
+            return 
+        self.register_design(system=system)
 
     def read_design_from_file(self, file_path):
         # check file format
@@ -29,26 +30,11 @@ class DesignLevelManager():
             with open(file_path, "r") as design_file:
                 json_obj = json.load(design_file)
                 self.read_design_json(json_obj)
-
-    def create_empty_design(self, name):
-        if name not in self._designs:
-            new_design = Design(name=name)
-            self._designs[name] = new_design
-        else:
-            LOG.error(f"Duplicate design name {name}")
         
     def check_system(self, system: str | System):
         pass
 
-    def compile_system(self, system: str | System):
-        system._frozen = True
-        pass
-
-
-    def set_objective():
-        pass
-
-    def register_system(self, system: System):
+    def register_design(self, system: System):
         """Puts the systems, ports, and connections in the manager
         Recursively put them in the manager for every subsystem
         """
@@ -56,6 +42,7 @@ class DesignLevelManager():
         tmp_ports:  dict = dict() 
         tmp_connections:  dict = dict() 
         hier_names = []
+        self._designs[system.system_name] = system
 
         self._register_system(system, tmp_sys, tmp_ports, tmp_connections, hier_names)
 
@@ -116,6 +103,11 @@ class DesignLevelManager():
         else:
             return None
 
+    def get_design(self, name: str) -> System | None:
+        if name in self._designs:
+            return self._designs[name]
+        else:
+            return None
 
 def _build_hier_name(hier_names):
     return ".".join(hier_names)

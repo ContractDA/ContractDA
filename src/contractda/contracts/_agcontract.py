@@ -277,7 +277,7 @@ class AGContract(ContractBase):
         A contract is refined by the other contract if the all the implementations of the new contract satisfy the original contract 
         and they can work under the environment required by the original contract.
 
-        :param ContractBase others: all the subsystem contracts of :class:`~contract.contracts.ContractBase` 
+        :param ContractBase others: all the subsystem contracts of :py:class:`~contract.contracts.ContractBase` 
         :return: True if the contract is refined by the others, False if not
         :rtype: bool
         """

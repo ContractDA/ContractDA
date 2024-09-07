@@ -17,6 +17,7 @@
    ~contractda.design.LibSystem.contracts
    ~contractda.design.LibSystem.name
    ~contractda.design.LibSystem.ports
+   ~contractda.design.LibSystem.schema
 
 
 
@@ -28,5 +29,7 @@
 
    ~contractda.design.LibSystem.add_contract
    ~contractda.design.LibSystem.add_port
+   ~contractda.design.LibSystem.from_dict
    ~contractda.design.LibSystem.report
+   ~contractda.design.LibSystem.to_dict
 

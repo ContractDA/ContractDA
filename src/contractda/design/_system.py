@@ -26,7 +26,12 @@ class System(object):
                  port_rename = None, 
                  ports: Iterable[Port] | None = None, 
                  contracts: Iterable[SystemContract] | None = None):
-        """Test"""
+        """
+        :param str system_name: the name of the system
+        :param LibSystem lib_system: the reference library system for creating the system, when this parameter is set, the ports and contracts follow the library system and the inputs to these two parameters are ignored.
+        :param Iterable[Port] ports: the list of ports for the system.
+        :param Iterable[SystemContract]: the contracts for specifying the system.
+        """
         #self._check_parameters()
 
         self._system_name: str = system_name
@@ -64,14 +69,57 @@ class System(object):
 
         self._frozen: bool = False
 
+    @property
+    def system_name(self):
+        """The name of the system"""
+        return self._system_name
+    
+    @property
+    def lib_system(self) -> LibSystem | None:
+        """The library that the system is referenced to"""
+        return self._lib_system
+    
+    @property
+    def template_name(self) -> str:
+        """The name of the library that the system is referenced to"""
+        if self._lib_system:
+            return self._lib_system.name
+        else:
+            return ""
+    
+    @property
+    def subsystems(self) -> dict[str, System]:
+        """The subsystems in the system. It returns a dictionary object, where the key is the subsystem names and the value is the subsystem :py:class:`System` instance"""
+        return self._subsystems
+    
+    @property
+    def ports(self) -> dict[str, Port]:
+        """The ports in the system. It returns a dictionary object, where the key is the port names and the value is :py:class:`Port` instance"""
+        return self._ports
+    
+    @property
+    def contracts(self) -> set[SystemContract]:
+        """The contracts in the system. It returns a python set object, where each element is a :py:class:`SystemContract` instance"""
+        return self._contracts
+    
+    @property
+    def connections(self) -> dict[str, Connection]:
+        """The connections in the system. It returns a dictionary object, where the key is the connection names and the value is :py:class:`Connection` instance"""
+        return self._connections
+    
+    @property
+    def hier_name(self) -> str:
+        """The hierarchical name in a design."""
+        return self._hier_name
+    
     # json schema
-    schema = {
+    _schema = {
         "type": "object",
         "properties": {
             "system_name": {"type": "string"},
             "ports": {
                 "type": "array",
-                "items": Port.schema
+                "items": Port._schema
             },
             "subsystems": {
                 "type": "array",
@@ -103,6 +151,13 @@ class System(object):
     }
 
     def to_dict(self) -> dict:
+        """
+        Create a json formatted dictionary object for the whole systems, including the contained subsystems.
+        The object can be then written to json file and read in as a portable file.
+
+        :return: the json formated dictionary.
+        :rtype: dict
+        """
         connections_obj = []
         for connection in self._connections.values():
             conn_obj = {"name": connection.name}
@@ -121,9 +176,17 @@ class System(object):
         return ret_dict
     
     @classmethod
-    def from_dict(cls, dict_obj, libs = None):
+    def from_dict(cls, dict_obj: dict, libs = None) -> System:
+        """
+        Create a system instance from the json formatted dictionary object.
+
+        :param dict dict_obj: the json formatted dictionary object.
+        :return: the :py:class:`System` object defined by dict_obj.
+        :rtype: Port
+
+        """
         try:
-            validate(instance=dict_obj, schema=cls.schema)
+            validate(instance=dict_obj, schema=cls._schema)
         except ValidationError as e:
             LOG.error(f"System Definition Error", e)
             return None
@@ -146,9 +209,6 @@ class System(object):
             lib_system = None,
             ports = ports, 
             contracts = contracts)
-        
-        for port_name, port in new_inst.ports.items():
-            port._set_system(new_inst)
         
         # reading subsystems
         subsystems = []
@@ -211,6 +271,58 @@ class System(object):
     def is_frozen(self):
         return self._frozen
     
+
+    def report(self) -> None:
+        """Report the information of the port in the design view"""
+        print(f"System Report: {self.hier_name} compile status: {self.is_frozen()}")
+        print(f"  Ports: ")
+        for port in self.ports.values():
+            print(f"    {port}")
+        print(f"  Subsystems: ")
+        for subsystem in self.subsystems.values():
+            print(f"    {subsystem.system_name}")
+        print(f"  Contracts: ")
+        for contract in self.contracts:
+            print(f"    {contract}")
+        print(f"  Connections: ")
+        for connection in self.connections.values():
+            print(f"    {connection}")       
+
+
+    def add_subsystem(self, subsystem: System) -> None:
+        """Add a subsystem to the system.
+        
+        :param System subsystem: the subsystem to be added to the system
+        """
+        if self._check_is_frozen_before_modify():
+            return 
+        if subsystem.system_name not in self._subsystems:
+            self._subsystems[subsystem.system_name] = subsystem
+            subsystem._upsystem = self
+        else:
+            LOG.error(f"Duplicated subsystem {subsystem.system_name}!")
+
+    def add_connection(self, connection: Connection) -> None:
+        """Add a connection to the system.
+        The terminals in the connections must be the ports that has already existed in the system or its immediate subsystem.
+
+        :param Connection connection: the connection to be added to the system
+        """
+        if self._check_is_frozen_before_modify():
+            return 
+        if connection.name not in self._connections:
+            # TODO: check if the connection terminals are all specify in this 
+            self._connections[connection.name] = connection
+            connection._set_system = self
+        else:
+            LOG.error(f"Duplicated connection {connection.name}!")
+
+    def _set_hier_name(self, hier_name:str):
+        if self._hier_name is None:
+            self._hier_name = hier_name
+        else:
+            LOG.error(f"Hier name has been set {self.system_name} {self.hier_name}")
+
     def _check_is_frozen_before_modify(self):
         if self.is_frozen():
             LOG.error(f"System Instance {self.system_name} is frozen! Please call System.allow_modify() before modification.")
@@ -227,83 +339,6 @@ class System(object):
 
         # check ports
         pass
-
-    def report(self) -> None:
-        print(f"System Report: {self.hier_name} compile status: {self.is_frozen()}")
-        print(f"  Ports: ")
-        for port in self.ports.values():
-            print(f"    {port}")
-        print(f"  Subsystems: ")
-        for subsystem in self.subsystems.values():
-            print(f"    {subsystem.system_name}")
-        print(f"  Contracts: ")
-        for contract in self.contracts:
-            print(f"    {contract}")
-        print(f"  Connections: ")
-        for connection in self.connections.values():
-            print(f"    {connection}")       
-
-
-    @property
-    def system_name(self):
-        return self._system_name
-    
-    @property
-    def lib_system(self) -> LibSystem | None:
-        return self._lib_system
-    
-    @property
-    def template_name(self) -> str:
-        if self._lib_system:
-            return self._lib_system.name
-        else:
-            return ""
-    
-    @property
-    def subsystems(self):
-        return self._subsystems
-    
-    @property
-    def ports(self):
-        return self._ports
-    
-    @property
-    def contracts(self):
-        return self._contracts
-    
-    @property
-    def connections(self):
-        return self._connections
-    
-    @property
-    def hier_name(self) -> str:
-        return self._hier_name
-
-    def add_subsystem(self, subsystem: System) -> None:
-        if self._check_is_frozen_before_modify():
-            return 
-        if subsystem.system_name not in self._subsystems:
-            self._subsystems[subsystem.system_name] = subsystem
-            subsystem._upsystem = self
-        else:
-            LOG.error(f"Duplicated subsystem {subsystem.system_name}!")
-
-    def add_connection(self, connection: Connection) -> None:
-        if self._check_is_frozen_before_modify():
-            return 
-        if connection.name not in self._connections:
-            # TODO: check if the connection terminals are all specify in this 
-            self._connections[connection.name] = connection
-            connection._set_system = self
-        else:
-            LOG.error(f"Duplicated connection {connection.name}!")
-
-    def _set_hier_name(self, hier_name:str):
-        if self._hier_name is None:
-            self._hier_name = hier_name
-        else:
-            LOG.error(f"Hier name has been set {self.system_name} {self.hier_name}")
-
 class CompiledSystem(System):
     """A system that is fixed
     """

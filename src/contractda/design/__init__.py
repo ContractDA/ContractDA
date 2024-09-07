@@ -12,23 +12,24 @@
     ~contractda.design.Connection
     ~contractda.design.System
     ~contractda.design.LibSystem
+    ~contractda.design.Module
 """
 
 from contractda.design._design_mgr import DesignLevelManager
-from contractda.design._design import Design
 from contractda.design._port import Port, PortDirection, VarType
 from contractda.design._connections import Connection
 from contractda.design._system import System
 from contractda.design._libsystem import LibSystem
+from contractda.design._module import Module
 
 
 __all__ = [
     "DesignLevelManager",
-    "Design",
     "Port",
     "PortDirection",
     "VarType",
     "Connection",
     "System",
-    "LibSystem"
+    "LibSystem",
+    "Module"
 ]

@@ -42,7 +42,7 @@ class Module(object):
             "module_name": {"type": "string"},
             "ports": {
                 "type": "array",
-                "items": Port.schema
+                "items": Port._schema
             },
             "submodules": {
                 "type": "array",

@@ -14,7 +14,10 @@
 
 .. autosummary::
 
+   ~contractda.design.Connection.hier_name
+   ~contractda.design.Connection.level_name_list
    ~contractda.design.Connection.name
+   ~contractda.design.Connection.schema
    ~contractda.design.Connection.terminals
 
 

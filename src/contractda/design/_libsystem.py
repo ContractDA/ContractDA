@@ -29,7 +29,7 @@ class LibSystem(object):
             "lib_system_name": {"type": "string"},
             "ports": {
                 "type": "array",
-                "items": Port.schema
+                "items": Port._schema
             },
             "contracts": {
                 "type": "array",

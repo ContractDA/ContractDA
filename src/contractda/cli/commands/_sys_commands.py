@@ -27,11 +27,41 @@ class ReadDesignFromFileCommand(BaseCommand):
             print("Error during execution")
             return -1
         return 0
+    
+class ReportDesignCommand(BaseCommand):
+    def __init__(self):
+        super().__init__()
+        self.name = "report_design"
+    
+    def exec(self, *args):
+        parser = argparse.ArgumentParser(prog=self.name, exit_on_error=False)
+        parser.add_argument("design_name", type=str, help="design name")
+        try:
+            parsed_args = parser.parse_args(args)
+        except SystemExit as e:
+            return -1
+        except argparse.ArgumentError as e:
+            print(e)
+            return -1
+        except Exception as e:
+            print("?????")
+            print(type(e))
+            return -1
+        
+        design_name = parsed_args.design_name      
+        design = self.context._design_mgr.get_design(design_name)
+        if design is None:
+            err_msg = f"design {design_name} does not exist!"
+            LOG.error(err_msg)
+            print(err_msg)
+            return -1
+        design.report()
+        return 0
 
 class ReportSystemCommand(BaseCommand):
     def __init__(self):
         super().__init__()
-        self.name = "report_design"
+        self.name = "report_system"
     
     def exec(self, *args):
         parser = argparse.ArgumentParser(prog=self.name, exit_on_error=False)
@@ -61,7 +91,7 @@ class ReportSystemCommand(BaseCommand):
 class ReportSystemsCommand(BaseCommand):
     def __init__(self):
         super().__init__()
-        self.name = "report_designs"
+        self.name = "report_systems"
     
     def exec(self, *args):
         parser = argparse.ArgumentParser(prog=self.name, exit_on_error=False)
@@ -77,7 +107,7 @@ class ReportSystemsCommand(BaseCommand):
             return -1
         
         print(len(self.context._design_mgr._systems.values()), "systems")
-        for sys in self.context._design_mgr._systems.keys():
+        for sys in self.context._design_mgr._systems.values():
             print(sys.hier_name)
         return 0
     

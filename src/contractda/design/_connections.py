@@ -10,47 +10,25 @@ from contractda.design._port import Port
 class Connection(object):
     """Connection between ports in a system"""
     def __init__(self, name: str, terminals: Iterable[Port]) -> None:
+        """
+        :param str name: the name of the connection
+        :param Iterable[Port] terminals: the list of ports connected by the connection.
+        """
         self._terminals = terminals
         self._name: str = name
         self._system: System = None
     
     def __str__(self) -> str:
         return f"{self._name} [" + ", ".join([term.level_name for term in self._terminals])+ "]"
-
-    schema = {
-        "type": "object",
-        "properties": {
-            "name": {"type": "string"},
-            "terminals": {
-                "type": "array",
-                "items": {"type": "string"}
-            }
-        },
-        "required": ["name", "terminals"]
-    }
-
-    def to_dict(self) -> dict:
-        return {
-            "name": self._name,
-            "terminals": [term.port_name for term in self._terminals]
-        }
-    
-    @classmethod
-    def from_dict(cls, dict_obj):
-        # connection should not be called from from_dict, it rely on ports
-        pass
-
-    def report(self) -> None:
-        print(f"Connection Report: {self.hier_name}")
-        for term in self.terminals:
-            print(f"   {term.hier_name}")
             
     @property
     def terminals(self) -> Iterable[Port]:
+        """The port (terminals) of the connections. It returns a list, where each element is a :py:class:`Port` instance"""
         return self._terminals
     
     @property
     def hier_name(self) -> str:
+        """The hierarchical name in a design."""
         hier = [self._name]
         if self._system is not None:
             hier.append(self._system.hier_name)
@@ -60,13 +38,21 @@ class Connection(object):
 
     @property
     def name(self) -> str:
+        """The name of the connection."""
         return self._name
     
+    def report(self) -> None:
+        """Report the information of the connection in the design view"""
+        print(f"Connection Report: {self.hier_name}")
+        for term in self.terminals:
+            print(f"   {term.hier_name}")
+
     def _set_system(self, system: "System"):
         self._system = system
 
     @property
     def level_name_list(self) -> Iterable[str]:
+        """The list of all level names of the terminals in the connection."""
         return [term.level_name for term in self._terminals]
 
 class ModuleConnection(Connection):

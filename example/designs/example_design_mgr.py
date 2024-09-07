@@ -8,6 +8,14 @@ if __name__ == "__main__":
 
     sys = System.from_dict(json_obj)
     design_mgr = DesignLevelManager()
-    design_mgr.register_system(sys)
+    design_mgr.register_design(sys)
 
-    print(design_mgr._connections)
+    design = design_mgr.get_design("test_sys")
+    design.report()
+    print(design)
+
+    sys1 = design_mgr.get_system("test_sys.sub1")
+    sys1.report()
+    for port_name, port in sys1.ports.items():
+        print(port)
+        port.report()

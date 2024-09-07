@@ -15,6 +15,8 @@
 .. autosummary::
 
    ~contractda.design.Port.direction
+   ~contractda.design.Port.hier_name
+   ~contractda.design.Port.level_name
    ~contractda.design.Port.port_name
    ~contractda.design.Port.port_type
 
@@ -26,5 +28,7 @@
 
 .. autosummary::
 
+   ~contractda.design.Port.from_dict
    ~contractda.design.Port.report
+   ~contractda.design.Port.to_dict
 

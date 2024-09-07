@@ -16,6 +16,7 @@
 
    ~contractda.design.System.connections
    ~contractda.design.System.contracts
+   ~contractda.design.System.hier_name
    ~contractda.design.System.lib_system
    ~contractda.design.System.ports
    ~contractda.design.System.subsystems
@@ -34,8 +35,10 @@
    ~contractda.design.System.add_subsystem
    ~contractda.design.System.allow_modify
    ~contractda.design.System.flatten
+   ~contractda.design.System.from_dict
    ~contractda.design.System.is_frozen
    ~contractda.design.System.report
    ~contractda.design.System.set_contracts
    ~contractda.design.System.set_ports
+   ~contractda.design.System.to_dict
 
