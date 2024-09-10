@@ -19,3 +19,7 @@ if __name__ == "__main__":
     for port_name, port in sys1.ports.items():
         print(port)
         port.report()
+
+    for contract in sys.contracts:
+        contract_obj = sys._convert_system_contract_to_contract_object(contract)
+        print(contract_obj)

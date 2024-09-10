@@ -34,6 +34,35 @@ class DesignLevelManager():
     def check_system(self, system: str | System):
         pass
 
+    def verify_design(self, system: str | System):
+        """Verify if the design has any potential issues
+        This function encapsulate many verification problems and summarize the result.
+        """
+        pass
+
+    def verify_independent_design(self, system: str | System):
+        """Verify if the given design may suffer from incompatible problems during independent design process"""
+        if isinstance(system, str):
+            system = self.get_design(system)
+        if system is None:
+            LOG.error(f"No such design, verification fails")
+            return 
+        
+        # to verify independent design in system
+        # 1. detect feedback loop
+        # 2. bottom up: find leaf systems and check if they are receptive
+        # 3. propagate leaf system up for pure refinement
+        # 4. detect loop: composition of receptive does not guarantee to be receptive
+        # 3. color up all those systems up that can be ensured to be receptive
+        # 2. if feedback loop does not exist, check if receptive can be established -> should be done bottom up?
+        # 2. For feedback loop, check feedback condition
+        # 3. For system not involve in feedback loop, try to estabilish its receptiveness. check strong replaceability
+        # 4. check receptiveness in the leaf
+        # 5. 
+        system.verify_contract_in
+        
+
+
     def register_design(self, system: System):
         """Puts the systems, ports, and connections in the manager
         Recursively put them in the manager for every subsystem

@@ -6,9 +6,14 @@ from jsonschema import validate, ValidationError
 from contractda.design._port import Port
 from contractda.design._connections import Connection
 from contractda.logger._logger import LOG
-from contractda.design._system_contracts import SystemContract
+from contractda.design._system_contracts import SystemContract, ContractType
 from contractda.design._libsystem import LibSystem
 
+from contractda.sets._fol_clause import FOLClause
+from contractda.sets import FOLClauseSet
+from contractda.sets._fol_lan import name_remap
+
+from contractda.contracts import AGContract
 
 class FrozenSystemExcpetion(Exception):
     pass
@@ -316,6 +321,44 @@ class System(object):
             connection._set_system = self
         else:
             LOG.error(f"Duplicated connection {connection.name}!")
+
+
+#################### contracts API
+    def _convert_system_contract_to_contract_object(self, contract: SystemContract):
+        # match ports 
+        # in contract we use the port name, but in system view we should use hierarchical name
+        vars = self._create_vars_for_port()
+        vars_remap = self._create_var_rename_for_hier_name()
+        if contract.type == ContractType.AG:
+            language_a = contract._description["assumption"]["set_type"]
+            desc_a = contract._description["assumption"]["description"]
+            if language_a == "FOL":
+                clause_instance_a = FOLClause(description=desc_a, ctx=None)
+                name_remap(vars_remap, clause_instance_a._root)
+                clause_instance_a._symbols = clause_instance_a._root.get_symbols()
+
+            language_g = contract._description["guarantee"]["set_type"]
+            desc_g = contract._description["guarantee"]["description"]
+            if language_g == "FOL":
+                clause_instance_g = FOLClause(description=desc_g, ctx=None)
+                name_remap(vars_remap, clause_instance_g._root)
+                clause_instance_g._symbols = clause_instance_g._root.get_symbols()
+            print(clause_instance_a)
+            for var in vars:
+                print(var)
+            print(clause_instance_a.get_symbols())
+            assumption = FOLClauseSet(vars=vars, expr=clause_instance_a)
+            guarantee = FOLClauseSet(vars=vars, expr=clause_instance_g)
+            return AGContract(vars=vars, assumption=assumption, guarantee=guarantee, language="FOL")
+        else:
+            LOG.error("Not supported contract type")
+
+
+    def _create_vars_for_port(self):
+        return [Port._create_var_using_hier_name(port=port) for port in self.ports.values()]
+    
+    def _create_var_rename_for_hier_name(self):
+        return {port.port_name: port.hier_name for port in self.ports.values()}
 
     def _set_hier_name(self, hier_name:str):
         if self._hier_name is None:

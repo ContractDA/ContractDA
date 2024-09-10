@@ -29,6 +29,9 @@ class SystemContract():
         description = ", ".join([f"{set_name}: {set_content['description']}" for set_name, set_content in self._description.items()])
         return f"{self._type.name}Contract {self._name}: {description}"
         
+    @property
+    def type(self) -> ContractType:
+        return self._type
 
     set_schema = {
         "type": "object",

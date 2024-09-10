@@ -14,7 +14,7 @@ json_obj1 = {
         },
         "guarantee": {
             "set_type": "FOL",
-            "description": "x = a+b+c"
+            "description": "x == a+b+c"
         }
     }
 }
@@ -29,7 +29,7 @@ json_obj2 = {
         },
         "guarantee": {
             "set_type": "FOL",
-            "description": "t1 = a1 + b"
+            "description": "t1 == a1 + b"
         }
     }
 }
@@ -45,7 +45,7 @@ json_obj3 = {
         },
         "guarantee": {
             "set_type": "FOL",
-            "description": "t2 = c + d"
+            "description": "t2 == c + d"
         }
     }
 }
@@ -100,3 +100,4 @@ if __name__ == "__main__":
 
     with open("./example/design_files/simple_design.json", "w") as file:
         json.dump(newsys.to_dict(), file, indent=4)
+

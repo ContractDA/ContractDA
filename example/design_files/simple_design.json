@@ -55,7 +55,7 @@
                         },
                         "guarantee": {
                             "set_type": "FOL",
-                            "description": "t1 = a1 + b"
+                            "description": "t1 == a1 + b"
                         }
                     }
                 }
@@ -93,7 +93,7 @@
                         },
                         "guarantee": {
                             "set_type": "FOL",
-                            "description": "t2 = c + d"
+                            "description": "t2 == c + d"
                         }
                     }
                 }
@@ -148,7 +148,7 @@
                 },
                 "guarantee": {
                     "set_type": "FOL",
-                    "description": "x = a+b+c"
+                    "description": "x == a+b+c"
                 }
             }
         }
