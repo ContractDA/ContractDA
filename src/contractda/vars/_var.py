@@ -21,8 +21,6 @@ class VarType(Enum):
     def __str__(self) -> str:
         return self.name
 
-var_type_string_map = {VarType.INTEGER: "integer", VarType.REAL: "real", VarType.BOOL: "boolean", VarType.CATEGORICAL: "categorical"}
-
 class Var(ABC):
     
     """
@@ -70,7 +68,7 @@ class Var(ABC):
     def type_str(self) -> str:
         """ The identifier of the type
         """
-        return var_type_string_map[self._var_type]
+        return str(self._var_type)
 
         
         

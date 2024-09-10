@@ -14,11 +14,11 @@ class Z3Interface(SolverInterface):
 
     @staticmethod
     def get_fresh_variable(var_name: str, sort: str, **kwargs):
-        if sort == "real":
+        if sort == "REAL":
             return z3.Real(var_name)
-        elif sort == "integer":
+        elif sort == "INTEGER":
             return z3.Int(var_name)
-        elif sort == "boolean":
+        elif sort == "BOOL":
             return z3.Bool(var_name)
         elif sort == "bit_vector":
             if "bv_size" in kwargs:
