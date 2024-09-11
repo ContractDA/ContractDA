@@ -99,7 +99,7 @@ class Module(object):
         try:
             validate(instance=dict_obj, schema=cls.schema)
         except ValidationError as e:
-            LOG.error(f"System Definition Error", e)
+            LOG.error(f"Module Definition Error {repr(e)}")    
             return None
         # reading system name
         module_name = dict_obj["module_name"]
