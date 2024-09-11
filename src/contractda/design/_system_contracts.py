@@ -30,6 +30,9 @@ class SystemContract():
         return f"{self._type.name}Contract {self._name}: {description}"
         
     @property
+    def name(self) -> str:
+        return self._name
+    @property
     def type(self) -> ContractType:
         return self._type
 
@@ -79,7 +82,7 @@ class SystemContract():
         try:
             validate(instance=dict_obj, schema=cls.schema)
         except ValidationError as e:
-            LOG.error(f"Contract Definition Error", e)
+            LOG.error(f"Contract Definition Error {repr(e)}")
             return None
         
         new_inst = cls(name=dict_obj["name"], type=ContractType[dict_obj["type"]])
