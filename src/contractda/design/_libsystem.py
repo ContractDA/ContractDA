@@ -53,7 +53,7 @@ class LibSystem(object):
         try:
             validate(instance=dict_obj, schema=cls.schema)
         except ValidationError as e:
-            LOG.error(f"System Definition Error", e)
+            LOG.error(f"LibSystem Definition Error {repr(e)}")    
             return None
         # reading system name
         name = dict_obj["lib_system_name"]

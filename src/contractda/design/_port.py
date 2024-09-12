@@ -138,7 +138,7 @@ class Port(object):
         try:
             validate(instance=dict_obj, schema=cls._schema)
         except ValidationError as e:
-            LOG.error(f"Port Definition Error", e)
+            LOG.error(f"Port Definition Error {repr(e)}")
             return None
     
         return cls(port_name=dict_obj["port_name"], port_type=VarType[dict_obj["port_type"]], direction=PortDirection[dict_obj["direction"]])

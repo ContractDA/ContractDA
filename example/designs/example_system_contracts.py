@@ -43,3 +43,19 @@ if __name__ == "__main__":
     print(c2)
     print(c3)
     print(c3.to_dict())
+
+
+    json_obj_failed = {
+        "name": "C1",
+        "content": {
+            "assumption": {
+                "set_type": "FOL",
+                "description": "a >= 0"
+            },
+            "guarantee": {
+                "set_type": "FOL",
+                "description": "y = a+b"
+            }
+        }
+    }
+    SystemContract.from_dict(json_obj_failed)

@@ -193,7 +193,7 @@ class System(object):
         try:
             validate(instance=dict_obj, schema=cls._schema)
         except ValidationError as e:
-            LOG.error(f"System Definition Error", e)
+            LOG.error(f"System Definition Error {repr(e)}")            
             return None
         # reading system name
         system_name = dict_obj["system_name"]
