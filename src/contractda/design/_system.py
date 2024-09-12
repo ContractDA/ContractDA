@@ -3,7 +3,7 @@ from typing import Iterable, TYPE_CHECKING
 import copy
 from jsonschema import validate, ValidationError
 
-from contractda.design._port import Port
+from contractda.design._port import Port, PortDirection
 from contractda.design._connections import Connection
 from contractda.logger._logger import LOG
 from contractda.design._system_contracts import SystemContract, ContractType
@@ -381,6 +381,50 @@ class System(object):
         # 3. check output ports cannot connect to output ports
 
         # check ports
+        pass
+
+    def check_connections(self):
+        pass
+
+    def _check_terminal_directions(self, connection: Connection) -> bool:
+        # check if multiple outputs drive the same coonnection, or no outputs
+        must_drive_ports = []
+        must_sink_ports = []
+        flex_ports = []
+        for term in connection.terminals:
+            if term in self._ports.values():
+                # might be optimized using better search
+                if term.direction == PortDirection.OUTPUT:
+                    must_sink_ports.append(term)
+                elif term.direction == PortDirection.INPUT:
+                    must_drive_ports.append(term)
+                elif term.direction == PortDirection.INOUT:
+                    flex_ports.append(term)
+                else:
+                    LOG.error(f"Unknown direction type {term.direction}")
+                    return False
+            else:
+                if term.direction == PortDirection.OUTPUT:
+                    must_drive_ports.append(term)
+                elif term.direction == PortDirection.INPUT:
+                    must_sink_ports.append(term)
+                elif term.direction == PortDirection.INOUT:
+                    flex_ports.append(term)
+                else:
+                    LOG.error(f"Unknown direction type {term.direction}")
+                    return False
+
+        if len(must_drive_ports) > 1:
+            LOG.error(f"Multiple drives for connection {connection.name} ({[term.hier_name for term in outputs]})")
+            return False
+        if len(must_drive_ports) == 0 and len(flex_ports) == 0:
+            LOG.error(f"No drives for connection {connection.name}")
+            return False    
+        
+        return True
+
+    def _check_feedback_loop(self):
+        """Find the feedback loop in the subsystem connection"""
         pass
 class CompiledSystem(System):
     """A system that is fixed

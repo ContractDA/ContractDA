@@ -23,3 +23,5 @@ if __name__ == "__main__":
     for contract in sys.contracts:
         contract_obj = sys._convert_system_contract_to_contract_object(contract)
         print(contract_obj)
+
+    print(sys._check_terminal_directions(list(sys.connections.values())[0]))
