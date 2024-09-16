@@ -415,7 +415,7 @@ class System(object):
                     return False
 
         if len(must_drive_ports) > 1:
-            LOG.error(f"Multiple drives for connection {connection.name} ({[term.hier_name for term in outputs]})")
+            LOG.error(f"Multiple drives for connection {connection.name} ({[term.hier_name for term in must_drive_ports]})")
             return False
         if len(must_drive_ports) == 0 and len(flex_ports) == 0:
             LOG.error(f"No drives for connection {connection.name}")
