@@ -93,8 +93,20 @@ class DesignLevelManager():
         system_obj = self._verify_system_obj_or_str(system=system)
         pass
 
-    def verify_system_consistensy(self, system: str | System, hierarchical=True):
+    def verify_system_consistensy(self, system: str | System, hierarchical=True) -> bool:
+        """Check if the system contracts in a system are consistent
+
+        :param str | System system: the system instance or its name for checking contract consistency
+        :param VarType | str port_type: the type of the port
+        :param PortDirection | str direction: the direction of the port. See PortDirection
+        """
         system_obj = self._verify_system_obj_or_str(system=system)
+        self._generate_system_contracts(system_obj)
+        inconsistent_contracts = []
+        for contract in system_obj.contracts:
+            if not contract._contract_obj.is_consistent():
+                inconsistent_contracts.append(contract)
+        return len(inconsistent_contracts) == 0
         
 
 
@@ -161,7 +173,9 @@ class DesignLevelManager():
 
     def _generate_system_contracts(self, system: System):
         system._convert_system_contract_to_contract_object()
-        
+        for subsystem in system.subsystems.values():
+            self._generate_system_contracts(system=subsystem)
+
     def summary(self):
         print(f"======== Design Manager Summary ========")
         print(f"     Systems: {len(self._systems)}")
