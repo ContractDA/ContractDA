@@ -48,7 +48,7 @@ class Port(object):
         return f"{self._port_type.name} {self._dir.name} {self._port_name}"
 
     @staticmethod
-    def _create_var_using_hier_name(port: "Port"):
+    def _create_var_using_hier_name(port: "Port") -> Var:
         return create_var(id=port.hier_name, var_type=port.port_type)
 
     @property

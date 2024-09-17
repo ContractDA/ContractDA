@@ -12,8 +12,9 @@ from contractda.design._libsystem import LibSystem
 from contractda.sets._fol_clause import FOLClause
 from contractda.sets import FOLClauseSet
 from contractda.sets._fol_lan import name_remap
+from contractda.vars import Var
 
-from contractda.contracts import AGContract
+# from contractda.contracts import AGContract, CBContract
 
 class FrozenSystemExcpetion(Exception):
     pass
@@ -324,40 +325,31 @@ class System(object):
 
 
 #################### contracts API
-    def _convert_system_contract_to_contract_object(self, contract: SystemContract):
+    def _convert_system_contract_to_contract_object(self):
         # match ports 
         # in contract we use the port name, but in system view we should use hierarchical name
         vars = self._create_vars_for_port()
         vars_remap = self._create_var_rename_for_hier_name()
-        if contract.type == ContractType.AG:
-            language_a = contract._description["assumption"]["set_type"]
-            desc_a = contract._description["assumption"]["description"]
-            if language_a == "FOL":
-                clause_instance_a = FOLClause(description=desc_a, ctx=None)
-                name_remap(vars_remap, clause_instance_a._root)
-                clause_instance_a._symbols = clause_instance_a._root.get_symbols()
+        for contract in self.contracts:
+            contract.convert_to_contract_object(vars, vars_remap)
+        return
 
-            language_g = contract._description["guarantee"]["set_type"]
-            desc_g = contract._description["guarantee"]["description"]
-            if language_g == "FOL":
-                clause_instance_g = FOLClause(description=desc_g, ctx=None)
-                name_remap(vars_remap, clause_instance_g._root)
-                clause_instance_g._symbols = clause_instance_g._root.get_symbols()
-            print(clause_instance_a)
-            for var in vars:
-                print(var)
-            print(clause_instance_a.get_symbols())
-            assumption = FOLClauseSet(vars=vars, expr=clause_instance_a)
-            guarantee = FOLClauseSet(vars=vars, expr=clause_instance_g)
-            return AGContract(vars=vars, assumption=assumption, guarantee=guarantee, language="FOL")
-        else:
-            LOG.error("Not supported contract type")
+    def _get_subsystem_contract_composition(self, subsystems: Iterable[System]):
+        pass
+        # 
+    
+    def _generate_contract_system_connection_constraint(self, required_language):
+        """Generate equivalence constraint for the connected ports including system ports"""
+        # required_language: FOLClauseSet, (Set-like class) that implements equivalent set.
+        for connection in self.connections:
+            pass
 
 
-    def _create_vars_for_port(self):
+
+    def _create_vars_for_port(self) -> list[Var]:
         return [Port._create_var_using_hier_name(port=port) for port in self.ports.values()]
     
-    def _create_var_rename_for_hier_name(self):
+    def _create_var_rename_for_hier_name(self) -> dict[str, str]:
         return {port.port_name: port.hier_name for port in self.ports.values()}
 
     def _set_hier_name(self, hier_name:str):
@@ -384,7 +376,12 @@ class System(object):
         pass
 
     def check_connections(self):
-        pass
+        for connection in self.connections.values():
+            ret = self._check_terminal_directions(connection=connection)
+            if not ret:
+                LOG.error(f"connection: {connection.hier_name}")
+                return False
+        
 
     def _check_terminal_directions(self, connection: Connection) -> bool:
         # check if multiple outputs drive the same coonnection, or no outputs
@@ -425,6 +422,10 @@ class System(object):
 
     def _check_feedback_loop(self):
         """Find the feedback loop in the subsystem connection"""
+        # create a map that tells where the ports go:
+        for port in self.ports.values():
+            if port.port_type == PortDirection.INPUT:
+                pass
         pass
 class CompiledSystem(System):
     """A system that is fixed

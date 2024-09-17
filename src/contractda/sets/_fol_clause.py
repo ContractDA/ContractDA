@@ -35,6 +35,10 @@ class FOLClause(Clause):
     def get_symbols(self) -> dict:
         return self._symbols
     
+    def rename_symbols(self, vars_remap):
+        fol_lan.name_remap(vars_remap, self._root)
+        self._symbols = self._root.get_symbols()
+    
     def clause_not(self):
         self._root = fol_lan.PropositionNodeUniOp("!", self._root)
         return self
