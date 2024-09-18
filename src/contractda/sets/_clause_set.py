@@ -161,7 +161,11 @@ class ClauseSet(SetBase):
         :rtype: bool
         """
         pass
-    
+
+    @classmethod
+    def generate_variable_equivalence_constraint_set(cls, vars: list[Var]) -> ClauseSet:
+        pass
+
     @staticmethod
     def _combine_vars(a: list[Var], b: list[Var]) -> list[Var]:
         """ Combine the Vars, return a list of var which has no duplicated

@@ -342,7 +342,8 @@ class System(object):
         """Generate equivalence constraint for the connected ports including system ports"""
         # required_language: FOLClauseSet, (Set-like class) that implements equivalent set.
         for connection in self.connections:
-            pass
+            required_language.q
+            FOLClause.clause_eq()
 
 
 
