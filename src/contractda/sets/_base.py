@@ -154,6 +154,16 @@ class SetBase(ABC):
         """
         pass
 
+    @classmethod
+    def generate_variable_equivalence_constraint_set(cls, vars: list[Var]) -> "SetBase":
+        """ Generate a set that force the variable to have the same values
+
+        :param list[Var] vars: the variable that has the same values.
+        :return: the set that force the variables to have the same values.
+        :rtype: SetBase
+        """
+        pass
+
     @staticmethod
     def _verify_unique_vars(vars: list[Var]) -> bool:
         ids = [var.get_id() for var in vars]

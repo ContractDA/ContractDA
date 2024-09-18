@@ -292,7 +292,10 @@ class FOLClauseSet(ClauseSet):
         new_expr_a.clause_and(new_expr_b)
 
         return not self._clause_satisfiable(vars=new_vars, clause=new_expr_a)
-    
+
+    @classmethod
+    def generate_variable_equivalence_constraint_set(cls, vars: list[Var]) -> FOLClauseSet:
+        pass
     ######################
     #   Internal Functions
     ######################
