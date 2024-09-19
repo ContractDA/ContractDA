@@ -340,7 +340,7 @@ class AGContract(ContractBase):
             var_map, encoded_guarantee = other.guarantee.encode(solver=solver, vars=other.guarantee.vars, clause=other.guarantee.expr, vars_map=vars_map)
             var_map, encoded_assumption = self.assumption.encode(solver=solver, vars=self.assumption.vars, clause=self.assumption.expr, vars_map=vars_map)
             # prepare quantifier variables
-            exist_vs = [var_map[v.id] for v in other.non_assumption_vs]
+            exist_vs = [var_map[v.id] for v in self.non_assumption_vs]
             # form the clause for checking
             if exist_vs:
                 encoded_clause = solver.clause_and(encoded_assumption, 
