@@ -49,7 +49,9 @@ class Port(object):
 
     @staticmethod
     def _create_var_using_hier_name(port: "Port") -> Var:
-        return create_var(id=port.hier_name, var_type=port.port_type)
+        var = create_var(id=port.hier_name, var_type=port.port_type)
+        port._var = var
+        return var
 
     @property
     def level_name(self) -> str:

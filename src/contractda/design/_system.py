@@ -328,10 +328,10 @@ class System(object):
     def _convert_system_contract_to_contract_object(self):
         # match ports 
         # in contract we use the port name, but in system view we should use hierarchical name
-        vars = self._create_vars_for_port()
-        vars_remap = self._create_var_rename_for_hier_name()
+        self.__vars = self._create_vars_for_port()
+        self.__vars_remap = self._create_var_rename_for_hier_name()
         for contract in self.contracts:
-            contract.convert_to_contract_object(vars, vars_remap)
+            contract.convert_to_contract_object(self.__vars, self.__vars_remap)
         return
 
     def _get_subsystem_contract_composition(self, subsystems: Iterable[System]):
@@ -341,9 +341,18 @@ class System(object):
     def _generate_contract_system_connection_constraint(self, required_language):
         """Generate equivalence constraint for the connected ports including system ports"""
         # required_language: FOLClauseSet, (Set-like class) that implements equivalent set.
-        for connection in self.connections:
-            required_language.q
-            FOLClause.clause_eq()
+        constraints = []
+        for connection in self.connections.values():
+            vars = [term._var for term in connection.terminals]
+            constraints.append(required_language.generate_variable_equivalence_constraint_set(vars=vars))
+            
+        if len(constraints) > 0:
+            aggregate_constraints = constraints[0]
+            for constraint in constraints:
+                aggregate_constraints = aggregate_constraints.intersect(constraint)
+
+        return aggregate_constraints
+            
 
 
 
