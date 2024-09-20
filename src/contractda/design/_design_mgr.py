@@ -36,35 +36,40 @@ class DesignLevelManager():
                 self.read_design_json(json_obj)
         
     def check_system(self, system: str | System):
+        raise NotImplementedError
         pass
 
     def verify_design(self, system: str | System):
         """Verify if the design has any potential issues
         This function encapsulate many verification problems and summarize the result.
         """
+        raise NotImplementedError
         pass
+    
 
     def verify_system(self, system: str | System):
         """Verify if the design has any potential issues
         This function encapsulate many verification problems and summarize the result.
         """
+        raise NotImplementedError
         pass
 
     def verify_design_refinement(self, system: str | System, hierarchical=True):
         """Verify if the given design satisfy refinement relation, hierarchical mean if the relation need to checked hierarchically"""
         system_obj = self._verify_system_obj_or_str(system=system)
+        raise NotImplementedError
 
     def verify_system_refinement(self, system: str | System, hierarchical=True):
         """Verify if the given design satisfy refinement relation, hierarchical mean if the relation need to checked hierarchically"""
         system_obj = self._verify_system_obj_or_str(system=system)
         system_contract = system._get_single_system_contract()
-        sbusystem_composed_contract = system._get_subsystem_contract_composition()
-        required_language = None
-        connection_constraint = system._generate_contract_system_connection_constraint(required_language=required_language)
+        subsystem_composed_contract = system._get_subsystem_contract_composition()
+        connection_constraint = system._generate_contract_system_connection_constraint()
 
         #connection constraint has to be put into everywhere for A, G, C, B for all contracts...
-        system_contract.add_constraint()
-        sbusystem_composed_contract.add_constraint()
+        system_contract.add_constraint(connection_constraint)
+        subsystem_composed_contract.add_constraint(connection_constraint)
+        return system_contract.is_refined_by(subsystem_composed_contract)
 
 
 
@@ -75,6 +80,7 @@ class DesignLevelManager():
         if system is None:
             LOG.error(f"No such design, verification fails")
             return 
+        raise NotImplementedError
         
     def verify_system_independent(self, system: str | System, hierarchical=True):
         """Verify if the given design satisfy refinement relation, hierarchical mean if the relation need to checked hierarchically"""
@@ -92,15 +98,19 @@ class DesignLevelManager():
         # 4. check receptiveness in the leaf
         # 5. 
         system.verify_contract_in
+        raise NotImplementedError
 
     def verify_design_connection(self, system: str | System, hierarchical=True):
+        raise NotImplementedError
         pass
 
     def verify_system_connection(self, system: str | System, hierarchical=True):
+        raise NotImplementedError
         pass
 
     def verify_design_consistensy(self, system: str | System, hierarchical=True):
         system_obj = self._verify_system_obj_or_str(system=system)
+        raise NotImplementedError
         pass
 
     def verify_system_consistensy(self, system: str | System, hierarchical=True) -> bool:
@@ -121,6 +131,7 @@ class DesignLevelManager():
 
 
     def verify_design_compatibility(self, system: str | System, hierarchical=True):
+        raise NotImplementedError
         pass
 
     def verify_system_compatibility(self, system: str | System, hierarchical=True):
@@ -139,12 +150,15 @@ class DesignLevelManager():
         return len(inconsistent_contracts) == 0
 
     def synthesize_systems(self):
+        raise NotImplementedError
         pass
 
     def simulate_design(self, system: str | System, simulator):
+        raise NotImplementedError
         pass
 
     def simulate_system(self, system: str | System, simulator):
+        raise NotImplementedError
         pass
 
 

@@ -27,3 +27,4 @@ if __name__ == "__main__":
     design_mgr.verify_system_consistensy(system=sys)
 
     print(sys._check_terminal_directions(list(sys.connections.values())[0]))
+    

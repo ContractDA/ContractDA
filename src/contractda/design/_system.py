@@ -358,11 +358,21 @@ class System(object):
         return composed_contract
         pass
         # 
+
+    def _get_contract_language_type(self):
+        # return the first contract type
+        for contract in self.contracts:
+            break
+        return type(contract._contract_obj.environment)
+        
     
-    def _generate_contract_system_connection_constraint(self, required_language):
+    def _generate_contract_system_connection_constraint(self, required_language = None):
         """Generate equivalence constraint for the connected ports including system ports"""
         # required_language: FOLClauseSet, (Set-like class) that implements equivalent set.
+        #if required_language is none, it is set to the first contract type
         constraints = []
+        if required_language is None:
+            required_language = self._get_contract_language_type()
         for connection in self.connections.values():
             vars = [term._var for term in connection.terminals]
             constraints.append(required_language.generate_variable_equivalence_constraint_set(vars=vars))

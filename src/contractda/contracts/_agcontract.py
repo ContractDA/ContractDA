@@ -71,7 +71,7 @@ class AGContract(ContractBase):
     def add_constraint(self, constraint: SetBase):
         self._assumption = self._assumption.intersect(constraint)
         self._guarantee = self._guarantee.intersect(constraint)
-        self._vars = None # determine vars 
+        self._vars = self._guarantee.vars # determine vars 
     ##################################
     #   Contract Property
     ##################################

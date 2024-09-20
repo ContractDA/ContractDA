@@ -29,8 +29,10 @@ if __name__ == "__main__":
 
     print(sys._check_terminal_directions(list(sys.connections.values())[0]))
 
-    constraint = sys._generate_contract_system_connection_constraint(FOLClauseSet)
+    constraint = sys._generate_contract_system_connection_constraint()
     print(constraint)
 
     print(sys._get_single_system_contract())
     print(sys._get_subsystem_contract_composition())
+    print(sys._get_contract_language_type())
+    print(design_mgr.verify_system_refinement(system=sys))
