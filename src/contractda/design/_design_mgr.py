@@ -57,7 +57,15 @@ class DesignLevelManager():
     def verify_system_refinement(self, system: str | System, hierarchical=True):
         """Verify if the given design satisfy refinement relation, hierarchical mean if the relation need to checked hierarchically"""
         system_obj = self._verify_system_obj_or_str(system=system)
-        
+        system_contract = system._get_single_system_contract()
+        sbusystem_composed_contract = system._get_subsystem_contract_composition()
+        required_language = None
+        connection_constraint = system._generate_contract_system_connection_constraint(required_language=required_language)
+
+        #connection constraint has to be put into everywhere for A, G, C, B for all contracts...
+        system_contract.add_constraint()
+        sbusystem_composed_contract.add_constraint()
+
 
 
     def verify_design_independent(self, system: str | System, hierarchical=True):

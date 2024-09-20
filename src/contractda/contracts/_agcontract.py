@@ -67,6 +67,11 @@ class AGContract(ContractBase):
         """ The contract obligation, see Beneviste et al. Multiple Viewpoint Contract-Based Specification and Design, FMCO07"""
         return self.guarantee.intersect(self.assumption)
 
+
+    def add_constraint(self, constraint: SetBase):
+        self._assumption = self._assumption.intersect(constraint)
+        self._guarantee = self._guarantee.intersect(constraint)
+        self._vars = None # determine vars 
     ##################################
     #   Contract Property
     ##################################
