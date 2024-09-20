@@ -14,7 +14,8 @@ from contractda.sets import FOLClauseSet
 from contractda.sets._fol_lan import name_remap
 from contractda.vars import Var
 
-# from contractda.contracts import AGContract, CBContract
+
+from contractda.contracts import ContractBase
 
 class FrozenSystemExcpetion(Exception):
     pass
@@ -333,8 +334,28 @@ class System(object):
         for contract in self.contracts:
             contract.convert_to_contract_object(self.__vars, self.__vars_remap)
         return
+    
+    def _get_single_system_contract(self) -> ContractBase:
+        single_contract = None
+        all_contracts = list(self.contracts)
+        if len(all_contracts) >= 1:
+            single_contract: ContractBase = all_contracts[0].contract_obj
+        for contract in all_contracts[1:]:
+            single_contract = single_contract.conjunction(contract.contract_obj)
+        
+        return single_contract
 
-    def _get_subsystem_contract_composition(self, subsystems: Iterable[System]):
+
+    def _get_subsystem_contract_composition(self) -> ContractBase:
+        composed_contract = None
+        all_contracts = [subsystem._get_single_system_contract() for subsystem in self.subsystems.values()]
+        print(len(all_contracts))
+        if len(all_contracts) >= 1:
+            composed_contract = all_contracts[0]
+        for contract in all_contracts[1:]:
+            composed_contract = composed_contract.composition(contract)
+        
+        return composed_contract
         pass
         # 
     
@@ -352,9 +373,6 @@ class System(object):
                 aggregate_constraints = aggregate_constraints.intersect(constraint)
 
         return aggregate_constraints
-            
-
-
 
     def _create_vars_for_port(self) -> list[Var]:
         return [Port._create_var_using_hier_name(port=port) for port in self.ports.values()]

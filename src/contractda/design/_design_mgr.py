@@ -57,6 +57,8 @@ class DesignLevelManager():
     def verify_system_refinement(self, system: str | System, hierarchical=True):
         """Verify if the given design satisfy refinement relation, hierarchical mean if the relation need to checked hierarchically"""
         system_obj = self._verify_system_obj_or_str(system=system)
+        
+
 
     def verify_design_independent(self, system: str | System, hierarchical=True):
         """Verify if the given design may suffer from incompatible problems during independent design process"""
@@ -104,7 +106,7 @@ class DesignLevelManager():
         self._generate_system_contracts(system_obj)
         inconsistent_contracts = []
         for contract in system_obj.contracts:
-            if not contract._contract_obj.is_consistent():
+            if not contract.contract_obj.is_consistent():
                 inconsistent_contracts.append(contract)
         return len(inconsistent_contracts) == 0
         
@@ -114,7 +116,19 @@ class DesignLevelManager():
         pass
 
     def verify_system_compatibility(self, system: str | System, hierarchical=True):
-        pass
+        """Check if the system contracts in a system are consistent
+
+        :param str | System system: the system instance or its name for checking contract consistency
+        :param VarType | str port_type: the type of the port
+        :param PortDirection | str direction: the direction of the port. See PortDirection
+        """
+        system_obj = self._verify_system_obj_or_str(system=system)
+        self._generate_system_contracts(system_obj)
+        inconsistent_contracts = []
+        for contract in system_obj.contracts:
+            if not contract.contract_obj.is_compatible():
+                inconsistent_contracts.append(contract)
+        return len(inconsistent_contracts) == 0
 
     def synthesize_systems(self):
         pass

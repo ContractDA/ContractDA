@@ -39,6 +39,13 @@ class SystemContract():
     @property
     def type(self) -> ContractType:
         return self._type
+    
+    @property
+    def contract_obj(self) -> ContractBase:
+        if self._contract_obj is None:
+            raise Exception("Contract obj not created")
+        
+        return self._contract_obj
 
     set_schema = {
         "type": "object",

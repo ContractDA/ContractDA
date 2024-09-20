@@ -31,3 +31,6 @@ if __name__ == "__main__":
 
     constraint = sys._generate_contract_system_connection_constraint(FOLClauseSet)
     print(constraint)
+
+    print(sys._get_single_system_contract())
+    print(sys._get_subsystem_contract_composition())
