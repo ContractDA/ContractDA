@@ -36,3 +36,4 @@ if __name__ == "__main__":
     print(sys._get_subsystem_contract_composition())
     print(sys._get_contract_language_type())
     print(design_mgr.verify_system_refinement(system=sys))
+    print(design_mgr.verify_design_consistensy(design=sys))

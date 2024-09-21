@@ -1,5 +1,5 @@
 
-from contractda.design._system import System, Port, Connection
+from contractda.design._system import System, Port, Connection, SystemContract
 from contractda.logger._logger import LOG
 import json
 
@@ -108,9 +108,19 @@ class DesignLevelManager():
         raise NotImplementedError
         pass
 
-    def verify_design_consistensy(self, system: str | System, hierarchical=True):
-        system_obj = self._verify_system_obj_or_str(system=system)
-        raise NotImplementedError
+    def verify_design_consistensy(self, design: str | System, hierarchical=True):
+        system_obj = self._verify_design_obj_or_str(design=design)
+        systems_under_test = [system_obj]
+        failed_contracts: dict[System, list[SystemContract]] = {}
+        while systems_under_test:
+            test_system = systems_under_test.pop()
+            inconsist_contracts = self.verify_system_consistensy(test_system)
+            if inconsist_contracts:
+                failed_contracts[test_system] = inconsist_contracts
+            
+            systems_under_test.extend(list(test_system.subsystems.values()))
+        return failed_contracts
+
         pass
 
     def verify_system_consistensy(self, system: str | System, hierarchical=True) -> bool:
@@ -126,7 +136,7 @@ class DesignLevelManager():
         for contract in system_obj.contracts:
             if not contract.contract_obj.is_consistent():
                 inconsistent_contracts.append(contract)
-        return len(inconsistent_contracts) == 0
+        return inconsistent_contracts
         
 
 
@@ -254,10 +264,10 @@ class DesignLevelManager():
         if system_obj is None:
             LOG.error(f"No such system {system}")
             raise Exception(f"Object not found")
-        if system_obj.system_name not in self._systems:
-            LOG.error(f"No such system {system_obj.system_name}")
+        if system_obj.hier_name not in self._systems:
+            LOG.error(f"No such system {system_obj.hier_name}")
             raise Exception(f"Object not found")
-        if self.get_system(system_obj.system_name) != system_obj:
+        if self.get_system(system_obj.hier_name) != system_obj:
             LOG.error(f"System registered not matched with the instance")
             raise Exception(f"Object not found")
         return system_obj
@@ -274,10 +284,10 @@ class DesignLevelManager():
         if design_obj is None:
             LOG.error(f"No such design {design}")
             raise Exception(f"Object not found")
-        if design_obj.system_name not in self._systems:
-            LOG.error(f"No such design {design_obj.system_name}")
+        if design_obj.hier_name not in self._systems:
+            LOG.error(f"No such design {design_obj.hier_name}")
             raise Exception(f"Object not found")
-        if self.get_system(design_obj.system_name) != design_obj:
+        if self.get_system(design_obj.hier_name) != design_obj:
             LOG.error(f"Design registered not matched with the instance")
             raise Exception(f"Object not found")
         return design_obj
