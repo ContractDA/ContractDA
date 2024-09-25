@@ -349,7 +349,9 @@ class System(object):
     def _get_subsystem_contract_composition(self) -> ContractBase:
         composed_contract = None
         all_contracts = [subsystem._get_single_system_contract() for subsystem in self.subsystems.values()]
-        print(len(all_contracts))
+        if None in all_contracts:
+            return None # has a subsystem without contract, unable to define contract composition, missing contracts...
+
         if len(all_contracts) >= 1:
             composed_contract = all_contracts[0]
         for contract in all_contracts[1:]:
@@ -382,7 +384,9 @@ class System(object):
             for constraint in constraints:
                 aggregate_constraints = aggregate_constraints.intersect(constraint)
 
-        return aggregate_constraints
+            return aggregate_constraints
+        else:
+            return None
 
     def _create_vars_for_port(self) -> list[Var]:
         return [Port._create_var_using_hier_name(port=port) for port in self.ports.values()]

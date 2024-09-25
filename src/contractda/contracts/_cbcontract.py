@@ -50,6 +50,15 @@ class CBContract(ContractBase):
     def obligation(self) -> SetBase:
         """ The contract obligation, see Beneviste et al. Multiple Viewpoint Contract-Based Specification and Design, FMCO07"""
         return self.constraint.intersect(self.intrinsic_behavior)
+    
+
+    def add_constraint(self, constraint: SetBase):
+        """ Impose constraints on both constraint and behaviors"""
+        if constraint is None:
+            return 
+        self._constraint = self._constraint.intersect(constraint)
+        self._intrinsic_behavior = self._intrinsic_behavior.intersect(constraint)
+        self._vars = self._guarantee.vars # determine vars 
     ##################################
     #   Contract Property
     ##################################

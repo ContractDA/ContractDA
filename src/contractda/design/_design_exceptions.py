@@ -1,0 +1,4 @@
+
+
+class IncompleteContractException(Exception):
+    pass

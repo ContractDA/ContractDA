@@ -1,6 +1,7 @@
 
 from contractda.design._system import System, Port, Connection, SystemContract
 from contractda.logger._logger import LOG
+from contractda.design._design_exceptions import IncompleteContractException
 import json
 
 class DesignLevelManager():
@@ -54,16 +55,29 @@ class DesignLevelManager():
         raise NotImplementedError
         pass
 
-    def verify_design_refinement(self, system: str | System, hierarchical=True):
+    def verify_design_refinement(self, design: str | System, hierarchical=True):
         """Verify if the given design satisfy refinement relation, hierarchical mean if the relation need to checked hierarchically"""
-        system_obj = self._verify_system_obj_or_str(system=system)
-        raise NotImplementedError
+        system_obj = self._verify_design_obj_or_str(design=design)
+        systems_under_test = [system_obj]
+        failed_systems: list[System] = []
+        while systems_under_test:
+            test_system = systems_under_test.pop()
+            try:
+                is_refinement = self.verify_system_refinement(test_system)
+                if not is_refinement:
+                    failed_systems.append(test_system)
+            except IncompleteContractException:
+                continue
+            systems_under_test.extend(list(test_system.subsystems.values()))
+        return failed_systems
 
     def verify_system_refinement(self, system: str | System, hierarchical=True):
         """Verify if the given design satisfy refinement relation, hierarchical mean if the relation need to checked hierarchically"""
         system_obj = self._verify_system_obj_or_str(system=system)
         system_contract = system._get_single_system_contract()
         subsystem_composed_contract = system._get_subsystem_contract_composition()
+        if subsystem_composed_contract is None:
+            raise IncompleteContractException("Subsystem does not have a complete contract defined for verifying refinement")
         connection_constraint = system._generate_contract_system_connection_constraint()
 
         #connection constraint has to be put into everywhere for A, G, C, B for all contracts...
@@ -109,14 +123,20 @@ class DesignLevelManager():
         pass
 
     def verify_design_consistensy(self, design: str | System, hierarchical=True):
+        """Check if the system contracts in a design are consistent
+
+        :param str | System system: the system instance or its name for checking contract consistency
+        :param VarType | str port_type: the type of the port
+        :param PortDirection | str direction: the direction of the port. See PortDirection
+        """
         system_obj = self._verify_design_obj_or_str(design=design)
         systems_under_test = [system_obj]
         failed_contracts: dict[System, list[SystemContract]] = {}
         while systems_under_test:
             test_system = systems_under_test.pop()
-            inconsist_contracts = self.verify_system_consistensy(test_system)
-            if inconsist_contracts:
-                failed_contracts[test_system] = inconsist_contracts
+            inconsistent_contracts = self.verify_system_consistensy(test_system)
+            if inconsistent_contracts:
+                failed_contracts[test_system] = inconsistent_contracts
             
             systems_under_test.extend(list(test_system.subsystems.values()))
         return failed_contracts
@@ -140,9 +160,24 @@ class DesignLevelManager():
         
 
 
-    def verify_design_compatibility(self, system: str | System, hierarchical=True):
-        raise NotImplementedError
-        pass
+    def verify_design_compatibility(self, design: str | System, hierarchical=True):
+        """Check if the system contracts in a design are compatible
+
+        :param str | System system: the system instance or its name for checking contract consistency
+        :param VarType | str port_type: the type of the port
+        :param PortDirection | str direction: the direction of the port. See PortDirection
+        """
+        system_obj = self._verify_design_obj_or_str(design=design)
+        systems_under_test = [system_obj]
+        failed_contracts: dict[System, list[SystemContract]] = {}
+        while systems_under_test:
+            test_system = systems_under_test.pop()
+            incompatible_contracts = self.verify_system_compatibility(test_system)
+            if incompatible_contracts:
+                failed_contracts[test_system] = incompatible_contracts
+            
+            systems_under_test.extend(list(test_system.subsystems.values()))
+        return failed_contracts
 
     def verify_system_compatibility(self, system: str | System, hierarchical=True):
         """Check if the system contracts in a system are consistent
@@ -153,11 +188,11 @@ class DesignLevelManager():
         """
         system_obj = self._verify_system_obj_or_str(system=system)
         self._generate_system_contracts(system_obj)
-        inconsistent_contracts = []
+        incompatible_contracts = []
         for contract in system_obj.contracts:
             if not contract.contract_obj.is_compatible():
-                inconsistent_contracts.append(contract)
-        return len(inconsistent_contracts) == 0
+                incompatible_contracts.append(contract)
+        return incompatible_contracts
 
     def synthesize_systems(self):
         raise NotImplementedError

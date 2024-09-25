@@ -69,6 +69,9 @@ class AGContract(ContractBase):
 
 
     def add_constraint(self, constraint: SetBase):
+        """ Impose constraints on both assumption and guarantee"""
+        if constraint is None:
+            return 
         self._assumption = self._assumption.intersect(constraint)
         self._guarantee = self._guarantee.intersect(constraint)
         self._vars = self._guarantee.vars # determine vars 
