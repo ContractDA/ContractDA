@@ -110,7 +110,7 @@
             "content": {
                 "assumption": {
                     "set_type": "FOL",
-                    "description": "x >= 2"
+                    "description": "x >= 0"
                 },
                 "guarantee": {
                     "set_type": "FOL",

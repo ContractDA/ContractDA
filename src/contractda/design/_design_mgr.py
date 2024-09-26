@@ -1,7 +1,7 @@
 
 from contractda.design._system import System, Port, Connection, SystemContract
 from contractda.logger._logger import LOG
-from contractda.design._design_exceptions import IncompleteContractException
+from contractda.design._design_exceptions import IncompleteContractException, ObjectNotFoundException
 import json
 
 class DesignLevelManager():
@@ -55,9 +55,10 @@ class DesignLevelManager():
         raise NotImplementedError
         pass
 
-    def verify_design_refinement(self, design: str | System, hierarchical=True):
+    def verify_design_refinement(self, design: str | System, hierarchical=True) -> list[System]:
         """Verify if the given design satisfy refinement relation, hierarchical mean if the relation need to checked hierarchically"""
         system_obj = self._verify_design_obj_or_str(design=design)
+        self._generate_system_contracts(system_obj)
         systems_under_test = [system_obj]
         failed_systems: list[System] = []
         while systems_under_test:
@@ -71,14 +72,15 @@ class DesignLevelManager():
             systems_under_test.extend(list(test_system.subsystems.values()))
         return failed_systems
 
-    def verify_system_refinement(self, system: str | System, hierarchical=True):
+    def verify_system_refinement(self, system: str | System, hierarchical=True) -> bool:
         """Verify if the given design satisfy refinement relation, hierarchical mean if the relation need to checked hierarchically"""
         system_obj = self._verify_system_obj_or_str(system=system)
-        system_contract = system._get_single_system_contract()
-        subsystem_composed_contract = system._get_subsystem_contract_composition()
+        self._generate_system_contracts(system_obj)
+        system_contract = system_obj._get_single_system_contract()
+        subsystem_composed_contract = system_obj._get_subsystem_contract_composition()
         if subsystem_composed_contract is None:
             raise IncompleteContractException("Subsystem does not have a complete contract defined for verifying refinement")
-        connection_constraint = system._generate_contract_system_connection_constraint()
+        connection_constraint = system_obj._generate_contract_system_connection_constraint()
 
         #connection constraint has to be put into everywhere for A, G, C, B for all contracts...
         system_contract.add_constraint(connection_constraint)
@@ -87,7 +89,7 @@ class DesignLevelManager():
 
 
 
-    def verify_design_independent(self, system: str | System, hierarchical=True):
+    def verify_design_independent(self, system: str | System, hierarchical=True) -> list[System]:
         """Verify if the given design may suffer from incompatible problems during independent design process"""
         if isinstance(system, str):
             system = self.get_design(system)
@@ -96,7 +98,7 @@ class DesignLevelManager():
             return 
         raise NotImplementedError
         
-    def verify_system_independent(self, system: str | System, hierarchical=True):
+    def verify_system_independent(self, system: str | System, hierarchical=True) -> bool:
         """Verify if the given design satisfy refinement relation, hierarchical mean if the relation need to checked hierarchically"""
         system_obj = self._verify_system_obj_or_str(system=system)
         
@@ -122,7 +124,7 @@ class DesignLevelManager():
         raise NotImplementedError
         pass
 
-    def verify_design_consistensy(self, design: str | System, hierarchical=True):
+    def verify_design_consistensy(self, design: str | System, hierarchical=True) -> dict[System, list[SystemContract]]:
         """Check if the system contracts in a design are consistent
 
         :param str | System system: the system instance or its name for checking contract consistency
@@ -143,7 +145,7 @@ class DesignLevelManager():
 
         pass
 
-    def verify_system_consistensy(self, system: str | System, hierarchical=True) -> bool:
+    def verify_system_consistensy(self, system: str | System, hierarchical=True) -> list[SystemContract]:
         """Check if the system contracts in a system are consistent
 
         :param str | System system: the system instance or its name for checking contract consistency
@@ -160,7 +162,7 @@ class DesignLevelManager():
         
 
 
-    def verify_design_compatibility(self, design: str | System, hierarchical=True):
+    def verify_design_compatibility(self, design: str | System, hierarchical=True) -> dict[System, list[SystemContract]]:
         """Check if the system contracts in a design are compatible
 
         :param str | System system: the system instance or its name for checking contract consistency
@@ -179,7 +181,7 @@ class DesignLevelManager():
             systems_under_test.extend(list(test_system.subsystems.values()))
         return failed_contracts
 
-    def verify_system_compatibility(self, system: str | System, hierarchical=True):
+    def verify_system_compatibility(self, system: str | System, hierarchical=True) -> list[SystemContract]:
         """Check if the system contracts in a system are consistent
 
         :param str | System system: the system instance or its name for checking contract consistency
@@ -297,19 +299,22 @@ class DesignLevelManager():
             raise Exception(f"Type Error")
 
         if system_obj is None:
-            LOG.error(f"No such system {system}")
-            raise Exception(f"Object not found")
+            message = f"System \"{system}\" not exists"
+            LOG.error(message)
+            raise ObjectNotFoundException(message)
         if system_obj.hier_name not in self._systems:
-            LOG.error(f"No such system {system_obj.hier_name}")
-            raise Exception(f"Object not found")
+            message = f"System object \"{system_obj.hier_name}\" not exists"
+            LOG.error(message)
+            raise ObjectNotFoundException(message)
         if self.get_system(system_obj.hier_name) != system_obj:
-            LOG.error(f"System registered not matched with the instance")
-            raise Exception(f"Object not found")
+            message = f"System registered not matched with the instance"
+            LOG.error(message)
+            raise ObjectNotFoundException(message)
         return system_obj
     
     def _verify_design_obj_or_str(self, design: str | System) :
         if isinstance(design, str):
-            design_obj = self.get_system(design)
+            design_obj = self.get_design(design)
         elif isinstance(design, System):
             design_obj = design
         else:
@@ -317,14 +322,17 @@ class DesignLevelManager():
             raise Exception(f"Type Error")
 
         if design_obj is None:
-            LOG.error(f"No such design {design}")
-            raise Exception(f"Object not found")
+            message = f"Design \"{design}\" not exists"
+            LOG.error(message)
+            raise ObjectNotFoundException(message)
         if design_obj.hier_name not in self._systems:
-            LOG.error(f"No such design {design_obj.hier_name}")
-            raise Exception(f"Object not found")
+            message = f"Design object \"{design_obj.hier_name}\" not exists"
+            LOG.error(message)
+            raise ObjectNotFoundException(message)
         if self.get_system(design_obj.hier_name) != design_obj:
-            LOG.error(f"Design registered not matched with the instance")
-            raise Exception(f"Object not found")
+            message = f"Design registered not matched with the instance"
+            LOG.error(message)
+            raise ObjectNotFoundException(message)
         return design_obj
 
 def _build_hier_name(hier_names):
