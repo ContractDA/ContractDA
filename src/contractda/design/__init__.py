@@ -6,7 +6,6 @@
     :template: class.rst
 
     ~contractda.design.DesignLevelManager
-    ~contractda.design.Design
     ~contractda.design.Port
     ~contractda.design.PortDirection
     ~contractda.design.Connection
@@ -25,6 +24,7 @@ from contractda.design._system import System
 from contractda.design._libsystem import LibSystem
 from contractda.design._module import Module
 from contractda.design._system_contracts import SystemContract, ContractType
+from contractda.design._design_exceptions import ObjectNotFoundException, IncompleteContractException
 
 
 __all__ = [
@@ -37,5 +37,7 @@ __all__ = [
     "LibSystem",
     "Module",
     "SystemContract",
-    "ContractType"
+    "ContractType",
+    "ObjectNotFoundException",
+    "IncompleteContractException"
 ]

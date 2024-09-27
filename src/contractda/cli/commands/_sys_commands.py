@@ -2,7 +2,7 @@ import argparse
 
 from contractda.cli.commands._cmd_mgr import BaseCommand
 from contractda.logger._logger import LOG
-from contractda.design._design_exceptions import ObjectNotFoundException
+from contractda.design._design_exceptions import ObjectNotFoundException, IncompleteContractException
 
 class ReadDesignFromFileCommand(BaseCommand):
     def __init__(self):
@@ -446,6 +446,11 @@ class VerifySystemRefinementCommand(BaseCommand):
             LOG.info(error_msg)
             print(error_msg)
             return -1
+        except IncompleteContractException as e:
+            error_msg = f"{str(e)}"
+            LOG.info(error_msg)
+            print(error_msg)
+            return -1            
                     
         if not ret:
             info_msg = f"The system \"{system_name}\" does not satisfy refinement with its subsystems"
@@ -458,3 +463,88 @@ class VerifySystemRefinementCommand(BaseCommand):
             print(info_msg)
             return 0
         return 0
+    
+class VerifyDesignConnectionCommand(BaseCommand):
+    def __init__(self):
+        super().__init__()
+        self.name = "verify_design_connection"
+    
+    def exec(self, *args):
+        parser = argparse.ArgumentParser(prog=self.name, exit_on_error=False)
+        parser.add_argument("design_name", type=str, help="design name")
+        try:
+            parsed_args = parser.parse_args(args)
+        except SystemExit as e:
+            return -1
+        except argparse.ArgumentError as e:
+            print(e)
+            return -1
+        except Exception as e:
+            print("?????")
+            print(type(e))
+            return -1
+        
+        design_name = parsed_args.design_name      
+        try:
+            ret = self.context._design_mgr.verify_design_connection(design=design_name)
+        except ObjectNotFoundException as e:
+            error_msg = f"{str(e)}"
+            LOG.info(error_msg)
+            print(error_msg)
+            return -1
+                    
+        if ret:
+            info_msg = f"Connections error found in systems: "
+            LOG.info(info_msg)
+            print(info_msg)
+
+            system_names_str = ", ".join([system.hier_name for system in ret])
+            info_msg = f"Violated system list: ({system_names_str})"
+            LOG.info(info_msg)
+            return 0
+        else:
+            info_msg = f"Connections are well-defined in systems"
+            LOG.info(info_msg)
+            print(info_msg)
+            return 0
+        return 0
+    
+class VerifySystemConnectionCommand(BaseCommand):
+    def __init__(self):
+        super().__init__()
+        self.name = "verify_system_connection"
+    
+    def exec(self, *args):
+        parser = argparse.ArgumentParser(prog=self.name, exit_on_error=False)
+        parser.add_argument("system_name", type=str, help="system name")
+        try:
+            parsed_args = parser.parse_args(args)
+        except SystemExit as e:
+            return -1
+        except argparse.ArgumentError as e:
+            print(e)
+            return -1
+        except Exception as e:
+            print("?????")
+            print(type(e))
+            return -1
+        
+        system_name = parsed_args.system_name      
+        try:
+            ret = self.context._design_mgr.verify_system_connection(system=system_name)
+        except ObjectNotFoundException as e:
+            error_msg = f"{str(e)}"
+            LOG.info(error_msg)
+            print(error_msg)
+            return -1
+                    
+        if not ret:
+            info_msg = f"The system \"{system_name}\" has connection error"
+            LOG.info(info_msg)
+            print(info_msg)
+            return 0
+        else:
+            info_msg = f"The system \"{system_name}\"'s connectioin is well-defined"
+            LOG.info(info_msg)
+            print(info_msg)
+            return 0

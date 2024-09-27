@@ -324,7 +324,17 @@ class System(object):
         else:
             LOG.error(f"Duplicated connection {connection.name}!")
 
-
+    def check_connections(self):
+        """Check if the connections of the system is defined without problem
+        
+        Return True if connection is ok
+        """
+        for connection in self.connections.values():
+            ret = self._check_terminal_directions(connection=connection)
+            if not ret:
+                LOG.error(f"connection: {connection.hier_name}")
+                return False
+        return True
 #################### contracts API
     def _convert_system_contract_to_contract_object(self):
         # match ports 
@@ -358,7 +368,6 @@ class System(object):
             composed_contract = composed_contract.composition(contract)
         
         return composed_contract
-        pass
         # 
 
     def _get_contract_language_type(self):
@@ -416,13 +425,6 @@ class System(object):
 
         # check ports
         pass
-
-    def check_connections(self):
-        for connection in self.connections.values():
-            ret = self._check_terminal_directions(connection=connection)
-            if not ret:
-                LOG.error(f"connection: {connection.hier_name}")
-                return False
         
 
     def _check_terminal_directions(self, connection: Connection) -> bool:

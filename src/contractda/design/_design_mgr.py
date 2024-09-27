@@ -196,6 +196,39 @@ class DesignLevelManager():
                 incompatible_contracts.append(contract)
         return incompatible_contracts
 
+
+
+    def verify_design_connection(self, design: str | System, hierarchical=True):
+        """Check if the system connection is well-defined
+
+        :param str | System system: the system instance or its name for checking contract consistency
+        :param VarType | str port_type: the type of the port
+        :param PortDirection | str direction: the direction of the port. See PortDirection
+        """
+        system_obj = self._verify_design_obj_or_str(design=design)
+        systems_under_test = [system_obj]
+        failed_systems: list[System] = []
+        while systems_under_test:
+            test_system = systems_under_test.pop()
+            ret = self.verify_system_connection(test_system)
+            if not ret:
+                failed_systems.append(test_system)
+            
+            systems_under_test.extend(list(test_system.subsystems.values()))
+        return failed_systems
+    
+    def verify_system_connection(self, system: str | System, hierarchical=True) -> list[SystemContract]:
+        """Check if the system connection is well-defined
+
+        :param str | System system: the system instance or its name for checking contract consistency
+        :param VarType | str port_type: the type of the port
+        :param PortDirection | str direction: the direction of the port. See PortDirection
+        """
+        system_obj = self._verify_system_obj_or_str(system=system)
+        ret = system_obj.check_connections()
+        return ret
+
+
     def synthesize_systems(self):
         raise NotImplementedError
         pass

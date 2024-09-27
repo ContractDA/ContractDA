@@ -98,7 +98,7 @@
         {
             "name": "net3",
             "terminals": [
-                "sub2.a",
+                "sub2.b",
                 "test_sys_composition1_failure.y"
             ]
         }
@@ -110,11 +110,11 @@
             "content": {
                 "assumption": {
                     "set_type": "FOL",
-                    "description": "x >= 0"
+                    "description": "x >= 0.4"
                 },
                 "guarantee": {
                     "set_type": "FOL",
-                    "description": "y == 2*x"
+                    "description": "y == 4*x"
                 }
             }
         }
