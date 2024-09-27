@@ -5,3 +5,8 @@ report_system test_sys.sub1
 report_system test_sys.sub2
 report_connection test_sys.net3
 report_port test_sys.sub1.a1
+
+verify_design_refinement test_sys
+verify_design_consistensy test_sys
+verify_design_compatibility test_sys
+verify_design_connection test_sys

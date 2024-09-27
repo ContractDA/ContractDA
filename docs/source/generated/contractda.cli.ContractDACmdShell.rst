@@ -18,6 +18,7 @@
 
 .. autosummary::
 
+   ~contractda.cli.ContractDACmdShell.batch_operation
    ~contractda.cli.ContractDACmdShell.initialize
    ~contractda.cli.ContractDACmdShell.interactive_shell
 

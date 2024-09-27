@@ -19,7 +19,6 @@
    ~contractda.contracts.AGContract.environment
    ~contractda.contracts.AGContract.guarantee
    ~contractda.contracts.AGContract.implementation
-   ~contractda.contracts.AGContract.name
    ~contractda.contracts.AGContract.non_assumption_vs
    ~contractda.contracts.AGContract.obligation
    ~contractda.contracts.AGContract.vs
@@ -32,6 +31,7 @@
 
 .. autosummary::
 
+   ~contractda.contracts.AGContract.add_constraint
    ~contractda.contracts.AGContract.composition
    ~contractda.contracts.AGContract.conjunction
    ~contractda.contracts.AGContract.implication
