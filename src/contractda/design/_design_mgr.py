@@ -89,7 +89,7 @@ class DesignLevelManager():
 
 
 
-    def verify_design_independent(self, system: str | System, hierarchical=True) -> list[System]:
+    def verify_design_independent(self, design: str | System, hierarchical=True) -> list[System]:
         """Verify if the given design may suffer from incompatible problems during independent design process"""
         if isinstance(system, str):
             system = self.get_design(system)
@@ -113,16 +113,20 @@ class DesignLevelManager():
         # 3. For system not involve in feedback loop, try to estabilish its receptiveness. check strong replaceability
         # 4. check receptiveness in the leaf
         # 5. 
-        system.verify_contract_in
+        system_obj = self._verify_system_obj_or_str(system=system)
+        is_cascade = False
+        if is_cascade:
+            # check receptiveness
+            pass
+        if len(system_obj.subsystems.values()) == 2:
+            # simple case
+            pass
+        self._generate_system_contracts(system_obj)
+        system_contract = system_obj._get_single_system_contract()
+        connection_constraint = system_obj._generate_contract_system_connection_constraint()
+        system_contract.add_constraint(connection_constraint)
+        
         raise NotImplementedError
-
-    def verify_design_connection(self, system: str | System, hierarchical=True):
-        raise NotImplementedError
-        pass
-
-    def verify_system_connection(self, system: str | System, hierarchical=True):
-        raise NotImplementedError
-        pass
 
     def verify_design_consistensy(self, design: str | System, hierarchical=True) -> dict[System, list[SystemContract]]:
         """Check if the system contracts in a design are consistent

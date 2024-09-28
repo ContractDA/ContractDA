@@ -11,8 +11,13 @@ class SetBase(ABC):
     """
 
     def __init__(self, solver):
+        self._vars: Iterable[Var] = None
         pass
-
+    
+    @property
+    def vars(self) -> Iterable[Var]:
+        """The variables"""
+        return self._vars
     ######################
     #   Extraction
     ######################

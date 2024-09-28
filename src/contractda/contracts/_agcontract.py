@@ -25,7 +25,8 @@ class AGContract(ContractBase):
         """
         self._assumption: SetBase = self._convert_to_sets_based_on_language(vars, assumption, language)
         self._guarantee: SetBase = self._convert_to_sets_based_on_language(vars, guarantee, language)
-        self._vars = vars
+        self._vars: list[Var] = vars
+        self._assigned_input_vars: list[Var] = None
 
     def __str__(self):
         return f" AG Contract: Assumption: {self.assumption}, Guarantee: {self.guarantee}"
@@ -43,6 +44,26 @@ class AGContract(ContractBase):
         return self._vars
     
     @property
+    def input_var_symbols(self) -> list[Var]:
+        """The input vars as if the contarct is defined with inputs and outputs"""
+        if self._assigned_input_vars:
+            return {v.id for v in self._assigned_input_vars}
+        else:
+            # default choice, directly use symbols from assumption
+            return self._assumption.expr.get_symbols()
+        
+    @property
+    def input_var(self) -> list[Var]:
+        """The input vars as if the contarct is defined with inputs and outputs"""
+        if self._assigned_input_vars:
+            return self._assigned_input_vars
+        else:
+            # default choice, directly use symbols from assumption
+            symbols = self._assumption.expr.get_symbols()
+            return [v for v in self.vs if v.id in symbols]
+
+    
+    @property
     def environment(self) -> SetBase:
         """ The targeted environment specified by the contracts"""
         return self.assumption
@@ -54,12 +75,12 @@ class AGContract(ContractBase):
     
     @property
     def assumption_vs(self) -> list[Var]:
-        symbols = self.assumption.expr.get_symbols()
+        symbols = self.input_var_symbols
         return [v for v in self.vs if v.id in symbols]
     
     @property
     def non_assumption_vs(self) -> list[Var]:
-        assumption_symbols = self.assumption.expr.get_symbols()
+        assumption_symbols = self.input_var_symbols
         return [v for v in self.vs if v.id not in assumption_symbols]        
     
     @property
@@ -68,13 +89,14 @@ class AGContract(ContractBase):
         return self.guarantee.intersect(self.assumption)
 
 
-    def add_constraint(self, constraint: SetBase):
+    def add_constraint(self, constraint: SetBase, adjusted_input: list[Var] = None):
         """ Impose constraints on both assumption and guarantee"""
         if constraint is None:
             return 
         self._assumption = self._assumption.intersect(constraint)
         self._guarantee = self._guarantee.intersect(constraint)
         self._vars = self._guarantee.vars # determine vars 
+        self._assigned_input_vars = adjusted_input # determine introduced input variables
     ##################################
     #   Contract Property
     ##################################
@@ -513,9 +535,9 @@ class AGContract(ContractBase):
         # find related inputs
         LOG.debug(f"[INDE] Determining the port partition....")
         all_var = set(self.vs).union(set(other1.vs)).union(set(other2.vs))
-        a1_var = other1.assumption.expr.get_symbols()
-        a2_var = other2.assumption.expr.get_symbols()
-        as_var = self.assumption.expr.get_symbols()
+        a1_var = other1.input_var_symbols
+        a2_var = other2.input_var_symbols
+        as_var = self.input_var_symbols
         
         related_inputs_1 = a1_var.difference(as_var)
         related_inputs_1 = set([v for v in all_var if v.id in related_inputs_1])

@@ -42,6 +42,7 @@ class FOLClauseSet(ClauseSet):
 
     def __str__(self):
         return str(self.expr)
+
     ######################
     #   Extraction
     ######################
