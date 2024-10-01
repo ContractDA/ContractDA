@@ -224,7 +224,7 @@ class ContractBase(ABC):
         """
         pass
 
-    def add_constraint(constraint: SetBase):
+    def add_constraint(self, constraint: SetBase, adjusted_input: list[Var] = None):
         pass
 
     @staticmethod

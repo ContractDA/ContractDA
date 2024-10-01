@@ -99,7 +99,11 @@ class DesignLevelManager():
         raise NotImplementedError
         
     def verify_system_independent(self, system: str | System, hierarchical=True) -> bool:
-        """Verify if the given design satisfy refinement relation, hierarchical mean if the relation need to checked hierarchically"""
+        """Verify if the given design satisfy refinement relation, hierarchical mean if the relation need to checked hierarchically
+        
+        A system is independent design safe if all the refinement of its subsystem contract satisfy strong replaceability
+        
+        """
         system_obj = self._verify_system_obj_or_str(system=system)
         
         # to verify independent design in system
@@ -114,19 +118,47 @@ class DesignLevelManager():
         # 4. check receptiveness in the leaf
         # 5. 
         system_obj = self._verify_system_obj_or_str(system=system)
-        is_cascade = False
-        if is_cascade:
-            # check receptiveness
-            pass
-        if len(system_obj.subsystems.values()) == 2:
-            # simple case
-            pass
-        self._generate_system_contracts(system_obj)
-        system_contract = system_obj._get_single_system_contract()
-        connection_constraint = system_obj._generate_contract_system_connection_constraint()
-        system_contract.add_constraint(connection_constraint)
+        # check refinement
+        if not self.verify_system_refinement(system=system):
+            LOG.info("Not passing independent test because refinement not held")
+            return False
+
+        # check receptiveness
+        receptive_flag = True
+        irreceptive_contracts = self.verify_system_receptiveness(system=system)
+        if irreceptive_contracts:
+            receptive_flag = False
+        for subsystem in system.subsystems.values():
+            irreceptive_contracts = self.verify_system_receptiveness(system=subystem)
+            if irreceptive_contracts:
+                receptive_flag = False    
+
+        if system_obj.is_cascade():
+            if receptive_flag:
+                return True
+            else:
+                # remember to set input variables....
+                system_contract = system_obj._get_single_system_contract()
+                subsystem_composed_contract = system_obj._get_subsystem_contract_composition()
+                connection_constraint = system_obj._generate_contract_system_connection_constraint()
+                input_vars = None
+                system_contract.add_constraint(connection_constraint, adjusted_input=input_vars)
+                subsystem_composed_contract.add_constraint(connection_constraint, adjusted_input=input_vars)
+                return system_contract.is_strongly_replaceable_by(subsystem_composed_contract)
         
-        raise NotImplementedError
+        # feedback
+        if len(system_obj.subsystems.values()) == 2:
+            system_contract = system_obj._get_single_system_contract()
+            subsystems = list(system_obj.subsystems.values())
+            subsystem_contract1 = subsystems[0]._get_single_system_contract()
+            subsystem_contract2 = subsystems[1]._get_single_system_contract()
+            connection_constraint = system_obj._generate_contract_system_connection_constraint()
+            system_contract.add_constraint(connection_constraint)
+            subsystem_contract1.add_constraint(connection_constraint)
+            subsystem_contract2.add_constraint(connection_constraint)
+            return system_contract.is_independent_decomposition_of(other1=subsystem_contract1, other2=subsystem_contract2)
+        
+        raise NotImplementedError("Not support when feedback composition has more than 2 subsystems")
 
     def verify_design_consistensy(self, design: str | System, hierarchical=True) -> dict[System, list[SystemContract]]:
         """Check if the system contracts in a design are consistent
@@ -165,7 +197,6 @@ class DesignLevelManager():
         return inconsistent_contracts
         
 
-
     def verify_design_compatibility(self, design: str | System, hierarchical=True) -> dict[System, list[SystemContract]]:
         """Check if the system contracts in a design are compatible
 
@@ -200,7 +231,39 @@ class DesignLevelManager():
                 incompatible_contracts.append(contract)
         return incompatible_contracts
 
+    def verify_design_receptiveness(self, design: str | System, hierarchical=True) -> dict[System, list[SystemContract]]:
+        """Check if the system contracts in a design are receptive
 
+        :param str | System system: the system instance or its name for checking contract consistency
+        :param VarType | str port_type: the type of the port
+        :param PortDirection | str direction: the direction of the port. See PortDirection
+        """
+        system_obj = self._verify_design_obj_or_str(design=design)
+        systems_under_test = [system_obj]
+        failed_contracts: dict[System, list[SystemContract]] = {}
+        while systems_under_test:
+            test_system = systems_under_test.pop()
+            irreceptive_contracts = self.verify_system_receptiveness(test_system)
+            if irreceptive_contracts:
+                failed_contracts[test_system] = irreceptive_contracts
+            
+            systems_under_test.extend(list(test_system.subsystems.values()))
+        return failed_contracts
+
+    def verify_system_receptiveness(self, system: str | System, hierarchical=True) -> list[SystemContract]:
+        """Check if the contracts in a system are receptive
+
+        :param str | System system: the system instance or its name for checking contract consistency
+        :param VarType | str port_type: the type of the port
+        :param PortDirection | str direction: the direction of the port. See PortDirection
+        """
+        system_obj = self._verify_system_obj_or_str(system=system)
+        self._generate_system_contracts(system_obj)
+        irreceptive_contracts = []
+        for contract in system_obj.contracts:
+            if not contract.contract_obj.is_receptive():
+                irreceptive_contracts.append(contract)
+        return irreceptive_contracts
 
     def verify_design_connection(self, design: str | System, hierarchical=True):
         """Check if the system connection is well-defined
@@ -231,6 +294,8 @@ class DesignLevelManager():
         system_obj = self._verify_system_obj_or_str(system=system)
         ret = system_obj.check_connections()
         return ret
+    
+
 
 
     def synthesize_systems(self):
