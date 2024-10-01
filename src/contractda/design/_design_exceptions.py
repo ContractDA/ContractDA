@@ -5,3 +5,6 @@ class IncompleteContractException(Exception):
 
 class ObjectNotFoundException(Exception):
     pass
+
+class FeedbackLoopException(Exception):
+    pass

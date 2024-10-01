@@ -13,6 +13,7 @@ from contractda.sets._fol_clause import FOLClause
 from contractda.sets import FOLClauseSet
 from contractda.sets._fol_lan import name_remap
 from contractda.vars import Var
+from contractda.design._design_exceptions import FeedbackLoopException
 
 
 from contractda.contracts import ContractBase
@@ -335,6 +336,102 @@ class System(object):
                 LOG.error(f"connection: {connection.hier_name}")
                 return False
         return True
+    
+    def is_cascade(self) -> bool:
+        """Check if the connection of the subsystem is cascade composition
+            Parallel Composition is treated as a special case of cascade composition
+        """
+        subsystems_orders = self.subsystem_topologoical_sort()
+        if subsystems_orders is not None:
+            return True
+        else:
+            return False
+        
+    def is_feedback(self) -> bool:
+        """Check if the connection of the subsystem is feedback composition"""
+        return not self.is_cascade()  
+    
+    def is_parallel(self) -> bool:
+        """Check if the connection of the subsystem is parallel composition"""
+        # subsystem is parallel if no connection involves different subsystem
+        # if there is a port that is not a input/output, it is treated as feedback
+        if self.subsystem_contain_inout_ports() or self.contain_inout_ports():
+            return False
+        
+        adj_list = self._build_adjacency_list()
+        for sys, adj_sys in adj_list.items():
+            if adj_sys:
+                return False
+        return True
+
+    def contain_inout_ports(self) -> bool:
+        """Check if there is inout port in the system"""
+        for port in self._ports.values():
+            if port.direction == PortDirection.INOUT:
+                return True
+            
+    def subsystem_contain_inout_ports(self) -> bool:
+        """Check if there is inout port in its subsystem"""
+        for subsystem in self._subsystems.values():
+            for port in subsystem.ports.values():
+                if port.direction == PortDirection.INOUT:
+                    return True
+                
+    def subsystem_topologoical_sort(self) -> list[System] | None:
+        """perform topological sort of the subsystem, return None if it cannot be sorted(contain loop)"""
+        # build graph
+        adj_list = self._build_adjacency_list()
+        # system itself are ignored
+        topological_order: list[System] = []
+        unmarked_subsystem = set(self._subsystems.values())
+        for subsystem in unmarked_subsystem:
+            subsystem._ts_mark = 0 #0: unmarked 1: temporary 2: permanant
+        while unmarked_subsystem:
+            for sys in unmarked_subsystem:
+                try:
+                    self._subsystems_topological_sort_visit(sys, unmarked_subsystem, topological_order, adj_list)
+                except FeedbackLoopException as e:
+                    return None # loop detected
+                break
+        return topological_order
+
+    def _subsystems_topological_sort_visit(self, sys: System, unmarked_subsystem: set[System], topological_order: list[System], adj_list: dict[System, set[System]]):
+        if sys._ts_mark == 2:
+            # reach an end that already sort 
+            return
+        if sys._ts_mark == 1:
+            raise FeedbackLoopException("Loop detected during visit")
+        
+        sys._ts_mark = 1
+        # collect all next subsystem
+        for adj_subystem in adj_list[sys]:
+            self._subsystems_topological_sort_visit(adj_subystem, unmarked_subsystem, topological_order, adj_list)
+
+        sys._ts_mark = 2
+        unmarked_subsystem.remove(sys)
+        topological_order.append(sys)
+        return 
+
+#################### Connection Helper
+    def _build_adjacency_list(self) -> dict[System, set[System]]:
+        adj_list: dict[System, set[System]] = dict()
+        for subsystem in self.subsystems.values():
+            adj_list[subsystem] = set()
+        for connection in self.connections.values():
+            driver_term = self._get_connection_driver(connection=connection)
+            driver_system = driver_term._system
+            if driver_system == self:
+                continue
+            adj_terms: list[Port] = self._get_connection_sinks(connection=connection)
+            adj_systems = {term._system for term in adj_terms if term._system != self}
+            adj_list[driver_system].update(adj_systems)
+        return adj_list
+    
+    def _connection_contain_(self, connection: Connection) -> bool:
+        for term in connection.terminals():
+            if term.system == self:
+                return True
+        return False
 #################### contracts API
     def _convert_system_contract_to_contract_object(self):
         # match ports 
@@ -426,7 +523,29 @@ class System(object):
         # check ports
         pass
         
-
+    def _get_connection_driver(self, connection: Connection) -> Port:
+        """Return a driver of the connection, assume the connection has only on driver"""
+        for term in connection.terminals:
+            if term in self._ports.values():
+                if term.direction == PortDirection.INPUT:
+                    return term
+            else:
+                if term.direction == PortDirection.OUTPUT:
+                    return term
+        raise Exception("No driver found")
+    
+    def _get_connection_sinks(self, connection: Connection) -> Iterable[Port]:
+        """Return a driver of the connection, assume the connection has only on driver"""
+        sinks = []
+        for term in connection.terminals:
+            if term in self._ports.values():
+                if term.direction != PortDirection.INPUT:
+                    sinks.append(term)
+            else:
+                if term.direction != PortDirection.OUTPUT:
+                    sinks.append(term)
+        return sinks
+        
     def _check_terminal_directions(self, connection: Connection) -> bool:
         # check if multiple outputs drive the same coonnection, or no outputs
         must_drive_ports = []
