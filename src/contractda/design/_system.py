@@ -106,6 +106,10 @@ class System(object):
         return self._ports
     
     @property
+    def input_ports(self) -> list[Port]:
+        return [port for port in self._ports.values() if port.direction == PortDirection.INPUT]
+    
+    @property
     def contracts(self) -> set[SystemContract]:
         """The contracts in the system. It returns a python set object, where each element is a :py:class:`SystemContract` instance"""
         return self._contracts
@@ -524,7 +528,7 @@ class System(object):
         pass
         
     def _get_connection_driver(self, connection: Connection) -> Port:
-        """Return a driver of the connection, assume the connection has only on driver"""
+        """Return a driver of the connection, assume the connection has only one driver"""
         for term in connection.terminals:
             if term in self._ports.values():
                 if term.direction == PortDirection.INPUT:
@@ -535,7 +539,7 @@ class System(object):
         raise Exception("No driver found")
     
     def _get_connection_sinks(self, connection: Connection) -> Iterable[Port]:
-        """Return a driver of the connection, assume the connection has only on driver"""
+        """Return a sinks of the connection"""
         sinks = []
         for term in connection.terminals:
             if term in self._ports.values():
@@ -583,13 +587,6 @@ class System(object):
         
         return True
 
-    def _check_feedback_loop(self):
-        """Find the feedback loop in the subsystem connection"""
-        # create a map that tells where the ports go:
-        for port in self.ports.values():
-            if port.port_type == PortDirection.INPUT:
-                pass
-        pass
 class CompiledSystem(System):
     """A system that is fixed
     """

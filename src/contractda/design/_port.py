@@ -42,6 +42,10 @@ class Port(object):
 
         self._var: Var = None # do not use this, need context to avoid duplicate name
 
+    @property
+    def var(self) -> Var | None:
+        return self._var
+
     def __str__(self) -> str:
         """
         """

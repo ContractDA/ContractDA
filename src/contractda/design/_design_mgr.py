@@ -129,33 +129,75 @@ class DesignLevelManager():
         if irreceptive_contracts:
             receptive_flag = False
         for subsystem in system.subsystems.values():
-            irreceptive_contracts = self.verify_system_receptiveness(system=subystem)
+            irreceptive_contracts = self.verify_system_receptiveness(system=subsystem)
             if irreceptive_contracts:
                 receptive_flag = False    
 
         if system_obj.is_cascade():
+            LOG.info("Cascade composition")
             if receptive_flag:
+                LOG.info("All Subsystem are receptive, Independent Design OK")
                 return True
             else:
                 # remember to set input variables....
+                LOG.info("Incllude non-receptive contract, checking strong replaceability")
                 system_contract = system_obj._get_single_system_contract()
                 subsystem_composed_contract = system_obj._get_subsystem_contract_composition()
                 connection_constraint = system_obj._generate_contract_system_connection_constraint()
-                input_vars = None
+                input_vars = [port.var for port in system_obj.input_ports]
+                LOG.info(f"Length of input vars: {len(input_vars)}")
                 system_contract.add_constraint(connection_constraint, adjusted_input=input_vars)
                 subsystem_composed_contract.add_constraint(connection_constraint, adjusted_input=input_vars)
                 return system_contract.is_strongly_replaceable_by(subsystem_composed_contract)
         
         # feedback
         if len(system_obj.subsystems.values()) == 2:
+            LOG.info("Feedback Composition, checking...")
             system_contract = system_obj._get_single_system_contract()
             subsystems = list(system_obj.subsystems.values())
             subsystem_contract1 = subsystems[0]._get_single_system_contract()
             subsystem_contract2 = subsystems[1]._get_single_system_contract()
             connection_constraint = system_obj._generate_contract_system_connection_constraint()
-            system_contract.add_constraint(connection_constraint)
-            subsystem_contract1.add_constraint(connection_constraint)
-            subsystem_contract2.add_constraint(connection_constraint)
+            input_vars = [port.var for port in system_obj.input_ports]
+            LOG.info(f"Length of input vars: {len(input_vars)}")
+            LOG.info(" ".join([var.id for var in input_vars]))
+            print(subsystem_contract1)
+            system_contract.add_constraint(connection_constraint, adjusted_input=input_vars)
+            # get the input port vars, and make it consistent with system inputs.
+            c1_input_vars = [port.var for port in subsystems[0].input_ports]
+            c2_input_vars = [port.var for port in subsystems[1].input_ports]
+            # create a map that maps subsystem ports to the corresponding system ports
+            input_map = dict()
+            for connection in system_obj.connections.values():
+                sys_var = None
+                for term in connection.terminals:
+                    if term.var in input_vars:
+                        sys_var = term.var 
+                        break
+                if sys_var is not None:
+                    for term in connection.terminals:
+                        input_map[term.var] = sys_var
+            LOG.info(input_map)
+            new_c1_input_vars = []
+            for var in c1_input_vars:
+                if var in input_map:
+                    new_c1_input_vars.append(input_map[var])
+                else:
+                    new_c1_input_vars.append(var)
+
+            new_c2_input_vars = []
+            for var in c2_input_vars:
+                if var in input_map:
+                    new_c2_input_vars.append(input_map[var])
+                else:
+                    new_c2_input_vars.append(var)
+
+            LOG.info(" ".join([port.var.id for port in subsystems[0].input_ports]))
+
+            subsystem_contract1.add_constraint(connection_constraint, adjusted_input=new_c1_input_vars)
+            LOG.info(" ".join([port.var.id for port in subsystems[1].input_ports]))
+            subsystem_contract2.add_constraint(connection_constraint, adjusted_input=new_c2_input_vars)
+
             return system_contract.is_independent_decomposition_of(other1=subsystem_contract1, other2=subsystem_contract2)
         
         raise NotImplementedError("Not support when feedback composition has more than 2 subsystems")
