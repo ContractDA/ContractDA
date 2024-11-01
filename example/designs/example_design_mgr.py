@@ -20,6 +20,11 @@ if __name__ == "__main__":
         print(port)
         port.report()
 
+    design_mgr._generate_system_contracts(system=sys)
     for contract in sys.contracts:
-        contract_obj = sys._convert_system_contract_to_contract_object(contract)
-        print(contract_obj)
+        print(contract._contract_obj)
+
+    design_mgr.verify_system_consistensy(system=sys)
+
+    print(sys._check_terminal_directions(list(sys.connections.values())[0]))
+    

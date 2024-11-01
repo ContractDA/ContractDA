@@ -18,7 +18,6 @@
    ~contractda.contracts.CBContract.environment
    ~contractda.contracts.CBContract.implementation
    ~contractda.contracts.CBContract.intrinsic_behavior
-   ~contractda.contracts.CBContract.name
    ~contractda.contracts.CBContract.obligation
    ~contractda.contracts.CBContract.vs
 
@@ -30,6 +29,7 @@
 
 .. autosummary::
 
+   ~contractda.contracts.CBContract.add_constraint
    ~contractda.contracts.CBContract.composition
    ~contractda.contracts.CBContract.conjunction
    ~contractda.contracts.CBContract.implication

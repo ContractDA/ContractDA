@@ -16,7 +16,6 @@
 
    ~contractda.contracts.ContractBase.environment
    ~contractda.contracts.ContractBase.implementation
-   ~contractda.contracts.ContractBase.name
    ~contractda.contracts.ContractBase.obligation
 
 
@@ -27,6 +26,7 @@
 
 .. autosummary::
 
+   ~contractda.contracts.ContractBase.add_constraint
    ~contractda.contracts.ContractBase.composition
    ~contractda.contracts.ContractBase.conjunction
    ~contractda.contracts.ContractBase.implication

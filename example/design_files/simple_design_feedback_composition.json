@@ -1,0 +1,128 @@
+{
+    "system_name": "test_sys_feedback_composition1",
+    "ports": [
+        {
+            "port_name": "x",
+            "port_type": "REAL",
+            "direction": "INPUT"
+        },
+        {
+            "port_name": "y",
+            "port_type": "REAL",
+            "direction": "OUTPUT"
+        }
+    ],
+    "subsystems": [
+        {
+            "system_name": "sub1",
+            "ports": [
+                {
+                    "port_name": "x",
+                    "port_type": "REAL",
+                    "direction": "INPUT"
+                },
+                {
+                    "port_name": "z",
+                    "port_type": "REAL",
+                    "direction": "INPUT"
+                },
+                {
+                    "port_name": "y",
+                    "port_type": "REAL",
+                    "direction": "OUTPUT"
+                }
+            ],
+            "subsystems": [],
+            "connections": [],
+            "contracts": [
+                {
+                    "name": "C1",
+                    "type": "AG",
+                    "content": {
+                        "assumption": {
+                            "set_type": "FOL",
+                            "description": "true"
+                        },
+                        "guarantee": {
+                            "set_type": "FOL",
+                            "description": "y == z + 1 || y == x * z"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "system_name": "sub2",
+            "ports": [
+                {
+                    "port_name": "y",
+                    "port_type": "REAL",
+                    "direction": "INPUT"
+                },
+                {
+                    "port_name": "z",
+                    "port_type": "REAL",
+                    "direction": "OUTPUT"
+                }
+            ],
+            "subsystems": [],
+            "connections": [],
+            "contracts": [
+                {
+                    "name": "C2",
+                    "type": "AG",
+                    "content": {
+                        "assumption": {
+                            "set_type": "FOL",
+                            "description": "true"
+                        },
+                        "guarantee": {
+                            "set_type": "FOL",
+                            "description": "z == y + 1"
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "connections": [
+        {
+            "name": "net1",
+            "terminals": [
+                "test_sys_feedback_composition1.x",
+                "sub1.x"
+            ]
+        },
+        {
+            "name": "net2",
+            "terminals": [
+                "sub1.z",
+                "sub2.z"
+            ]
+        },
+        {
+            "name": "net3",
+            "terminals": [
+                "test_sys_feedback_composition1.y",
+                "sub1.y",
+                "sub2.y"
+            ]
+        }
+    ],
+    "contracts": [
+        {
+            "name": "CS",
+            "type": "AG",
+            "content": {
+                "assumption": {
+                    "set_type": "FOL",
+                    "description": "x != 1"
+                },
+                "guarantee": {
+                    "set_type": "FOL",
+                    "description": "y == x / (1 - x)"
+                }
+            }
+        }
+    ]
+}

@@ -5,7 +5,8 @@ from jsonschema import validate, ValidationError
 if TYPE_CHECKING:
     from contractda.design._system import System
 
-from contractda.design._port import Port
+from contractda.design._port import Port, PortDirection
+from contractda.logger._logger import LOG
 
 class Connection(object):
     """Connection between ports in a system"""
@@ -54,6 +55,8 @@ class Connection(object):
     def level_name_list(self) -> Iterable[str]:
         """The list of all level names of the terminals in the connection."""
         return [term.level_name for term in self._terminals]
+    
+
 
 class ModuleConnection(Connection):
     """Connection for module"""

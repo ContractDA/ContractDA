@@ -11,8 +11,13 @@ class SetBase(ABC):
     """
 
     def __init__(self, solver):
+        self._vars: Iterable[Var] = None
         pass
-
+    
+    @property
+    def vars(self) -> Iterable[Var]:
+        """The variables"""
+        return self._vars
     ######################
     #   Extraction
     ######################
@@ -151,6 +156,16 @@ class SetBase(ABC):
         :param SetBase other: the other set to be check if this set is disjoint to it.
         :return: True if this set is disjoint to the other set. False if not.
         :rtype: bool
+        """
+        pass
+
+    @classmethod
+    def generate_variable_equivalence_constraint_set(cls, vars: list[Var]) -> "SetBase":
+        """ Generate a set that force the variable to have the same values
+
+        :param list[Var] vars: the variable that has the same values.
+        :return: the set that force the variables to have the same values.
+        :rtype: SetBase
         """
         pass
 

@@ -1,4 +1,4 @@
-contractda.sets.FOLClauseSet
+﻿contractda.sets.FOLClauseSet
 ============================
 
 .. currentmodule:: contractda.sets
@@ -28,6 +28,7 @@ contractda.sets.FOLClauseSet
    ~contractda.sets.FOLClauseSet.complement
    ~contractda.sets.FOLClauseSet.difference
    ~contractda.sets.FOLClauseSet.encode
+   ~contractda.sets.FOLClauseSet.generate_variable_equivalence_constraint_set
    ~contractda.sets.FOLClauseSet.get_enumeration
    ~contractda.sets.FOLClauseSet.intersect
    ~contractda.sets.FOLClauseSet.is_contain

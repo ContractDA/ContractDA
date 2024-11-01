@@ -54,5 +54,7 @@ if __name__ == "__main__":
     print(ast.get_symbols())
     print(ast.evaluate({"x": False, "y": 100, "z": 101}))
 
+    ast = fol_parser.parse("")
+
 
 

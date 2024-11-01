@@ -2,6 +2,10 @@
 from enum import Enum
 from jsonschema import validate, ValidationError
 from contractda.logger._logger import LOG
+from contractda.vars import Var
+from contractda.contracts import AGContract, CBContract, ContractBase
+from contractda.sets._fol_clause import FOLClause
+from contractda.sets import FOLClauseSet
 
 class ContractType(Enum):
     """Enum for contract type
@@ -19,10 +23,10 @@ class SystemContract():
     """A wrapper for storing contract description and the actual contract object
     """
     def __init__(self, name:str, type:ContractType):
-        self._contract_obj = None
-        self._type = type
-        self._name = name
-        self._description = None
+        self._contract_obj: ContractBase = None
+        self._type: ContractType = type
+        self._name: str = name
+        self._description: dict = None
         pass
 
     def __str__(self) -> str:
@@ -35,6 +39,13 @@ class SystemContract():
     @property
     def type(self) -> ContractType:
         return self._type
+    
+    @property
+    def contract_obj(self) -> ContractBase:
+        if self._contract_obj is None:
+            raise Exception("Contract obj not created")
+        
+        return self._contract_obj
 
     set_schema = {
         "type": "object",
@@ -76,6 +87,44 @@ class SystemContract():
             "type": self._type.name,
             "content": self._description
         }
+    
+    def convert_to_contract_object(self, vars: list[Var], vars_remap: dict[str, str]) -> ContractBase:
+        if self._type == ContractType.AG:
+            language_a = self._description["assumption"]["set_type"]
+            desc_a = self._description["assumption"]["description"]
+            if language_a == "FOL":
+                clause_instance_a = FOLClause(description=desc_a, ctx=None)
+                clause_instance_a.rename_symbols(vars_remap=vars_remap)
+
+            language_g = self._description["guarantee"]["set_type"]
+            desc_g = self._description["guarantee"]["description"]
+            if language_g == "FOL":
+                clause_instance_g = FOLClause(description=desc_g, ctx=None)
+                clause_instance_g.rename_symbols(vars_remap=vars_remap)
+
+            assumption = FOLClauseSet(vars=vars, expr=clause_instance_a)
+            guarantee = FOLClauseSet(vars=vars, expr=clause_instance_g)
+            self._contract_obj = AGContract(vars=vars, assumption=assumption, guarantee=guarantee, language="FOL")
+            return self._contract_obj
+        elif self._type == ContractType.CB:
+            language_c = self._description["constraint"]["set_type"]
+            desc_c = self._description["constraint"]["description"]
+            if language_c == "FOL":
+                clause_instance_c = FOLClause(description=desc_c, ctx=None)
+                clause_instance_c.rename_symbols(vars_remap=vars_remap)
+
+            language_b = self._description["behavior"]["set_type"]
+            desc_b = self._description["behavior"]["description"]
+            if language_b == "FOL":
+                clause_instance_b = FOLClause(description=desc_b, ctx=None)
+                clause_instance_b.rename_symbols(vars_remap=vars_remap)
+
+            constraint = FOLClauseSet(vars=vars, expr=clause_instance_c)
+            behavior = FOLClauseSet(vars=vars, expr=clause_instance_b)
+            self._contract_obj = CBContract(vars=vars, constraint=constraint, behavior=behavior, language="FOL")
+            return self._contract_obj
+        else:
+            LOG.error(f"Not supported contract type {self._type}") 
 
     @classmethod
     def from_dict(cls, dict_obj):

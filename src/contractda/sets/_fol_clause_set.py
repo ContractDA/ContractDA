@@ -42,6 +42,7 @@ class FOLClauseSet(ClauseSet):
 
     def __str__(self):
         return str(self.expr)
+
     ######################
     #   Extraction
     ######################
@@ -292,7 +293,26 @@ class FOLClauseSet(ClauseSet):
         new_expr_a.clause_and(new_expr_b)
 
         return not self._clause_satisfiable(vars=new_vars, clause=new_expr_a)
-    
+
+    @classmethod
+    def generate_variable_equivalence_constraint_set(cls, vars: list[Var]) -> FOLClauseSet | None:
+        if len(vars) <= 1:
+            return None
+        first_element = fol_lan.Symbol(name=vars[0].id)
+        clauses = []
+        for var in vars[1:]:
+            eq_element = fol_lan.Symbol(name=var.id)
+            element_clause1 = FOLClause._create_clause_by_node(first_element)
+            element_clause2 = FOLClause._create_clause_by_node(eq_element)
+            element_clause1.clause_eq(element_clause2)
+            clauses.append(element_clause1)
+
+        # aggregate all the clause sets 
+        aggregate_clause = clauses[0]
+        for clause in clauses[1:]:
+            aggregate_clause.clause_and(clause)
+
+        return cls(vars = vars, expr = aggregate_clause)
     ######################
     #   Internal Functions
     ######################

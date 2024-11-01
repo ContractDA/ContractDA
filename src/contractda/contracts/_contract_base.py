@@ -224,6 +224,9 @@ class ContractBase(ABC):
         """
         pass
 
+    def add_constraint(self, constraint: SetBase, adjusted_input: list[Var] = None):
+        pass
+
     @staticmethod
     def _convert_to_sets_based_on_language(vars: list[Var], expr: str, language: str):
         if isinstance(expr, str):

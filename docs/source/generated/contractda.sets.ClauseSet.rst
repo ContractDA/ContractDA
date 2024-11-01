@@ -1,4 +1,4 @@
-contractda.sets.ClauseSet
+﻿contractda.sets.ClauseSet
 =========================
 
 .. currentmodule:: contractda.sets
@@ -27,6 +27,7 @@ contractda.sets.ClauseSet
 
    ~contractda.sets.ClauseSet.complement
    ~contractda.sets.ClauseSet.difference
+   ~contractda.sets.ClauseSet.generate_variable_equivalence_constraint_set
    ~contractda.sets.ClauseSet.get_enumeration
    ~contractda.sets.ClauseSet.intersect
    ~contractda.sets.ClauseSet.is_contain

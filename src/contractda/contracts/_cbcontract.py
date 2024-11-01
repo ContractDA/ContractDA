@@ -50,6 +50,15 @@ class CBContract(ContractBase):
     def obligation(self) -> SetBase:
         """ The contract obligation, see Beneviste et al. Multiple Viewpoint Contract-Based Specification and Design, FMCO07"""
         return self.constraint.intersect(self.intrinsic_behavior)
+    
+
+    def add_constraint(self, constraint: SetBase):
+        """ Impose constraints on both constraint and behaviors"""
+        if constraint is None:
+            return 
+        self._constraint = self._constraint.intersect(constraint)
+        self._intrinsic_behavior = self._intrinsic_behavior.intersect(constraint)
+        self._vars = self._guarantee.vars # determine vars 
     ##################################
     #   Contract Property
     ##################################
@@ -61,6 +70,7 @@ class CBContract(ContractBase):
         :return: True if the contract is receptive, False if not
         :rtype: bool
         """
+        raise NotImplementedError
         pass
 
     def is_compatible(self) -> bool:
@@ -72,6 +82,7 @@ class CBContract(ContractBase):
         :return: True if the contract is compatible, False if not
         :rtype: bool
         """
+        raise NotImplementedError
         pass
 
     def is_consistent(self) -> bool:
@@ -82,6 +93,7 @@ class CBContract(ContractBase):
         :return: True if the contract is consistent, False if not
         :rtype: bool
         """
+        raise NotImplementedError
         pass
     ##################################
     #   Contract Operations
@@ -130,6 +142,7 @@ class CBContract(ContractBase):
         :return: the quotient result 
         :rtype: ContractBase
         """
+        raise NotImplementedError
         pass
 
     def conjunction(self, other: ContractBase):
@@ -142,6 +155,7 @@ class CBContract(ContractBase):
         :return: the conjunction result
         :rtype: ContractBase
         """
+        raise NotImplementedError
         pass
 
     def implication(self, other: ContractBase):
@@ -166,6 +180,7 @@ class CBContract(ContractBase):
         :return: the merging result
         :rtype: ContractBase
         """
+        raise NotImplementedError
         pass
 
 
@@ -179,6 +194,7 @@ class CBContract(ContractBase):
         :return: the separation result
         :rtype: ContractBase
         """
+        raise NotImplementedError
         pass
 
     def saturation(self) -> ContractBase:
@@ -220,6 +236,7 @@ class CBContract(ContractBase):
         :return: True if the contract is conformed by the others, False if not
         :rtype: bool
         """
+        raise NotImplementedError
         pass
 
     def is_strongly_dominated_by(self, other: ContractBase) -> bool:
@@ -231,6 +248,7 @@ class CBContract(ContractBase):
         :return: True if the contract is strongly dominated by the others, False if not
         :rtype: bool
         """
+        raise NotImplementedError
         pass
     
     def is_strongly_replaceable_by(self, other: ContractBase) -> bool:
@@ -248,6 +266,7 @@ class CBContract(ContractBase):
         :return: True if the contract is strongly replaceable by the other, False if not
         :rtype: bool
         """
+        raise NotImplementedError
         pass
 
     def is_replaceable_by(self, other: ContractBase) -> bool:
@@ -261,6 +280,7 @@ class CBContract(ContractBase):
         :return: True if the contract is strongly replaceable by the other, False if not
         :rtype: bool
         """
+        raise NotImplementedError
         pass
 
     def is_independent_decomposition_of(self, other1: ContractBase, other2: ContractBase) -> bool:
@@ -273,6 +293,7 @@ class CBContract(ContractBase):
         :return: True if the contract is refined by other, False if not
         :rtype: bool
         """
+        raise NotImplementedError
         pass
 
     def to_ag(self):

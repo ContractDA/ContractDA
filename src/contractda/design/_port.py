@@ -40,7 +40,11 @@ class Port(object):
         self._dir: PortDirection = direction
         self._system: System = None
 
-        self._var: Var = create_var(port_name, port_type, **kwargs) # do not use this, need context to avoid duplicate name
+        self._var: Var = None # do not use this, need context to avoid duplicate name
+
+    @property
+    def var(self) -> Var | None:
+        return self._var
 
     def __str__(self) -> str:
         """
@@ -48,8 +52,11 @@ class Port(object):
         return f"{self._port_type.name} {self._dir.name} {self._port_name}"
 
     @staticmethod
-    def _create_var_using_hier_name(port: "Port"):
-        return create_var(id=port.hier_name, var_type=port.port_type)
+    def _create_var_using_hier_name(port: "Port") -> Var:
+        if port._var is None:
+            var = create_var(id=port.hier_name, var_type=port.port_type)
+            port._var = var
+        return port._var
 
     @property
     def level_name(self) -> str:

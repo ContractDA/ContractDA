@@ -34,6 +34,7 @@
    ~contractda.design.System.add_connection
    ~contractda.design.System.add_subsystem
    ~contractda.design.System.allow_modify
+   ~contractda.design.System.check_connections
    ~contractda.design.System.flatten
    ~contractda.design.System.from_dict
    ~contractda.design.System.is_frozen

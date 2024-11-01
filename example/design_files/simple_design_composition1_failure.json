@@ -1,0 +1,122 @@
+{
+    "system_name": "test_sys_composition1_failure",
+    "ports": [
+        {
+            "port_name": "x",
+            "port_type": "REAL",
+            "direction": "INPUT"
+        },
+        {
+            "port_name": "y",
+            "port_type": "REAL",
+            "direction": "OUTPUT"
+        }
+    ],
+    "subsystems": [
+        {
+            "system_name": "sub1",
+            "ports": [
+                {
+                    "port_name": "a",
+                    "port_type": "REAL",
+                    "direction": "INPUT"
+                },
+                {
+                    "port_name": "b",
+                    "port_type": "REAL",
+                    "direction": "OUTPUT"
+                }
+            ],
+            "subsystems": [],
+            "connections": [],
+            "contracts": [
+                {
+                    "name": "C1",
+                    "type": "AG",
+                    "content": {
+                        "assumption": {
+                            "set_type": "FOL",
+                            "description": "a >= 0"
+                        },
+                        "guarantee": {
+                            "set_type": "FOL",
+                            "description": "b == 2*a"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "system_name": "sub2",
+            "ports": [
+                {
+                    "port_name": "a",
+                    "port_type": "REAL",
+                    "direction": "INPUT"
+                },
+                {
+                    "port_name": "b",
+                    "port_type": "REAL",
+                    "direction": "OUTPUT"
+                }
+            ],
+            "subsystems": [],
+            "connections": [],
+            "contracts": [
+                {
+                    "name": "C2",
+                    "type": "AG",
+                    "content": {
+                        "assumption": {
+                            "set_type": "FOL",
+                            "description": "a >= 1"
+                        },
+                        "guarantee": {
+                            "set_type": "FOL",
+                            "description": "b == 2*a"
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "connections": [
+        {
+            "name": "net1",
+            "terminals": [
+                "test_sys_composition1_failure.x",
+                "sub1.a"
+            ]
+        },
+        {
+            "name": "net2",
+            "terminals": [
+                "sub1.b",
+                "sub2.a"
+            ]
+        },
+        {
+            "name": "net3",
+            "terminals": [
+                "sub2.b",
+                "test_sys_composition1_failure.y"
+            ]
+        }
+    ],
+    "contracts": [
+        {
+            "name": "CS",
+            "type": "AG",
+            "content": {
+                "assumption": {
+                    "set_type": "FOL",
+                    "description": "x >= 0.4"
+                },
+                "guarantee": {
+                    "set_type": "FOL",
+                    "description": "y == 4*x"
+                }
+            }
+        }
+    ]
+}

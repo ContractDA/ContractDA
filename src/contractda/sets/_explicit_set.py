@@ -372,6 +372,16 @@ class ExplicitSet(SetBase):
 
         return set1.internal_expr.isdisjoint(set2.internal_expr)
 
+    @classmethod
+    def generate_variable_equivalence_constraint_set(cls, vars: list[Var]) -> ExplicitSet:
+        expr = []
+        for var in vars:
+            acceptable_value = var.value_range
+            acceptable_behavior = ExplicitSetElementType([acceptable_value]*len(vars))
+            expr.append(acceptable_behavior)
+
+        return cls(vars = vars, expr=expr)
+
     def len(self):
         return len(self._vars)
     

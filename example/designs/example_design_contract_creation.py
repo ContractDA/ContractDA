@@ -1,8 +1,9 @@
 import json
 from contractda.design._system import System
+from contractda.sets._fol_clause_set import FOLClauseSet
 from contractda.design._design_mgr import DesignLevelManager
 
-def test_design_mgr():
+if __name__ == "__main__":
     with open("./example/design_files/simple_design.json", "r") as file:
         json_obj = json.load(file)
 
@@ -25,3 +26,14 @@ def test_design_mgr():
         print(contract._contract_obj)
 
     design_mgr.verify_system_consistensy(system=sys)
+
+    print(sys._check_terminal_directions(list(sys.connections.values())[0]))
+
+    constraint = sys._generate_contract_system_connection_constraint()
+    print(constraint)
+
+    print(sys._get_single_system_contract())
+    print(sys._get_subsystem_contract_composition())
+    print(sys._get_contract_language_type())
+    print(design_mgr.verify_system_refinement(system=sys))
+    print(design_mgr.verify_design_consistensy(design=sys))
