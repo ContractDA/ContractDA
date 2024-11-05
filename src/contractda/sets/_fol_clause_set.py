@@ -66,6 +66,19 @@ class FOLClauseSet(ClauseSet):
         :return: any element that is in the set
         :rtype: Any
         """
+        solver_instance = self._solver_type()
+        vars_map, encoded_clause = self.encode(solver=solver_instance, vars=self._vars, clause=self._expr)
+        solver_instance.add_conjunction_clause(encoded_clause)
+        ret = solver_instance.check()
+        sample = dict()
+        if ret == True:
+            for var in self._vars:
+                solver_var = vars_map[var.id]
+                val = solver_instance.get_model_for_var(solver_var)
+                sample[var] = val
+        else:
+            raise Exception("No element available for sample")
+        return ret, sample
         pass
     ######################
     #   Set Operation
@@ -313,6 +326,16 @@ class FOLClauseSet(ClauseSet):
             aggregate_clause.clause_and(clause)
 
         return cls(vars = vars, expr = aggregate_clause)
+    
+    @classmethod
+    def generate_var_val_equivalence_constraint_set(cls, var: Var, val) -> FOLClauseSet:
+        var_element = fol_lan.Symbol(name=var.id)
+        val_element = fol_lan.Constant(val = val)
+        clause = FOLClause._create_clause_by_node(var_element)
+        val_node_clause = FOLClause._create_clause_by_node(val_element)
+        clause.clause_eq(val_node_clause)
+
+        return cls(vars = [var], expr = clause)
     ######################
     #   Internal Functions
     ######################
