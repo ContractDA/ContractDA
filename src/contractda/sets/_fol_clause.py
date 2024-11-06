@@ -76,6 +76,16 @@ class FOLClause(Clause):
         self._obtain_symbols()
         return self
 
+    def clause_gt(self, other):
+        self._root = fol_lan.PropositionNodeBinOp(">", self._root, other._root)
+        self._obtain_symbols()
+        return self
+    
+    def clause_lt(self, other):
+        self._root = fol_lan.PropositionNodeBinOp("<", self._root, other._root)
+        self._obtain_symbols()
+        return self
+
     def clasue_project(self, vars, is_refine = True):
         raise NotImplementedError()
     

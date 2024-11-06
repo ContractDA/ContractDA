@@ -9,10 +9,11 @@
 
 """
 
-from contractda.simulator._simulator import Simulator, Stimulus
+from contractda.simulator._simulator import Simulator, Stimulus, ClauseEvaluator
 
 
 __all__ = [
     "Simulator",
-    "Stimulus"
+    "Stimulus",
+    "ClauseEvaluator"
 ]

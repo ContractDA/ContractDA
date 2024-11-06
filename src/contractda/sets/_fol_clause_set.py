@@ -336,6 +336,26 @@ class FOLClauseSet(ClauseSet):
         clause.clause_eq(val_node_clause)
 
         return cls(vars = [var], expr = clause)
+
+    @classmethod
+    def generate_var_val_gt_constraint_set(cls, var: Var, val) -> FOLClauseSet:
+        var_element = fol_lan.Symbol(name=var.id)
+        val_element = fol_lan.Constant(val = val)
+        clause = FOLClause._create_clause_by_node(var_element)
+        val_node_clause = FOLClause._create_clause_by_node(val_element)
+        clause.clause_gt(val_node_clause)
+
+        return cls(vars = [var], expr = clause)
+
+    @classmethod
+    def generate_var_val_lt_constraint_set(cls, var: Var, val) -> FOLClauseSet:
+        var_element = fol_lan.Symbol(name=var.id)
+        val_element = fol_lan.Constant(val = val)
+        clause = FOLClause._create_clause_by_node(var_element)
+        val_node_clause = FOLClause._create_clause_by_node(val_element)
+        clause.clause_lt(val_node_clause)
+
+        return cls(vars = [var], expr = clause)
     ######################
     #   Internal Functions
     ######################

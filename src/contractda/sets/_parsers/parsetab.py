@@ -54,5 +54,5 @@ _lr_productions = [
   ('expression -> symbol','expression',1,'p_expression_literal','_fol_parser.py',161),
   ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_paren','_fol_parser.py',165),
   ('symbol -> LITERAL','symbol',1,'p_symbol','_fol_parser.py',169),
-  ('constant -> CONSTANT','constant',1,'p_constant','_fol_parser.py',178),
+  ('constant -> CONSTANT','constant',1,'p_constant','_fol_parser.py',179),
 ]
