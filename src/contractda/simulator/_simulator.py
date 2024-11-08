@@ -10,13 +10,30 @@ from contractda.vars import Var
 
 
 class Stimulus(object):
-    """class that represents the behaviors"""
-    def __init__(self, stimulus_map: dict):
-        self._map = stimulus_map
+    """class that represents the behaviors
+
+    the behavior is set as a dictionary that maps a :py:class:`~contract.contracts.Var` to a value
+    """
+    def __init__(self, stimulus_map: dict[Var, Any]):
+        self._map: dict[Var, Any] = stimulus_map
 
     @property
-    def var_val_map(self) -> dict:
+    def var_val_map(self) -> dict[Var, Any]:
         return self._map
+    
+    @property 
+    def value(self, var: Var) -> Any:
+        if var in self.var_val_map:
+            return self.var_val_map[var]
+        else:
+            LOG.error(f"Variable {var.id} not found!")
+            return None
+    
+    def __str__(self):
+        ret = ""
+        for var, val in self.var_val_map.items():
+            ret += f"{var.id}: {val}, "
+        return ret
         
 # class ObjectiveExpression(object):
 #     def __init__(self, expr:str):
@@ -113,6 +130,8 @@ class ClauseEvaluator(Evaluator):
     
         return [sample[var] for var in self._obj], sample 
 
+
+
 class CallableEvaluator(Evaluator):
     def __init__(self, callable_func: Callable[[Stimulus], list[Any]]):
         self._func = callable_func
@@ -120,8 +139,6 @@ class CallableEvaluator(Evaluator):
     def evaluate(self, behavior: Stimulus):
         ret = self._func(behavior)
         return ret
-   
-
 
 
 class Simulator(object):
@@ -138,11 +155,19 @@ class Simulator(object):
         self._contract: ContractBase = contract
         self._evaluator: Evaluator = evaluator
         self._options = options
+
+        self._behavior_history: list[Stimulus] = []
         
-    def simulate(self, stimulus: Stimulus):
+    def simulate(self, stimulus: Stimulus, environement: SetBase = None,  num_unique_simulations: int = 1) -> list[Stimulus]:
+        """Simulate the contract using the stimulus
+
+        :param Stimulus stimulus: the behaviors provided by the environment
+        :param int num_unique_simulations: number of unique simulation needed for the stimulus
+        """
+        # TODO: Return a set or a stimulus?
         env_set = _create_set_from_behavior(stimulus.var_val_map)
 
-        self._contract.assumption
+        # self._contract.assumption
         # check if the stimulus always satisfy the assumption
         # check if stimulus has elements in not A
         if env_set.intersect(self._contract.assumption.complement()).is_satifiable():
@@ -150,19 +175,45 @@ class Simulator(object):
             # still return a behavior?
             return
         
-        behavior_set = env_set.intersect(self._contract.guarantee)
-        ret, sample = behavior_set.sample()
-        for var, val in sample.items():
-            LOG.debug(f"{var.id}: {val}")
+        ret: list[Stimulus] = []
+        constraint = None
+        for i in range(num_unique_simulations):
+            behavior = self._simulate_with_environment(env_set=env_set, constraint=constraint)
+            if behavior is None:
+                LOG.warn(f"Insufficient behavior to reach {num_unique_simulations} behaviors")
+            # TODO: update constraints
+            ret.append(behavior)
+        return ret
 
+
+    def _simulate_with_environment(self, env_set: SetBase, constraint: SetBase = None):
+        """Generate a behavior based on the environment and constraint, assuming the env_set is a proper environment"""
+        behavior_set = env_set.intersect(self._contract.guarantee)
+        if constraint is not None:
+            behavior_set = behavior_set.intersect(constraint)
+        sat, sample = behavior_set.sample()
+        if sat:
+            return Stimulus(sample)
+        else:
+            return None
+
+    def _check_behavior_uniqueness(self, found_behavior: Stimulus, env_set: SetBase):
+        """Check if the behavior is unique given the environment and an already found behavior, assuming env_set is a subset of the proper environment for the contract
+        
+        """
         #check if there is other behaviors
-        sample_set = _create_set_from_behavior(sample)
+        sample_set = _create_set_from_behavior(found_behavior.var_val_map)
+
+        behavior_set = env_set.intersect(self._contract.guarantee)
         check_set = behavior_set.intersect(sample_set.complement())
         if check_set.is_satifiable():
             LOG.debug(f"Multiple behavior exist!")
             ret, sample = check_set.sample()
-            for var, val in sample.items():
-                LOG.debug(f"{var.id}: {val}")
+            return 
+
+            
+
+
 
     def evaluate(self, stimulus: Stimulus, evaluator: Evaluator = None):
         if evaluator is None:
