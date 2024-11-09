@@ -1,4 +1,4 @@
-﻿contractda.sets.SetBase
+contractda.sets.SetBase
 =======================
 
 .. currentmodule:: contractda.sets
@@ -9,6 +9,12 @@
    :members:
    
 
+
+.. rubric:: Attributes
+
+.. autosummary::
+
+   ~contractda.sets.SetBase.vars
 
 
 

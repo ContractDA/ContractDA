@@ -1,4 +1,4 @@
-﻿contractda.design.LibSystem
+contractda.design.LibSystem
 ===========================
 
 .. currentmodule:: contractda.design

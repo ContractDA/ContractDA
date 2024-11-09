@@ -1,4 +1,4 @@
-﻿contractda.vars.create\_var
+contractda.vars.create\_var
 ===========================
 
 .. currentmodule:: contractda.vars

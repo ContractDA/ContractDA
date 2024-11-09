@@ -1,4 +1,4 @@
-﻿contractda.contracts.CBContract
+contractda.contracts.CBContract
 ===============================
 
 .. currentmodule:: contractda.contracts

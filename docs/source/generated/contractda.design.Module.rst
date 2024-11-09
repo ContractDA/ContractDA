@@ -1,4 +1,4 @@
-﻿contractda.design.Module
+contractda.design.Module
 ========================
 
 .. currentmodule:: contractda.design

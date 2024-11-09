@@ -130,7 +130,13 @@ class ClauseEvaluator(Evaluator):
     
         return [sample[var] for var in self._obj], sample 
 
-
+    def _check_evaluation_uniqueness(self, behavior_set: SetBase, val: Any) -> list[Any]:
+        uniqueness_set = FOLClauseSet.generate_var_val_equivalence_constraint_set(var = self._obj[0], val = val)
+        solver_set = self.objective_set.intersect(behavior_set).intersect(uniqueness_set)
+        if solver_set.is_satifiable():
+            return False
+        else:
+            return True
 
 class CallableEvaluator(Evaluator):
     def __init__(self, callable_func: Callable[[Stimulus], list[Any]]):
@@ -180,8 +186,14 @@ class Simulator(object):
         for i in range(num_unique_simulations):
             behavior = self._simulate_with_environment(env_set=env_set, constraint=constraint)
             if behavior is None:
-                LOG.warn(f"Insufficient behavior to reach {num_unique_simulations} behaviors")
+                LOG.warn(f"Insufficient behavior to reach {num_unique_simulations} behaviors ({len(ret)} generated)")
+                break
             # TODO: update constraints
+            newconstraint = _create_set_from_behavior(behavior.var_val_map).complement()
+            if constraint is None:
+                constraint = newconstraint
+            else:
+                constraint = constraint.intersect(newconstraint)
             ret.append(behavior)
         return ret
 
@@ -191,7 +203,11 @@ class Simulator(object):
         behavior_set = env_set.intersect(self._contract.guarantee)
         if constraint is not None:
             behavior_set = behavior_set.intersect(constraint)
-        sat, sample = behavior_set.sample()
+        try:
+            sat, sample = behavior_set.sample()
+        except Exception as e:
+            sat = False
+
         if sat:
             return Stimulus(sample)
         else:
@@ -208,14 +224,16 @@ class Simulator(object):
         check_set = behavior_set.intersect(sample_set.complement())
         if check_set.is_satifiable():
             LOG.debug(f"Multiple behavior exist!")
-            ret, sample = check_set.sample()
-            return 
+            #ret, sample = check_set.sample()
+            return False
+        else:
+            return True
 
             
 
 
 
-    def evaluate(self, stimulus: Stimulus, evaluator: Evaluator = None):
+    def evaluate(self, stimulus: Stimulus, evaluator: Evaluator = None, check_unique = False):
         if evaluator is None:
             evaluator = self._evaluator
         if evaluator is None:
@@ -230,9 +248,14 @@ class Simulator(object):
             return
         
         behavior_set = env_set.intersect(self._contract.guarantee)
-        obj_vals = self._evaluator.evaluate(behavior_set=behavior_set)
+        obj_vals = evaluator.evaluate(behavior_set=behavior_set)
+        if check_unique:
+            pass
 
         return obj_vals
+    
+    def _check_evaluate_uniqueness(self, found_value: Any, env_set: SetBase):
+        pass
     
     def evaluate_range(self, stimulus: Stimulus, evaluator: Evaluator = None):
         if evaluator is None:
@@ -249,8 +272,8 @@ class Simulator(object):
             return
         
         behavior_set = env_set.intersect(self._contract.guarantee)
-        max_vals = self._evaluator.evaluate_max(behavior_set=behavior_set)
-        min_vals = self._evaluator.evaluate_max(behavior_set=behavior_set, minimum=True)
+        max_vals = evaluator.evaluate_max(behavior_set=behavior_set)
+        min_vals = evaluator.evaluate_max(behavior_set=behavior_set, minimum=True)
 
         return max_vals, min_vals
 

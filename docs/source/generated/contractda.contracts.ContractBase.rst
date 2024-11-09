@@ -1,4 +1,4 @@
-﻿contractda.contracts.ContractBase
+contractda.contracts.ContractBase
 =================================
 
 .. currentmodule:: contractda.contracts

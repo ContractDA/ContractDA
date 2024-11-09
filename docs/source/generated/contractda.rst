@@ -29,6 +29,7 @@
    contractda.contracts
    contractda.design
    contractda.sets
+   contractda.simulator
    contractda.solvers
    contractda.vars
 

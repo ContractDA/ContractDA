@@ -1,4 +1,4 @@
-﻿contractda.sets.ExplicitSet
+contractda.sets.ExplicitSet
 ===========================
 
 .. currentmodule:: contractda.sets

@@ -6,6 +6,8 @@
     :template: class.rst
 
     ~contractda.simulator.Simulator
+    ~contractda.simulator.Stimulus
+    ~contractda.simulator.ClauseEvaluator
 
 """
 

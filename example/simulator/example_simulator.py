@@ -1,6 +1,6 @@
 from contractda.simulator import Simulator, Stimulus, ClauseEvaluator
 from contractda.contracts import AGContract
-from contractda.vars import Var, RealVar
+from contractda.vars import Var, RealVar, IntVar
 from contractda.sets import FOLClauseSet
 if __name__ == "__main__":
     x = RealVar("x")
@@ -14,8 +14,10 @@ if __name__ == "__main__":
     
     #prober = [y]
     sim = Simulator(contract=c, evaluator= eval)
-    sim.simulate(stimulus = sti) # need a prober to specify what we are interested to see
-    #FOLClauseSet([x], expr="x")
+    ret = sim.simulate(stimulus = sti, num_unique_simulations=10) # need a prober to specify what we are interested to see
+    for beh in ret:
+        print(beh)
+    # FOLClauseSet([x], expr="x")
     obj_val = sim.evaluate(stimulus=sti)
     print(f"obj: {obj_val}")
     obj_val = sim.evaluate_range(stimulus=sti)

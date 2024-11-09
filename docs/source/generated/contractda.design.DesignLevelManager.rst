@@ -1,4 +1,4 @@
-﻿contractda.design.DesignLevelManager
+contractda.design.DesignLevelManager
 ====================================
 
 .. currentmodule:: contractda.design
@@ -36,11 +36,13 @@
    ~contractda.design.DesignLevelManager.verify_design_connection
    ~contractda.design.DesignLevelManager.verify_design_consistensy
    ~contractda.design.DesignLevelManager.verify_design_independent
+   ~contractda.design.DesignLevelManager.verify_design_receptiveness
    ~contractda.design.DesignLevelManager.verify_design_refinement
    ~contractda.design.DesignLevelManager.verify_system
    ~contractda.design.DesignLevelManager.verify_system_compatibility
    ~contractda.design.DesignLevelManager.verify_system_connection
    ~contractda.design.DesignLevelManager.verify_system_consistensy
    ~contractda.design.DesignLevelManager.verify_system_independent
+   ~contractda.design.DesignLevelManager.verify_system_receptiveness
    ~contractda.design.DesignLevelManager.verify_system_refinement
 

@@ -1,4 +1,4 @@
-﻿contractda.design.PortDirection
+contractda.design.PortDirection
 ===============================
 
 .. currentmodule:: contractda.design

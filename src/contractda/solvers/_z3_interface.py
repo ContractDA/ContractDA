@@ -152,6 +152,8 @@ class Z3Interface(SolverInterface):
             return ref.numerator_as_long() / ref.denominator_as_long()
         elif z3.is_rational_value(ref):
             return ref.numerator_as_long() / ref.denominator_as_long()
+        elif z3.is_int(var):
+            return ref.as_long()
         elif z3.is_bool(ref):
             return z3.is_true(ref)
         else:

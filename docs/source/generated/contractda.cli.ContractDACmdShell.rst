@@ -1,4 +1,4 @@
-﻿contractda.cli.ContractDACmdShell
+contractda.cli.ContractDACmdShell
 =================================
 
 .. currentmodule:: contractda.cli
