@@ -1,8 +1,8 @@
 from contractda.contracts import ContractBase
 from contractda.design import System
 from contractda.logger._logger import LOG
-from typing import Callable, Any
-from contractda.sets import FOLClauseSet, SetBase
+from typing import Callable, Any, Type
+from contractda.sets import FOLClauseSet, SetBase, ClauseSet
 from contractda.vars import Var
 #from contractda.sets._parsers._expression_parser import fol_exp_parser
 
@@ -53,7 +53,7 @@ class Evaluator(object):
 
 class ClauseEvaluator(Evaluator):
     """Class for evaluation using clause to represent objectives"""
-    def __init__(self, clause_set: FOLClauseSet, clause_objective: list[Var]):
+    def __init__(self, clause_set: ClauseSet, clause_objective: list[Var]):
         self._clause_set = clause_set
         self._obj = clause_objective
 
@@ -79,7 +79,7 @@ class ClauseEvaluator(Evaluator):
             return ret
     
     def _evaluate_by_behavior(self, behavior: Stimulus) -> list[Any]:
-        behavior_set = _create_set_from_behavior(sample=behavior.var_val_map)
+        behavior_set = _create_set_from_behavior(sample=behavior.var_val_map, set_type=type(self._clause_set))
         sat, sample = self._clause_set.intersect(behavior_set).sample()
         if not sat:
             err_msg = "Cannot evaluate as the objective function does not have solution"
@@ -104,9 +104,9 @@ class ClauseEvaluator(Evaluator):
         while sat:
             if max_val is not None:
                 if minimum:
-                    constrained_set = FOLClauseSet.generate_var_val_lt_constraint_set(self._obj[0], max_val)
+                    constrained_set = behavior_set.generate_var_val_lt_constraint_set(self._obj[0], max_val)
                 else:
-                    constrained_set = FOLClauseSet.generate_var_val_gt_constraint_set(self._obj[0], max_val)
+                    constrained_set = behavior_set.generate_var_val_gt_constraint_set(self._obj[0], max_val)
                 new_behavior_set = behavior_set.intersect(constrained_set)
             else:
                 new_behavior_set = behavior_set
@@ -131,7 +131,7 @@ class ClauseEvaluator(Evaluator):
         return [sample[var] for var in self._obj], sample 
 
     def _check_evaluation_uniqueness(self, behavior_set: SetBase, val: Any) -> list[Any]:
-        uniqueness_set = FOLClauseSet.generate_var_val_equivalence_constraint_set(var = self._obj[0], val = val)
+        uniqueness_set = behavior_set.generate_var_val_equivalence_constraint_set(var = self._obj[0], val = val)
         solver_set = self.objective_set.intersect(behavior_set).intersect(uniqueness_set)
         if solver_set.is_satifiable():
             return False
@@ -160,6 +160,7 @@ class Simulator(object):
             self._contract = system._get_single_system_contract()
         self._contract: ContractBase = contract
         self._evaluator: Evaluator = evaluator
+        self._set_type: Type[SetBase] = type(self._contract.environment)
         self._options = options
 
         self._behavior_history: list[Stimulus] = []
@@ -171,15 +172,16 @@ class Simulator(object):
         :param int num_unique_simulations: number of unique simulation needed for the stimulus
         """
         # TODO: Return a set or a stimulus?
-        env_set = _create_set_from_behavior(stimulus.var_val_map)
-
+        set_type = type(self._contract.environment)
+        env_set = _create_set_from_behavior(stimulus.var_val_map, set_type=self._set_type)
+        
         # self._contract.assumption
         # check if the stimulus always satisfy the assumption
         # check if stimulus has elements in not A
-        if env_set.intersect(self._contract.assumption.complement()).is_satifiable():
+        if not self._contract.check_environment_satisfy(env_set):
             LOG.error("Contract Assumption is violated")
-            # still return a behavior?
-            return
+            # still return a behavior? must be careful as CB contract allow more behaviors!
+            return 
         
         ret: list[Stimulus] = []
         constraint = None
@@ -189,18 +191,21 @@ class Simulator(object):
                 LOG.warn(f"Insufficient behavior to reach {num_unique_simulations} behaviors ({len(ret)} generated)")
                 break
             # TODO: update constraints
-            newconstraint = _create_set_from_behavior(behavior.var_val_map).complement()
+            newconstraint = _create_set_from_behavior(behavior.var_val_map, set_type=self._set_type).complement()
             if constraint is None:
                 constraint = newconstraint
             else:
                 constraint = constraint.intersect(newconstraint)
             ret.append(behavior)
+
+
+        
         return ret
 
 
     def _simulate_with_environment(self, env_set: SetBase, constraint: SetBase = None):
         """Generate a behavior based on the environment and constraint, assuming the env_set is a proper environment"""
-        behavior_set = env_set.intersect(self._contract.guarantee)
+        behavior_set = env_set.intersect(self._contract.implementation)
         if constraint is not None:
             behavior_set = behavior_set.intersect(constraint)
         try:
@@ -218,9 +223,9 @@ class Simulator(object):
         
         """
         #check if there is other behaviors
-        sample_set = _create_set_from_behavior(found_behavior.var_val_map)
+        sample_set = _create_set_from_behavior(found_behavior.var_val_map, set_type=self._set_type)
 
-        behavior_set = env_set.intersect(self._contract.guarantee)
+        behavior_set = env_set.intersect(self._contract.implementation)
         check_set = behavior_set.intersect(sample_set.complement())
         if check_set.is_satifiable():
             LOG.debug(f"Multiple behavior exist!")
@@ -239,15 +244,16 @@ class Simulator(object):
         if evaluator is None:
             raise Exception("No evaluator defined!")
         
-        env_set = _create_set_from_behavior(stimulus.var_val_map)
+        
+        env_set = _create_set_from_behavior(stimulus.var_val_map, set_type=self._set_type)
         # check if the stimulus always satisfy the assumption
         # check if stimulus has elements in not A
-        if env_set.intersect(self._contract.assumption.complement()).is_satifiable():
+        if not self._contract.check_environment_satisfy(env_set):
             LOG.error("Contract Assumption is violated")
             # still return a behavior?
             return
         
-        behavior_set = env_set.intersect(self._contract.guarantee)
+        behavior_set = env_set.intersect(self._contract.implementation)
         obj_vals = evaluator.evaluate(behavior_set=behavior_set)
         if check_unique:
             pass
@@ -263,15 +269,15 @@ class Simulator(object):
         if evaluator is None:
             raise Exception("No evaluator defined!")
         
-        env_set = _create_set_from_behavior(stimulus.var_val_map)
+        env_set = _create_set_from_behavior(stimulus.var_val_map, self._set_type)
         # check if the stimulus always satisfy the assumption
         # check if stimulus has elements in not A
-        if env_set.intersect(self._contract.assumption.complement()).is_satifiable():
+        if not self._contract.check_environment_satisfy(env_set):
             LOG.error("Contract Assumption is violated")
             # still return a behavior?
             return
         
-        behavior_set = env_set.intersect(self._contract.guarantee)
+        behavior_set = env_set.intersect(self._contract.implementation)
         max_vals = evaluator.evaluate_max(behavior_set=behavior_set)
         min_vals = evaluator.evaluate_max(behavior_set=behavior_set, minimum=True)
 
@@ -283,10 +289,10 @@ class Simulator(object):
     
 
             
-def _create_set_from_behavior(behavior: dict):
+def _create_set_from_behavior(behavior: dict, set_type: Type[ClauseSet] = FOLClauseSet):
     stimulus_set = None
     for var, val in behavior.items():
-        eq_set = FOLClauseSet.generate_var_val_equivalence_constraint_set(var = var, val = val)
+        eq_set = set_type.generate_var_val_equivalence_constraint_set(var = var, val = val)
         if stimulus_set is None:
             stimulus_set = eq_set
         else:

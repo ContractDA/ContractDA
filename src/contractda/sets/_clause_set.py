@@ -166,6 +166,18 @@ class ClauseSet(SetBase):
     def generate_variable_equivalence_constraint_set(cls, vars: list[Var]) -> ClauseSet:
         pass
 
+    @classmethod
+    def generate_var_val_equivalence_constraint_set(cls, var: Var, val) -> ClauseSet:
+        pass
+
+    @classmethod
+    def generate_var_val_gt_constraint_set(cls, var: Var, val) -> ClauseSet:
+        pass
+
+    @classmethod
+    def generate_var_val_lt_constraint_set(cls, var: Var, val) -> ClauseSet:
+        pass
+
     @staticmethod
     def _combine_vars(a: list[Var], b: list[Var]) -> list[Var]:
         """ Combine the Vars, return a list of var which has no duplicated
