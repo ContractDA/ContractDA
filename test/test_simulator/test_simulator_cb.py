@@ -20,33 +20,35 @@ def test_simulator():
             if var.get_id() == "I":
                 assert(val == 2)
 
-# def test_simulator_multiple_behave():
-#     x = RealVar("x")
-#     y = RealVar("y")
-#     c = AGContract([x, y], assumption="x >= 0", guarantee="y == 2*x || y == 2*x + 1")
+def test_simulator_multiple_behave():
+    I = RealVar("I")
+    V = RealVar("V")
+    c = CBContract([I, V], constraint="I*V <= 10", behavior="V <= 2.1*I && V >= 1.9*I")
 
-#     sti = Stimulus({x: 50})
-#     sim = Simulator(contract=c)
-#     ret = sim.simulate(stimulus=sti, num_unique_simulations=2)
-#     assert(len(ret) == 2)
-#     for behavior in ret:
-#         for var, val in behavior.var_val_map.items():
-#             if var.get_id() == "x":
-#                 assert(val == 50)
-#             if var.get_id() == "y":
-#                 assert(val == 100 or val == 101)
+    sti = Stimulus({V: 4})
+    sim = Simulator(contract=c)
+    ret = sim.simulate(stimulus=sti, num_unique_simulations=5)
+    assert(len(ret) == 5)
+    for behavior in ret:
+        for var, val in behavior.var_val_map.items():
+            if var.get_id() == "V":
+                assert(val == 4)
+            if var.get_id() == "I":
+                assert(val <= 4/1.9 and val >= 4/2.1)
 
-# def test_evaluator():
-#     x = RealVar("x")
-#     y = RealVar("y")
-#     c = AGContract([x, y], assumption="x >= 0", guarantee="y == 2*x")
+def test_evaluator():
+    I = RealVar("I")
+    V = RealVar("V")
+    c = CBContract([I, V], constraint="I*V <= 8", behavior="V == 2*I")
 
-#     sti = Stimulus({x: 50})
-#     obj = RealVar("obj")
-#     eval = ClauseEvaluator(FOLClauseSet(vars = [x, y, obj], expr= "obj == x+y"), clause_objective=[obj])
+    sti = Stimulus({V: 4})
+
+    sti = Stimulus({V: 4})
+    obj = RealVar("obj")
+    eval = ClauseEvaluator(FOLClauseSet(vars = [I, V, obj], expr= "obj == I*V"), clause_objective=[obj])
     
-#     sim = Simulator(contract=c, evaluator= eval)
-#     obj_val = sim.evaluate(stimulus=sti)
-#     assert(obj_val == [150])
-#     obj_val = sim.evaluate_range(stimulus=sti)
-#     assert(obj_val == ([150], [150]))
+    sim = Simulator(contract=c, evaluator= eval)
+    obj_val = sim.evaluate(stimulus=sti)
+    assert(obj_val == [8])
+    obj_val = sim.evaluate_range(stimulus=sti)
+    assert(obj_val == ([8], [8]))
