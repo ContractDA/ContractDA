@@ -178,6 +178,12 @@ class ClauseSet(SetBase):
     def generate_var_val_lt_constraint_set(cls, var: Var, val) -> ClauseSet:
         pass
 
+    def generate_boundary_set(self, tactics = None) -> list[ClauseSet]:
+        """Return the boundary set associated with the set
+        
+        """
+        pass
+
     @staticmethod
     def _combine_vars(a: list[Var], b: list[Var]) -> list[Var]:
         """ Combine the Vars, return a list of var which has no duplicated

@@ -356,6 +356,29 @@ class FOLClauseSet(ClauseSet):
         clause.clause_lt(val_node_clause)
 
         return cls(vars = [var], expr = clause)
+    
+    def generate_boundary_set(self, max_depth:int = 3, max_count:int = None, exclude_empty: bool = True) -> tuple[list[ClauseSet], list[ClauseSet]]:
+        """Return the boundary set associated with the set
+
+        :param int depth: the depth of traversal in AST
+        :param int maximum: maximum number of boundaries searched in both internal and external
+        :return: a tuple of a list of internal boundary sets and a list of external boundary sets
+        :rtype: tuple[list[ClauseSet], list[ClauseSet]]
+        """
+        nodes_internal_boundaries, nodes_external_boundaries = self._generate_boundary_set(d = 1, 
+                                           max_depth=max_depth, 
+                                           node=self.expr.root, 
+                                           exclude_empty=exclude_empty,
+                                           vars=self.vars)
+        internal_boundary_sets = []
+        external_boundary_sets = []
+
+        for node in nodes_internal_boundaries:
+            internal_boundary_sets.append(FOLClauseSet(vars=self.vars, expr=FOLClause._create_clause_by_node(node)))
+        for node in nodes_external_boundaries:
+            external_boundary_sets.append(FOLClauseSet(vars=self.vars, expr=FOLClause._create_clause_by_node(node)))
+
+        return internal_boundary_sets, external_boundary_sets
     ######################
     #   Internal Functions
     ######################
@@ -473,4 +496,112 @@ class FOLClauseSet(ClauseSet):
                 raise Exception(f"Not specified varibles {id}") 
             
             return solver_var
+    @staticmethod
+    def _generate_boundary_set(d: int, max_depth: int, node: fol_lan.AST_Node, exclude_empty: bool = False, vars = None) -> tuple[list[fol_lan.AST_Node], list[fol_lan.AST_Node]]:
+        # all internal -> internal
+        # once external -> external (no need to traverse)
+        if d > max_depth:
+            neg_node = fol_lan.PropositionNodeUniOp(op="!", exp1=copy.deepcopy(node))
+            return ([node], [neg_node])
+        
+        internal_boundaries: list[fol_lan.AST_Node] = []
+        external_boundaries: list[fol_lan.AST_Node] = []
 
+        if isinstance(node, fol_lan.PropositionNodeBinOp):
+            if node.op == "==":
+                internal_boundaries.append(FOLClauseSet._newnode_change_op(node, op="=="))
+                external_boundaries.append(FOLClauseSet._newnode_change_op(node, op="!="))
+            elif node.op == "<=":
+                internal_boundaries.append(FOLClauseSet._newnode_change_op(node, op="<"))
+                internal_boundaries.append(FOLClauseSet._newnode_change_op(node, op="=="))
+                external_boundaries.append(FOLClauseSet._newnode_change_op(node, op=">"))
+            elif node.op == "<":
+                internal_boundaries.append(FOLClauseSet._newnode_change_op(node, op="<"))
+                external_boundaries.append(FOLClauseSet._newnode_change_op(node, op="=="))
+                external_boundaries.append(FOLClauseSet._newnode_change_op(node, op=">"))    
+            elif node.op == ">":
+                internal_boundaries.append(FOLClauseSet._newnode_change_op(node, op=">"))
+                external_boundaries.append(FOLClauseSet._newnode_change_op(node, op="=="))
+                external_boundaries.append(FOLClauseSet._newnode_change_op(node, op="<"))     
+            elif node.op == ">=":
+                internal_boundaries.append(FOLClauseSet._newnode_change_op(node, op=">"))
+                internal_boundaries.append(FOLClauseSet._newnode_change_op(node, op="=="))
+                external_boundaries.append(FOLClauseSet._newnode_change_op(node, op="<"))  
+            elif node.op == "!=":
+                internal_boundaries.append(FOLClauseSet._newnode_change_op(node, op="!="))
+                external_boundaries.append(FOLClauseSet._newnode_change_op(node, op="==")) 
+            else:
+                ch1 = node.children[0]
+                ch2 = node.children[1]
+                int1, ext1 = FOLClauseSet._generate_boundary_set(d+1, max_depth, ch1)
+                int2, ext2 = FOLClauseSet._generate_boundary_set(d+1, max_depth, ch2)
+                if node.op == "&&":
+                    FOLClauseSet._collect_boundaries(internal_boundaries, int1, int2, op="&&")
+                    FOLClauseSet._collect_boundaries(external_boundaries, int1, ext2, op="&&")
+                    FOLClauseSet._collect_boundaries(external_boundaries, ext1, int2, op="&&")
+                    FOLClauseSet._collect_boundaries(external_boundaries, ext1, ext2, op="&&")
+                elif node.op == "||":
+                    FOLClauseSet._collect_boundaries(internal_boundaries, int1, int2, op="&&")
+                    FOLClauseSet._collect_boundaries(internal_boundaries, int1, ext2, op="&&")
+                    FOLClauseSet._collect_boundaries(internal_boundaries, ext1, int2, op="&&")
+                    FOLClauseSet._collect_boundaries(external_boundaries, ext1, ext2, op="&&")
+                elif node.op == "->":
+                    FOLClauseSet._collect_boundaries(internal_boundaries, int1, int2, op="&&")
+                    FOLClauseSet._collect_boundaries(external_boundaries, int1, ext2, op="&&")
+                    FOLClauseSet._collect_boundaries(internal_boundaries, ext1, int2, op="&&")
+                    FOLClauseSet._collect_boundaries(internal_boundaries, ext1, ext2, op="&&") 
+                else:
+                    raise Exception(f"Unsupported operator: {node.op}")
+        elif isinstance(node, fol_lan.PropositionNodeUniOp):
+            if node.op == "!":
+                ch1 = node.children[0]
+                int1, ext1 = FOLClauseSet._generate_boundary_set(d+1, max_depth, ch1)
+                internal_boundaries.extend(ext1)
+                external_boundaries.extend(int1)
+            else:
+                raise Exception(f"Unsupported operator: {node.op}")
+        else:
+            if len(node.children) == 1:
+                internal_boundaries, external_boundaries = FOLClauseSet._generate_boundary_set(d, max_depth, node=node.children[0])
+
+        # check emptiness before return...
+        if exclude_empty:
+            if vars is None:
+                err_msg = "Need variables declared to check emptiness of set!"
+                LOG.error(err_msg)
+                raise Exception(err_msg)
+                
+            clean_internal_boundaries = []
+            clean_external_boundaries = []
+            for bound_node in internal_boundaries:
+                bound_set = FOLClauseSet(vars=vars, expr=FOLClause._create_clause_by_node(bound_node))
+                if bound_set.is_satifiable():
+                    clean_internal_boundaries.append(bound_node)
+
+            for bound_node in external_boundaries:
+                bound_set = FOLClauseSet(vars=vars, expr=FOLClause._create_clause_by_node(bound_node))
+                if bound_set.is_satifiable():
+                    clean_external_boundaries.append(bound_node)
+            internal_boundaries = clean_internal_boundaries
+            external_boundaries = clean_external_boundaries
+
+        return internal_boundaries, external_boundaries
+    @staticmethod
+    def _newnode_change_op(node: fol_lan.AST_Node, op:str) -> fol_lan.AST_Node:
+        new_node = copy.deepcopy(node)
+        new_node.op = op
+        return new_node
+    
+    @staticmethod
+    def _collect_boundaries(boundaries: list[fol_lan.AST_Node], bounds_a: list[fol_lan.AST_Node], bounds_b: list[fol_lan.AST_Node], op: str):
+        for bound_a in bounds_a:
+            for bound_b in bounds_b:
+                new_bound_a = copy.deepcopy(bound_a)
+                new_bound_b = copy.deepcopy(bound_b)
+                boundaries.append(fol_lan.PropositionNodeBinOp(op=op, exp1 = new_bound_a, exp2=new_bound_b))
+
+
+
+
+
+        
