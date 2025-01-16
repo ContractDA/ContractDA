@@ -160,52 +160,98 @@ class Simulator(object):
             self._contract = system._get_single_system_contract()
         self._contract: ContractBase = contract
         self._evaluator: Evaluator = evaluator
-        self._set_type: Type[SetBase] = type(self._contract.environment)
+        self._set_type: Type[SetBase] | None = None
+        if contract is not None:
+            self._set_type: Type[SetBase] = type(contract.environment)
         self._options = options
 
         self._behavior_history: list[Stimulus] = []
 
-    def auto_simulate(self, stimulus: Stimulus = None, environement: SetBase = None,  num_unique_simulations: int = 1, max_depth:int = 3) -> tuple[list[Stimulus], list[Stimulus]]:
+    def auto_simulate(self, stimulus: Stimulus = None, environement: SetBase = None,  num_unique_simulations: int = 1, max_depth:int = 3, contract: ContractBase = None) -> tuple[list[Stimulus], list[Stimulus], dict[Stimulus, list[Stimulus]]]:
         """Automatic simulate the contract, no stimulus is needed"""
-        violated_stimulus: list[Stimulus] = []
-        behavior_stimulus: list[Stimulus] = []
-        success_stimulus: list[Stimulus] = []
-        if isinstance(self._contract, AGContract):
-            in_sets, ex_sets = self._contract.assumption.generate_boundary_set(max_depth = max_depth)
-            for ex_set in ex_sets:
-                sat, sample = ex_set.sample()
-                if sat:
-                    violated_stimulus.append(Stimulus(sample))
+        if contract is not None:
+            sim_contract = contract
+            set_type = type(contract.environment)
+        else:
+            if self._contract is None:
+                err_msg = "No contract available for simulation"
+                LOG.error(err_msg)
+                raise Exception(err_msg)
+            
+            sim_contract = self._contract
+            set_type = self._set_type
 
-            for in_set in in_sets:
-                sat, sample = in_set.sample()
-                if sat:
-                    success_stimulus.append(Stimulus(sample))
+        
+        violated_stimulus: list[Stimulus] = []
+        simulate_stimulus: list[Stimulus] = []
+        result: dict[Stimulus, list[Stimulus]] = dict()
+        
+        if isinstance(sim_contract, AGContract):
+            if stimulus is None:
+                # Use Assumption Boundary to generate stimulus automatically
+                in_sets_a, ex_sets_a = sim_contract.assumption.generate_boundary_set(max_depth = max_depth)
+                for ex_set in ex_sets_a:
+                    sat, sample = ex_set.sample()
+                    if sat:
+                        violated_stimulus.append(Stimulus(sample))
+
+                for in_set in in_sets_a:
+                    sat, sample = in_set.sample()
+                    if sat:
+                        simulate_stimulus.append(Stimulus(sample))
+            else:
+                LOG.info("Stimulus is provided in auto simulation!")
+                simulate_stimulus.append(stimulus)
+
+            # Guarantee boundary
+            in_sets_g, _ = sim_contract.guarantee.generate_boundary_set(max_depth = max_depth)
+
+            for stimulus in simulate_stimulus:
+                stimulus_result = []
+                for in_set in in_sets_g:
+                    auto_contract = AGContract(vars=sim_contract._vars, assumption=sim_contract.assumption, guarantee=in_set)
+                    LOG.debug(f"Running stimulus {stimulus} on boundary contract {auto_contract}")
+                    ret = self.simulate(stimulus=stimulus, num_unique_simulations=num_unique_simulations, contract=auto_contract)
+                    stimulus_result.extend(ret)
+                result[stimulus] = stimulus_result
+
 
             # use success_stimulus to generate behaviors for contract
 
         else:
-            raise Exception(f"Contrac type({type(self._contract)}) is not supported to use auto simulation")
+            raise Exception(f"Contrac type({type(sim_contract)}) is not supported to use auto simulation")
         # for AG contract, use auto boundary to get sample of assumption
         # directly gives failure stimulus based on external behavior in assumption
         # Then guarantee is also modified to give
         # Can we do similar to CB contract? let's ignore it now
-        return success_stimulus, violated_stimulus
+        return simulate_stimulus, violated_stimulus, result
 
-    def simulate(self, stimulus: Stimulus, environement: SetBase = None,  num_unique_simulations: int = 1) -> list[Stimulus]:
+
+    def simulate(self, stimulus: Stimulus, environement: SetBase = None,  num_unique_simulations: int = 1, contract: ContractBase = None) -> list[Stimulus]:
         """Simulate the contract using the stimulus
 
         :param Stimulus stimulus: the behaviors provided by the environment
         :param int num_unique_simulations: number of unique simulation needed for the stimulus
         """
         # TODO: Return a set or a stimulus?
-        set_type = type(self._contract.environment)
-        env_set = _create_set_from_behavior(stimulus.var_val_map, set_type=self._set_type)
+        if contract is not None:
+            sim_contract = contract
+            set_type = type(contract.environment)
+        else:
+            if self._contract is None:
+                err_msg = "No contract available for simulation"
+                LOG.error(err_msg)
+                raise Exception(err_msg)
+            
+            sim_contract = self._contract
+            set_type = self._set_type
+
+        env_set = _create_set_from_behavior(stimulus.var_val_map, set_type=set_type)
         
-        # self._contract.assumption
+        # sim_contract.assumption
         # check if the stimulus always satisfy the assumption
         # check if stimulus has elements in not A
-        if not self._contract.check_environment_satisfy(env_set):
+        if not sim_contract.check_environment_satisfy(env_set):
             LOG.error("Contract Assumption is violated")
             # still return a behavior? must be careful as CB contract allow more behaviors!
             return 
@@ -213,12 +259,12 @@ class Simulator(object):
         ret: list[Stimulus] = []
         constraint = None
         for i in range(num_unique_simulations):
-            behavior = self._simulate_with_environment(env_set=env_set, constraint=constraint)
+            behavior = self._simulate_with_environment(contract=sim_contract, env_set=env_set, constraint=constraint)
             if behavior is None:
                 LOG.warn(f"Insufficient behavior to reach {num_unique_simulations} behaviors ({len(ret)} generated)")
                 break
             # TODO: update constraints
-            newconstraint = _create_set_from_behavior(behavior.var_val_map, set_type=self._set_type).complement()
+            newconstraint = _create_set_from_behavior(behavior.var_val_map, set_type=set_type).complement()
             if constraint is None:
                 constraint = newconstraint
             else:
@@ -229,10 +275,10 @@ class Simulator(object):
         
         return ret
 
-
-    def _simulate_with_environment(self, env_set: SetBase, constraint: SetBase = None):
+    @staticmethod
+    def _simulate_with_environment(contract: ContractBase, env_set: SetBase, constraint: SetBase = None):
         """Generate a behavior based on the environment and constraint, assuming the env_set is a proper environment"""
-        behavior_set = env_set.intersect(self._contract.implementation)
+        behavior_set = env_set.intersect(contract.implementation)
         if constraint is not None:
             behavior_set = behavior_set.intersect(constraint)
         try:
@@ -245,14 +291,14 @@ class Simulator(object):
         else:
             return None
 
-    def _check_behavior_uniqueness(self, found_behavior: Stimulus, env_set: SetBase):
+    def _check_behavior_uniqueness(self, found_behavior: Stimulus, env_set: SetBase, sim_contract: ContractBase):
         """Check if the behavior is unique given the environment and an already found behavior, assuming env_set is a subset of the proper environment for the contract
         
         """
         #check if there is other behaviors
-        sample_set = _create_set_from_behavior(found_behavior.var_val_map, set_type=self._set_type)
+        sample_set = _create_set_from_behavior(found_behavior.var_val_map, set_type=type(sim_contract.environment))
 
-        behavior_set = env_set.intersect(self._contract.implementation)
+        behavior_set = env_set.intersect(sim_contract.implementation)
         check_set = behavior_set.intersect(sample_set.complement())
         if check_set.is_satifiable():
             LOG.debug(f"Multiple behavior exist!")
@@ -265,22 +311,33 @@ class Simulator(object):
 
 
 
-    def evaluate(self, stimulus: Stimulus, evaluator: Evaluator = None, check_unique = False):
+    def evaluate(self, stimulus: Stimulus, evaluator: Evaluator = None, check_unique = False, contract: ContractBase = None):
         if evaluator is None:
             evaluator = self._evaluator
         if evaluator is None:
             raise Exception("No evaluator defined!")
         
-        
-        env_set = _create_set_from_behavior(stimulus.var_val_map, set_type=self._set_type)
+        if contract is not None:
+            sim_contract = contract
+            set_type = type(contract.environment)
+        else:
+            if self._contract is None:
+                err_msg = "No contract available for simulation"
+                LOG.error(err_msg)
+                raise Exception(err_msg)
+            
+            sim_contract = self._contract
+            set_type = self._set_type
+
+        env_set = _create_set_from_behavior(stimulus.var_val_map, set_type=set_type)
         # check if the stimulus always satisfy the assumption
         # check if stimulus has elements in not A
-        if not self._contract.check_environment_satisfy(env_set):
+        if not sim_contract.check_environment_satisfy(env_set):
             LOG.error("Contract Assumption is violated")
             # still return a behavior?
             return
         
-        behavior_set = env_set.intersect(self._contract.implementation)
+        behavior_set = env_set.intersect(sim_contract.implementation)
         obj_vals = evaluator.evaluate(behavior_set=behavior_set)
         if check_unique:
             pass
@@ -290,21 +347,33 @@ class Simulator(object):
     def _check_evaluate_uniqueness(self, found_value: Any, env_set: SetBase):
         pass
     
-    def evaluate_range(self, stimulus: Stimulus, evaluator: Evaluator = None):
+    def evaluate_range(self, stimulus: Stimulus, evaluator: Evaluator = None, contract: ContractBase = None):
         if evaluator is None:
             evaluator = self._evaluator
         if evaluator is None:
             raise Exception("No evaluator defined!")
-        
-        env_set = _create_set_from_behavior(stimulus.var_val_map, self._set_type)
+
+        if contract is not None:
+            sim_contract = contract
+            set_type = type(contract.environment)
+        else:
+            if self._contract is None:
+                err_msg = "No contract available for simulation"
+                LOG.error(err_msg)
+                raise Exception(err_msg)
+            
+            sim_contract = self._contract
+            set_type = self._set_type
+
+        env_set = _create_set_from_behavior(stimulus.var_val_map, set_type=set_type)
         # check if the stimulus always satisfy the assumption
         # check if stimulus has elements in not A
-        if not self._contract.check_environment_satisfy(env_set):
+        if not sim_contract.check_environment_satisfy(env_set):
             LOG.error("Contract Assumption is violated")
             # still return a behavior?
             return
         
-        behavior_set = env_set.intersect(self._contract.implementation)
+        behavior_set = env_set.intersect(sim_contract.implementation)
         max_vals = evaluator.evaluate_max(behavior_set=behavior_set)
         min_vals = evaluator.evaluate_max(behavior_set=behavior_set, minimum=True)
 
