@@ -1,6 +1,6 @@
 from contractda.contracts import ContractBase, AGContract
-from contractda.design import System
 from contractda.logger._logger import LOG
+from contractda.design import System, Port
 from typing import Callable, Any, Type
 from contractda.sets import FOLClauseSet, SetBase, ClauseSet
 from contractda.vars import Var
@@ -12,10 +12,24 @@ from contractda.vars import Var
 class Stimulus(object):
     """class that represents the behaviors
 
-    the behavior is set as a dictionary that maps a :py:class:`~contract.contracts.Var` to a value
+    the behavior is set as a dictionary that maps a :py:class:`~contractda.contracts.Var` to a value
     """
-    def __init__(self, stimulus_map: dict[Var, Any]):
-        self._map: dict[Var, Any] = stimulus_map
+    def __init__(self, stimulus_map: dict[Var, Any] = None, port_stimulus_map: dict[Port, Any] = None):
+
+        if stimulus_map is not None and port_stimulus_map is not None:
+            err_msg = "Only one map can be defined"
+            LOG.error(err_msg)
+            raise Exception(err_msg)
+        if port_stimulus_map is not None:
+            var_map = {port._var: val for port, val in port_stimulus_map.items()}
+            port_var_map = {port._var: port for port in port_stimulus_map.keys()} 
+        else:
+            var_map = stimulus_map
+            port_var_map = dict()
+
+        self._map: dict[Var, Any] = var_map
+        self._port_var_map = port_var_map
+
 
     @property
     def var_val_map(self) -> dict[Var, Any]:
@@ -138,13 +152,13 @@ class ClauseEvaluator(Evaluator):
         else:
             return True
 
-class CallableEvaluator(Evaluator):
-    def __init__(self, callable_func: Callable[[Stimulus], list[Any]]):
-        self._func = callable_func
+# class CallableEvaluator(Evaluator):
+#     def __init__(self, callable_func: Callable[[Stimulus], list[Any]]):
+#         self._func = callable_func
 
-    def evaluate(self, behavior: Stimulus):
-        ret = self._func(behavior)
-        return ret
+#     def evaluate(self, behavior: Stimulus):
+#         ret = self._func(behavior)
+#         return ret
 
 
 class Simulator(object):
@@ -261,7 +275,7 @@ class Simulator(object):
         for i in range(num_unique_simulations):
             behavior = self._simulate_with_environment(contract=sim_contract, env_set=env_set, constraint=constraint)
             if behavior is None:
-                LOG.warn(f"Insufficient behavior to reach {num_unique_simulations} behaviors ({len(ret)} generated)")
+                LOG.warning(f"Insufficient behavior to reach {num_unique_simulations} behaviors ({len(ret)} generated)")
                 break
             # TODO: update constraints
             newconstraint = _create_set_from_behavior(behavior.var_val_map, set_type=set_type).complement()

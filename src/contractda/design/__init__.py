@@ -8,6 +8,7 @@
     ~contractda.design.DesignLevelManager
     ~contractda.design.Port
     ~contractda.design.PortDirection
+    ~contractda.design.PortStimulus
     ~contractda.design.Connection
     ~contractda.design.System
     ~contractda.design.LibSystem
@@ -19,6 +20,7 @@
 
 from contractda.design._design_mgr import DesignLevelManager
 from contractda.design._port import Port, PortDirection, VarType
+from contractda.design._port_stimulus import PortStimulus
 from contractda.design._connections import Connection
 from contractda.design._system import System
 from contractda.design._libsystem import LibSystem
@@ -31,6 +33,7 @@ __all__ = [
     "DesignLevelManager",
     "Port",
     "PortDirection",
+    "PortStimulus"
     "VarType",
     "Connection",
     "System",
