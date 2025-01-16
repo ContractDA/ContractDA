@@ -1,4 +1,4 @@
-from contractda.contracts import ContractBase
+from contractda.contracts import ContractBase, AGContract
 from contractda.design import System
 from contractda.logger._logger import LOG
 from typing import Callable, Any, Type
@@ -164,7 +164,34 @@ class Simulator(object):
         self._options = options
 
         self._behavior_history: list[Stimulus] = []
-        
+
+    def auto_simulate(self, stimulus: Stimulus = None, environement: SetBase = None,  num_unique_simulations: int = 1, max_depth:int = 3) -> tuple[list[Stimulus], list[Stimulus]]:
+        """Automatic simulate the contract, no stimulus is needed"""
+        violated_stimulus: list[Stimulus] = []
+        behavior_stimulus: list[Stimulus] = []
+        success_stimulus: list[Stimulus] = []
+        if isinstance(self._contract, AGContract):
+            in_sets, ex_sets = self._contract.assumption.generate_boundary_set(max_depth = max_depth)
+            for ex_set in ex_sets:
+                sat, sample = ex_set.sample()
+                if sat:
+                    violated_stimulus.append(Stimulus(sample))
+
+            for in_set in in_sets:
+                sat, sample = in_set.sample()
+                if sat:
+                    success_stimulus.append(Stimulus(sample))
+
+            # use success_stimulus to generate behaviors for contract
+
+        else:
+            raise Exception(f"Contrac type({type(self._contract)}) is not supported to use auto simulation")
+        # for AG contract, use auto boundary to get sample of assumption
+        # directly gives failure stimulus based on external behavior in assumption
+        # Then guarantee is also modified to give
+        # Can we do similar to CB contract? let's ignore it now
+        return success_stimulus, violated_stimulus
+
     def simulate(self, stimulus: Stimulus, environement: SetBase = None,  num_unique_simulations: int = 1) -> list[Stimulus]:
         """Simulate the contract using the stimulus
 

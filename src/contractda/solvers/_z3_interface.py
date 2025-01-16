@@ -156,8 +156,10 @@ class Z3Interface(SolverInterface):
             return ref.as_long()
         elif z3.is_bool(ref):
             return z3.is_true(ref)
+        elif ref is None:
+            return None
         else:
-            raise Exception("unsupported type")
+            raise Exception(f"unsupported type {type(ref)}")
         # TODO: access value for other sort
 
     def _var_is_variable(self, var):

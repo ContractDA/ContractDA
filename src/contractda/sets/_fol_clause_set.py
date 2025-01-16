@@ -75,7 +75,8 @@ class FOLClauseSet(ClauseSet):
             for var in self._vars:
                 solver_var = vars_map[var.id]
                 val = solver_instance.get_model_for_var(solver_var)
-                sample[var] = val
+                if val is not None:
+                    sample[var] = val
         else:
             raise Exception("No element available for sample")
         return ret, sample
