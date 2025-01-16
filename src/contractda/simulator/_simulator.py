@@ -28,13 +28,16 @@ class Stimulus(object):
             port_var_map = dict()
 
         self._map: dict[Var, Any] = var_map
-        self._port_var_map = port_var_map
+        self._port_var_map: dict[Port, Var] = port_var_map
 
 
     @property
     def var_val_map(self) -> dict[Var, Any]:
         return self._map
     
+    def set_port_var_map(self, map: dict[Port, Var]) -> None:
+        self._port_var_map = map
+
     @property 
     def value(self, var: Var) -> Any:
         if var in self.var_val_map:
@@ -168,15 +171,19 @@ class Simulator(object):
             err_msg = "Need at least one system or contract"
             LOG.error(err_msg)
             raise Exception(err_msg)
+        self._contract: ContractBase
+
         if system is None:
             self._contract = contract
+            self._system = None
         else:
             self._contract = system._get_single_system_contract()
-        self._contract: ContractBase = contract
+            self._system = system
+
         self._evaluator: Evaluator = evaluator
         self._set_type: Type[SetBase] | None = None
-        if contract is not None:
-            self._set_type: Type[SetBase] = type(contract.environment)
+        if self._contract is not None:
+            self._set_type: Type[SetBase] = type(self._contract.environment)
         self._options = options
 
         self._behavior_history: list[Stimulus] = []
@@ -283,14 +290,15 @@ class Simulator(object):
                 constraint = newconstraint
             else:
                 constraint = constraint.intersect(newconstraint)
+            
+            if self._system is not None:
+                behavior.set_port_var_map(self._system._get_port_var_map())
             ret.append(behavior)
-
-
         
         return ret
 
     @staticmethod
-    def _simulate_with_environment(contract: ContractBase, env_set: SetBase, constraint: SetBase = None):
+    def _simulate_with_environment(contract: ContractBase, env_set: SetBase, constraint: SetBase = None) -> Stimulus | None:
         """Generate a behavior based on the environment and constraint, assuming the env_set is a proper environment"""
         behavior_set = env_set.intersect(contract.implementation)
         if constraint is not None:

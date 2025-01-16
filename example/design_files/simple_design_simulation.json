@@ -1,0 +1,122 @@
+{
+    "system_name": "sim_sys_1",
+    "ports": [
+        {
+            "port_name": "a",
+            "port_type": "REAL",
+            "direction": "INPUT"
+        },
+        {
+            "port_name": "x",
+            "port_type": "REAL",
+            "direction": "OUTPUT"
+        }
+    ],
+    "subsystems": [
+        {
+            "system_name": "sub1",
+            "ports": [
+                {
+                    "port_name": "a",
+                    "port_type": "REAL",
+                    "direction": "INPUT"
+                },
+                {
+                    "port_name": "t",
+                    "port_type": "REAL",
+                    "direction": "OUTPUT"
+                }
+            ],
+            "subsystems": [],
+            "connections": [],
+            "contracts": [
+                {
+                    "name": "C2",
+                    "type": "AG",
+                    "content": {
+                        "assumption": {
+                            "set_type": "FOL",
+                            "description": "a >= 0"
+                        },
+                        "guarantee": {
+                            "set_type": "FOL",
+                            "description": "t >= 1*a && t<= 1.2*a"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "system_name": "sub2",
+            "ports": [
+                {
+                    "port_name": "a",
+                    "port_type": "REAL",
+                    "direction": "INPUT"
+                },
+                {
+                    "port_name": "t2",
+                    "port_type": "REAL",
+                    "direction": "OUTPUT"
+                }
+            ],
+            "subsystems": [],
+            "connections": [],
+            "contracts": [
+                {
+                    "name": "C3",
+                    "type": "AG",
+                    "content": {
+                        "assumption": {
+                            "set_type": "FOL",
+                            "description": "true"
+                        },
+                        "guarantee": {
+                            "set_type": "FOL",
+                            "description": "t2 == 2*a"
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "connections": [
+        {
+            "name": "net1",
+            "terminals": [
+                "sim_sys_1.a",
+                "sub1.a"
+            ]
+        },
+        {
+            "name": "net2",
+            "terminals": [
+                "sim_sys_1.x",
+                "sub2.t2"
+            ]
+        },
+        {
+            "name": "net3",
+            "terminals": [
+                "sub1.t",
+                "sub2.a"
+            ]
+        }
+    ],
+    "contracts": [
+        {
+            "name": "C1",
+            "type": "AG",
+            "content": {
+                "assumption": {
+                    "set_type": "FOL",
+                    "description": "(a >= 0 && a <= 10)"
+                },
+                "guarantee": {
+                    "set_type": "FOL",
+                    "description": "x >= 2*a && x <= 3*a"
+                }
+            }
+        }
+    ]
+}

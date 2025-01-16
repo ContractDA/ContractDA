@@ -501,6 +501,9 @@ class System(object):
     def _create_vars_for_port(self) -> list[Var]:
         return [Port._create_var_using_hier_name(port=port) for port in self.ports.values()]
     
+    def _get_port_var_map(self) -> dict[Port, Var]:
+            return {port: port.var for port in self._ports.values()}
+    
     def _create_var_rename_for_hier_name(self) -> dict[str, str]:
         return {port.port_name: port.hier_name for port in self.ports.values()}
 
@@ -537,6 +540,7 @@ class System(object):
                 if term.direction == PortDirection.OUTPUT:
                     return term
         raise Exception("No driver found")
+
     
     def _get_connection_sinks(self, connection: Connection) -> Iterable[Port]:
         """Return a sinks of the connection"""

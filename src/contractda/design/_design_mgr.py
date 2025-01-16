@@ -2,6 +2,7 @@
 from contractda.design._system import System, Port, Connection, SystemContract
 from contractda.logger._logger import LOG
 from contractda.design._design_exceptions import IncompleteContractException, ObjectNotFoundException
+from contractda.simulator import Simulator, ClauseEvaluator, Evaluator, Stimulus
 import json
 
 class DesignLevelManager():
@@ -348,9 +349,12 @@ class DesignLevelManager():
         raise NotImplementedError
         pass
 
-    def simulate_system(self, system: str | System, simulator):
-        raise NotImplementedError
-        pass
+    def simulate_system(self, system: str | System, stimulus: Stimulus):
+        system_obj = self._verify_system_obj_or_str(system=system)
+        self._generate_system_contracts(system_obj)
+        simulator = Simulator(system=system)
+        ret = simulator.simulate(stimulus=stimulus)
+        return ret
 
 
     def register_design(self, system: System):
@@ -413,24 +417,28 @@ class DesignLevelManager():
         if name in self._systems:
             return self._systems[name]
         else:
+            LOG.error(f"System {name} does not exist!")
             return None
         
     def get_port(self, name: str) -> Port | None:
         if name in self._ports:
             return self._ports[name]
         else:
+            LOG.error(f"Port {name} does not exist!")
             return None
 
     def get_connection(self, name: str) -> Connection | None:
         if name in self._connections:
             return self._connections[name]
         else:
+            LOG.error(f"Connection {name} does not exist!")
             return None
 
     def get_design(self, name: str) -> System | None:
         if name in self._designs:
             return self._designs[name]
         else:
+            LOG.error(f"Design {name} does not exist!")
             return None
         
     def _verify_system_obj_or_str(self, system: str | System) :
