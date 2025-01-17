@@ -1,6 +1,6 @@
 import json
 from contractda.design._system import System
-from contractda.design._design_mgr import DesignLevelManager
+from contractda.design_api import DesignLevelManager
 
 def test_design_mgr():
     with open("./example/design_files/simple_design.json", "r") as file:

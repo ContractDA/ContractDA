@@ -1,7 +1,7 @@
 import json
 from contractda.design._system import System
 from contractda.sets._fol_clause_set import FOLClauseSet
-from contractda.design._design_mgr import DesignLevelManager
+from contractda.design_api._design_mgr import DesignLevelManager
 
 if __name__ == "__main__":
     with open("./example/design_files/simple_design_composition1.json", "r") as file:

@@ -1,4 +1,4 @@
-from contractda.design import DesignLevelManager
+from contractda.design_api import DesignLevelManager
 from contractda.simulator import Simulator, Stimulus, Evaluator
 
 if __name__ == "__main__":
@@ -28,6 +28,14 @@ if __name__ == "__main__":
         for e in ret:
             print(" ", e)
 
-
-    ret = mgr.simulate_system(system="sub2", stimulus=stimulus)
+    system = mgr.get_system("sim_sys_1.sub2")
+    stimulus = {system.ports["a"]: 7}
+    print(stimulus)
+    ret = mgr.simulate_system(system="sim_sys_1.sub2", stimulus=stimulus)
     print(ret[0])
+
+    sim, vio, ret = mgr.auto_simulate_system(system="sim_sys_1")
+    for s, r in ret.items():
+        print(s)
+        for rr in r:
+            print("  ", rr)

@@ -21,6 +21,11 @@ class Stimulus(object):
             LOG.error(err_msg)
             raise Exception(err_msg)
         if port_stimulus_map is not None:
+            if any([port._var is None for port in port_stimulus_map.keys()]):
+                err_msg = "No port variable found, please check if the system has been properly constructed and compile"
+                LOG.error(err_msg)
+                raise Exception(err_msg)
+            
             var_map = {port._var: val for port, val in port_stimulus_map.items()}
             port_var_map = {port._var: port for port in port_stimulus_map.keys()} 
         else:
@@ -38,7 +43,6 @@ class Stimulus(object):
     def set_port_var_map(self, map: dict[Port, Var]) -> None:
         self._port_var_map = map
 
-    @property 
     def value(self, var: Var) -> Any:
         if var in self.var_val_map:
             return self.var_val_map[var]

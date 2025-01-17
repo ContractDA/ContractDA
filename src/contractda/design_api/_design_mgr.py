@@ -3,6 +3,8 @@ from contractda.design._system import System, Port, Connection, SystemContract
 from contractda.logger._logger import LOG
 from contractda.design._design_exceptions import IncompleteContractException, ObjectNotFoundException
 from contractda.simulator import Simulator, ClauseEvaluator, Evaluator, Stimulus
+
+from typing import Any
 import json
 
 class DesignLevelManager():
@@ -345,18 +347,58 @@ class DesignLevelManager():
         raise NotImplementedError
         pass
 
-    def simulate_design(self, system: str | System, simulator):
-        raise NotImplementedError
-        pass
+    def simulate_design(self, design: str | System, stimulus: Stimulus | dict[Port, Any], num_unique_simulations: int = 1) -> list[Stimulus]:
+        """Simulate the design system using the stimulus
 
-    def simulate_system(self, system: str | System, stimulus: Stimulus):
+        :param: str | System design: the design for simulation
+        :param Stimulus | dict[Port, Any] stimulus: the stimulus to set for the simulation
+        :param int num_unique_simulations: number of unique behaviors want to perform for this simulation
+        :return: the simulation result as stimulus
+        :rtype: list[Stimulus]
+        
+        """
+        system_obj = self._verify_design_obj_or_str(design=design)
+        return self.simulate_system(system=system_obj, stimulus=stimulus, num_unique_simulations=num_unique_simulations)
+
+    def simulate_system(self, system: str | System, stimulus: Stimulus | dict[Port, Any], num_unique_simulations: int = 1) -> list[Stimulus]:
+        """Simulate the system using the stimulus
+
+        :param: str | System system: the system for simulation
+        :param Stimulus | dict[Port, Any] stimulus: the stimulus to set for the simulation
+        :param int num_unique_simulations: number of unique behaviors want to perform for this simulation
+        :return: the simulation result as stimulus
+        :rtype: list[Stimulus]
+        
+        """
+
         system_obj = self._verify_system_obj_or_str(system=system)
         self._generate_system_contracts(system_obj)
-        simulator = Simulator(system=system)
-        ret = simulator.simulate(stimulus=stimulus)
+        if isinstance(stimulus, Stimulus):
+            simulate_stimulus = stimulus
+        else:
+            simulate_stimulus = Stimulus(port_stimulus_map=stimulus)
+        
+        simulator = Simulator(system=system_obj)
+        ret = simulator.simulate(stimulus=simulate_stimulus, num_unique_simulations=num_unique_simulations)
         return ret
 
+    def auto_simulate_system(self, system: str | System, num_unique_simulations:int = 1, max_depth:int = 3)-> tuple[list[Stimulus], list[Stimulus], dict[Stimulus, list[Stimulus]]]:
+        """Automatic simulate the system
 
+        :param: str | System system: the system for simulation
+        :param int max_depth: the depth used to automatic generate stimulus
+        :param int num_unique_simulations: number of unique behaviors want to perform for this simulation
+        :return: the simulation result as stimulus
+        :rtype: list[Stimulus]
+        
+        """
+
+        system_obj = self._verify_system_obj_or_str(system=system)
+        self._generate_system_contracts(system_obj)
+        simulator = Simulator(system=system_obj)
+        sim_stimulus, violate_stimulus, ret = simulator.auto_simulate(num_unique_simulations=num_unique_simulations, max_depth=max_depth)
+        return sim_stimulus, violate_stimulus, ret
+    
     def register_design(self, system: System):
         """Puts the systems, ports, and connections in the manager
         Recursively put them in the manager for every subsystem

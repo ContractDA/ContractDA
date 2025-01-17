@@ -17,7 +17,6 @@
 
 """
 
-from contractda.design._design_mgr import DesignLevelManager
 from contractda.design._port import Port, PortDirection, VarType
 from contractda.design._connections import Connection
 from contractda.design._system import System
@@ -28,7 +27,6 @@ from contractda.design._design_exceptions import ObjectNotFoundException, Incomp
 
 
 __all__ = [
-    "DesignLevelManager",
     "Port",
     "PortDirection",
     "VarType",
