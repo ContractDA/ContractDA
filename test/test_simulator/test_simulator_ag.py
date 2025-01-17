@@ -20,6 +20,21 @@ def test_simulator():
             if var.get_id() == "y":
                 assert(val == 100)
 
+def test_simulator_env():
+    x = RealVar("x")
+    y = RealVar("y")
+    c = AGContract([x, y], assumption="x >= 0", guarantee="y == 2*x")
+
+    env = FOLClauseSet(vars=[x, y], expr="x >= 2 && x <= 5")
+    sim = Simulator(contract=c)
+    ret = sim.simulate(environement=env)
+    assert(len(ret) == 1)
+    for behavior in ret:
+        x_val = behavior.var_val_map[x]
+        y_val = behavior.var_val_map[y]
+        assert(x_val >= 2 and x_val <= 5)
+        assert(y_val == 2*x_val)
+
 def test_simulator_multiple_behave():
     x = RealVar("x")
     y = RealVar("y")
@@ -50,3 +65,31 @@ def test_evaluator():
     assert(obj_val == [150])
     obj_val = sim.evaluate_range(stimulus=sti)
     assert(obj_val == ([150], [150]))
+
+def test_evaluator_env():
+    x = RealVar("x")
+    y = RealVar("y")
+    c = AGContract([x, y], assumption="x >= 0", guarantee="y == 2*x")
+
+    env = FOLClauseSet(vars=[x, y], expr="x >= 20 && x <= 50")
+    obj = RealVar("obj")
+    eval = ClauseEvaluator(FOLClauseSet(vars = [x, y, obj], expr= "obj == x+y"), clause_objective=[obj])
+    
+    sim = Simulator(contract=c, evaluator= eval)
+    obj_val = sim.evaluate(environement=env)
+    assert(obj_val[0] >= 60 and obj_val[0]<=150)
+    obj_val = sim.evaluate_range(environement=env)
+    assert(obj_val == ([150], [60]))
+
+def test_evaluator_range():
+    x = RealVar("x")
+    y = RealVar("y")
+    c = AGContract([x, y], assumption="x >= 0", guarantee="y <= 2*x && y >= 1.5*x")
+
+    sti = Stimulus({x: 50})
+    obj = RealVar("obj")
+    eval = ClauseEvaluator(FOLClauseSet(vars = [x, y, obj], expr= "obj == x+y"), clause_objective=[obj])
+    
+    sim = Simulator(contract=c, evaluator= eval)
+    obj_val = sim.evaluate_range(stimulus=sti)
+    assert(obj_val == ([150], [125]))
