@@ -1,4 +1,4 @@
-﻿contractda.simulator.Stimulus
+contractda.simulator.Stimulus
 =============================
 
 .. currentmodule:: contractda.simulator
@@ -14,7 +14,6 @@
 
 .. autosummary::
 
-   ~contractda.simulator.Stimulus.value
    ~contractda.simulator.Stimulus.var_val_map
 
 
@@ -25,4 +24,6 @@
 
 .. autosummary::
 
+   ~contractda.simulator.Stimulus.set_port_var_map
+   ~contractda.simulator.Stimulus.value
 

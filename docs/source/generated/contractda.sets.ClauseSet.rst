@@ -27,6 +27,10 @@ contractda.sets.ClauseSet
 
    ~contractda.sets.ClauseSet.complement
    ~contractda.sets.ClauseSet.difference
+   ~contractda.sets.ClauseSet.generate_boundary_set
+   ~contractda.sets.ClauseSet.generate_var_val_equivalence_constraint_set
+   ~contractda.sets.ClauseSet.generate_var_val_gt_constraint_set
+   ~contractda.sets.ClauseSet.generate_var_val_lt_constraint_set
    ~contractda.sets.ClauseSet.generate_variable_equivalence_constraint_set
    ~contractda.sets.ClauseSet.get_enumeration
    ~contractda.sets.ClauseSet.intersect

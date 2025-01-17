@@ -28,6 +28,7 @@ contractda.sets.FOLClauseSet
    ~contractda.sets.FOLClauseSet.complement
    ~contractda.sets.FOLClauseSet.difference
    ~contractda.sets.FOLClauseSet.encode
+   ~contractda.sets.FOLClauseSet.generate_boundary_set
    ~contractda.sets.FOLClauseSet.generate_var_val_equivalence_constraint_set
    ~contractda.sets.FOLClauseSet.generate_var_val_gt_constraint_set
    ~contractda.sets.FOLClauseSet.generate_var_val_lt_constraint_set

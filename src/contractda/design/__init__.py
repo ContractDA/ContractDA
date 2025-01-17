@@ -5,7 +5,6 @@
     :toctree: 
     :template: class.rst
 
-    ~contractda.design.DesignLevelManager
     ~contractda.design.Port
     ~contractda.design.PortDirection
     ~contractda.design.Connection

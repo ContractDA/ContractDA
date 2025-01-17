@@ -5,7 +5,7 @@
     :toctree: 
     :template: class.rst
 
-    ~contractda.design.DesignLevelManager
+    ~contractda.design_api.DesignLevelManager
 """
 
 from contractda.design_api._design_mgr import DesignLevelManager

@@ -360,6 +360,17 @@ class DesignLevelManager():
         system_obj = self._verify_design_obj_or_str(design=design)
         return self.simulate_system(system=system_obj, stimulus=stimulus, num_unique_simulations=num_unique_simulations)
 
+
+    def evaluate_system(self, system: str | System, stimulus: Stimulus | dict[Port, Any]) -> list[Any]:
+        # TODO: allow control layer of composition
+        system_obj = self._verify_system_obj_or_str(system=system)
+        self._generate_system_contracts(system_obj)
+        system_contract = system_obj._get_single_system_contract()
+        subsystem_composed_contract = system_obj._get_subsystem_contract_composition()
+        if subsystem_composed_contract is None:
+            raise IncompleteContractException("Subsystem does not have a complete contract defined for simulation")
+        raise NotImplementedError
+    
     def simulate_system(self, system: str | System, stimulus: Stimulus | dict[Port, Any], num_unique_simulations: int = 1) -> list[Stimulus]:
         """Simulate the system using the stimulus
 

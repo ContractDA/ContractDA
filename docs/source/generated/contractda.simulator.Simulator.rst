@@ -18,6 +18,7 @@ contractda.simulator.Simulator
 
 .. autosummary::
 
+   ~contractda.simulator.Simulator.auto_simulate
    ~contractda.simulator.Simulator.evaluate
    ~contractda.simulator.Simulator.evaluate_range
    ~contractda.simulator.Simulator.simulate

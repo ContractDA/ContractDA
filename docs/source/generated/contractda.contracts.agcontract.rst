@@ -34,6 +34,7 @@ contractda.contracts.AGContract
 .. autosummary::
 
    ~contractda.contracts.AGContract.add_constraint
+   ~contractda.contracts.AGContract.check_environment_satisfy
    ~contractda.contracts.AGContract.composition
    ~contractda.contracts.AGContract.conjunction
    ~contractda.contracts.AGContract.implication

@@ -30,6 +30,7 @@ contractda.contracts.CBContract
 .. autosummary::
 
    ~contractda.contracts.CBContract.add_constraint
+   ~contractda.contracts.CBContract.check_environment_satisfy
    ~contractda.contracts.CBContract.composition
    ~contractda.contracts.CBContract.conjunction
    ~contractda.contracts.CBContract.implication

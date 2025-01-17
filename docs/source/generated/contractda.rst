@@ -28,6 +28,7 @@
    contractda.cli
    contractda.contracts
    contractda.design
+   contractda.design_api
    contractda.sets
    contractda.simulator
    contractda.solvers

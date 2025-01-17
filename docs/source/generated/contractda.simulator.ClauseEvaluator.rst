@@ -1,4 +1,4 @@
-﻿contractda.simulator.ClauseEvaluator
+contractda.simulator.ClauseEvaluator
 ====================================
 
 .. currentmodule:: contractda.simulator

@@ -31,6 +31,7 @@ contractda.sets.ExplicitSet
 
    ~contractda.sets.ExplicitSet.complement
    ~contractda.sets.ExplicitSet.difference
+   ~contractda.sets.ExplicitSet.generate_var_val_equivalence_constraint_set
    ~contractda.sets.ExplicitSet.generate_variable_equivalence_constraint_set
    ~contractda.sets.ExplicitSet.get_enumeration
    ~contractda.sets.ExplicitSet.intersect
