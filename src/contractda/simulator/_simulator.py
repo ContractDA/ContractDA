@@ -286,7 +286,7 @@ class Simulator(object):
                 env_set = environement
             else:
                 env_set = env_set.intersect(environement)
-        if env_set:
+        if env_set is None:
             raise Exception("Empty environment set for simulation")
 
         
