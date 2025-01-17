@@ -371,12 +371,13 @@ class DesignLevelManager():
             raise IncompleteContractException("Subsystem does not have a complete contract defined for simulation")
         raise NotImplementedError
     
-    def simulate_system(self, system: str | System, stimulus: Stimulus | dict[Port, Any], num_unique_simulations: int = 1) -> list[Stimulus]:
+    def simulate_system(self, system: str | System, stimulus: Stimulus | dict[Port, Any], num_unique_simulations: int = 1, system_compose_level:int|None = None) -> list[Stimulus]:
         """Simulate the system using the stimulus
 
         :param: str | System system: the system for simulation
         :param Stimulus | dict[Port, Any] stimulus: the stimulus to set for the simulation
         :param int num_unique_simulations: number of unique behaviors want to perform for this simulation
+        :param int system_compose_level: number of level to perform composition, if not given, the whole system is used
         :return: the simulation result as stimulus
         :rtype: list[Stimulus]
         
@@ -389,7 +390,7 @@ class DesignLevelManager():
         else:
             simulate_stimulus = Stimulus(port_stimulus_map=stimulus)
         
-        simulator = Simulator(system=system_obj)
+        simulator = Simulator(system=system_obj, system_compose_level=system_compose_level)
         ret = simulator.simulate(stimulus=simulate_stimulus, num_unique_simulations=num_unique_simulations)
         return ret
 

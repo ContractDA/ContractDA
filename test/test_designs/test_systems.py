@@ -93,3 +93,5 @@ def test_name(example_system):
 
 def test_report(example_system):
     example_system.report()
+
+

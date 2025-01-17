@@ -42,3 +42,28 @@ if __name__ == "__main__":
         print(s)
         for rr in r:
             print("  ", rr)
+
+    print("6")
+    system = mgr.get_system("sim_sys_1")
+    contract = system._get_composed_system_contract(max_level=5)
+    print(contract)
+
+    contract = system._get_subsystem_contract_composition()
+    print(contract)
+    print(system.report())
+
+    contract = system._get_composed_system_contract(max_level=0)
+    print(contract)
+    print("7")
+    design_path = "./example/design_files/simple_design_simulation.json"
+    mgr = DesignLevelManager()
+    mgr.read_design_from_file(file_path=design_path)
+
+    system = mgr.get_system("sim_sys_1")
+    stimulus = {system.ports["a"]: 7}
+    ret = mgr.simulate_system(system="sim_sys_1", stimulus=stimulus, system_compose_level=1, num_unique_simulations=5)
+    assert(len(ret) == 5)
+    for behavior in ret:
+        assert(behavior.value(var = system.ports["a"].var) == 7)
+        value = behavior.value(var = system.ports["x"].var)
+        print(value)

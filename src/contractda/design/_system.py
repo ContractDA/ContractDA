@@ -10,7 +10,7 @@ from contractda.design._system_contracts import SystemContract, ContractType
 from contractda.design._libsystem import LibSystem
 
 from contractda.sets._fol_clause import FOLClause
-from contractda.sets import FOLClauseSet
+from contractda.sets import FOLClauseSet, SetBase
 from contractda.sets._fol_lan import name_remap
 from contractda.vars import Var
 from contractda.design._design_exceptions import FeedbackLoopException
@@ -455,6 +455,37 @@ class System(object):
             single_contract = single_contract.conjunction(contract.contract_obj)
         
         return single_contract
+    
+    def _get_composed_system_contract(self, current_level: int = 0, max_level:int | None = None) -> tuple[ContractBase, SetBase]:
+        # recursive to get composition
+        composed_contract = None
+        # terminating condition, max_level reached or no subsystem
+        if len(self.subsystems) == 0 or (max_level is not None and current_level >= max_level):
+            return self._get_single_system_contract(), None
+         
+        all_recursives = [subsystem._get_composed_system_contract(current_level=current_level+1,
+                                                                  max_level=max_level) 
+                        for subsystem in self.subsystems.values()]
+        
+        all_contracts = [ret[0] for ret in all_recursives]
+        all_constraints = [ret[1] for ret in all_recursives]
+
+        if None in all_contracts:
+            msg = f"Empty contract encountered in level {current_level}, subsystem of system {self.hier_name}"
+            LOG.warning(msg)
+            return self._get_single_system_contract(), None
+        
+        if len(all_contracts) >= 1:
+            composed_contract = all_contracts[0]
+        for contract in all_contracts[1:]:
+            composed_contract = composed_contract.composition(contract)
+
+        constraint_set = self._generate_contract_system_connection_constraint()
+        for constraint in all_constraints:
+            if constraint is not None:
+                constraint_set.intersect(constraint)
+        
+        return composed_contract, constraint_set
 
 
     def _get_subsystem_contract_composition(self) -> ContractBase:

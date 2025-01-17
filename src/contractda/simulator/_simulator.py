@@ -170,18 +170,19 @@ class ClauseEvaluator(Evaluator):
 
 class Simulator(object):
     """wrapper class for performing simulation"""
-    def __init__(self, evaluator: Evaluator = None, options: dict = None, contract: ContractBase = None, system: System = None ):
+    def __init__(self, evaluator: Evaluator = None, options: dict = None, contract: ContractBase = None, system: System = None, system_compose_level: int = None):
         if system is None and contract is None:
             err_msg = "Need at least one system or contract"
             LOG.error(err_msg)
             raise Exception(err_msg)
         self._contract: ContractBase
+        self._constraint: SetBase = None
 
         if system is None:
             self._contract = contract
             self._system = None
         else:
-            self._contract = system._get_single_system_contract()
+            self._contract, self._constraint = system._get_composed_system_contract(max_level=system_compose_level)
             self._system = system
 
         self._evaluator: Evaluator = evaluator
@@ -252,8 +253,9 @@ class Simulator(object):
         return simulate_stimulus, violated_stimulus, result
 
 
-    def simulate(self, stimulus: Stimulus, environement: SetBase = None,  num_unique_simulations: int = 1, contract: ContractBase = None) -> list[Stimulus]:
-        """Simulate the contract using the stimulus
+    def simulate(self, stimulus: Stimulus = None, environement: SetBase = None,  num_unique_simulations: int = 1, contract: ContractBase = None) -> list[Stimulus]:
+        """Simulate the contract using the stimulus and environment
+        When contract is set, it only considers the contract while ignoring the system/contract in simulator
 
         :param Stimulus stimulus: the behaviors provided by the environment
         :param int num_unique_simulations: number of unique simulation needed for the stimulus
@@ -270,8 +272,23 @@ class Simulator(object):
             
             sim_contract = self._contract
             set_type = self._set_type
+            if self._constraint is not None:
+                if environement is None:
+                    environement = self._constraint
+                else:
+                    environement = environement.intersect(self._constraint)
 
-        env_set = _create_set_from_behavior(stimulus.var_val_map, set_type=set_type)
+        env_set = None
+        if stimulus is not None:
+            env_set = _create_set_from_behavior(stimulus.var_val_map, set_type=set_type)
+        if environement is not None:
+            if env_set is None:
+                env_set = environement
+            else:
+                env_set = env_set.intersect(environement)
+        if env_set:
+            raise Exception("Empty environment set for simulation")
+
         
         # sim_contract.assumption
         # check if the stimulus always satisfy the assumption
