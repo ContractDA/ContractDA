@@ -20,6 +20,22 @@ def test_simulator():
             if var.get_id() == "I":
                 assert(val == 2)
 
+def test_simulator_env():
+    I = RealVar("I")
+    V = RealVar("V")
+    c = CBContract([I, V], constraint="I*V <= 8", behavior="V == 2*I")
+
+    env = FOLClauseSet(vars = [I, V], expr="V >= 1 && V <= 2")
+    sim = Simulator(contract=c)
+    ret = sim.simulate(environement=env, num_unique_simulations=20)
+    assert(len(ret) == 20)
+    for behavior in ret:
+        V_val = behavior.var_val_map[V]
+        I_val = behavior.var_val_map[I]
+        assert(V_val >= 1 and V_val <= 2)
+        assert(V_val == 2*I_val)
+        print(V_val, I_val)
+
 def test_simulator_multiple_behave():
     I = RealVar("I")
     V = RealVar("V")
@@ -52,3 +68,17 @@ def test_evaluator():
     assert(obj_val == [8])
     obj_val = sim.evaluate_range(stimulus=sti)
     assert(obj_val == ([8], [8]))
+
+def test_evaluate_env():
+    I = RealVar("I")
+    V = RealVar("V")
+    c = CBContract([I, V], constraint="I*V <= 8", behavior="V == 2*I")
+
+    obj = RealVar("obj")
+    env = FOLClauseSet(vars = [I, V], expr="V >= 1 && V <= 2")
+    eval = ClauseEvaluator(FOLClauseSet(vars = [I, V, obj], expr= "obj == I+V"), clause_objective=[obj])
+    sim = Simulator(contract=c, evaluator= eval)
+    obj_val = sim.evaluate(environement=env)
+    assert(obj_val[0] >= 1.5 and obj_val[0] <= 3)
+    obj_val = sim.evaluate_range(environement=env)
+    assert(obj_val == ([3.0], [1.5]))
