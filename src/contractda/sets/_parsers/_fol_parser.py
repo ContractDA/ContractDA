@@ -11,7 +11,7 @@ class FOL_Lexer(object):
     
     """
     fol_tokens_symbol = {"CONSTANT": r"[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?",
-                "LITERAL": r"[a-zA-Z_][a-zA-Z0-9_]*",
+                "LITERAL": r"[a-zA-Z_][a-zA-Z0-9_\.]*",
                 # Logical symbol
                 "AND": r"&&",
                 "OR": r"||",

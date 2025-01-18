@@ -3,6 +3,7 @@ from contractda.design._system import System, Port, Connection, SystemContract
 from contractda.logger._logger import LOG
 from contractda.design._design_exceptions import IncompleteContractException, ObjectNotFoundException
 from contractda.simulator import Simulator, ClauseEvaluator, Evaluator, Stimulus
+from contractda.design_api._design_expression import DesignExpression
 
 from typing import Any
 import json
@@ -361,17 +362,72 @@ class DesignLevelManager():
         return self.simulate_system(system=system_obj, stimulus=stimulus, num_unique_simulations=num_unique_simulations)
 
 
-    def evaluate_system(self, system: str | System, stimulus: Stimulus | dict[Port, Any]) -> list[Any]:
+    def evaluate_system(self, system: str | System, 
+                        objective: DesignExpression,
+                        stimulus: Stimulus | dict[Port, Any] = None, 
+                        environement: DesignExpression = None,
+                        system_compose_level:int|None = None) -> list[Any]:
         # TODO: allow control layer of composition
         system_obj = self._verify_system_obj_or_str(system=system)
         self._generate_system_contracts(system_obj)
-        system_contract = system_obj._get_single_system_contract()
-        subsystem_composed_contract = system_obj._get_subsystem_contract_composition()
-        if subsystem_composed_contract is None:
-            raise IncompleteContractException("Subsystem does not have a complete contract defined for simulation")
-        raise NotImplementedError
+
+        simulate_stimulus = None
+        if isinstance(stimulus, Stimulus):
+            simulate_stimulus = stimulus
+        elif stimulus is not None:
+            simulate_stimulus = Stimulus(port_stimulus_map=stimulus)
+
+        # collect all vars     
+        all_system_vars = [port.var for port in self._ports.values()]
+        simulate_environment = None
+        if environement is not None:
+            simulate_environment = environement.get_clause_set(design_vars=all_system_vars)
+        
+        simulator = Simulator(system=system_obj, system_compose_level=system_compose_level)
+        evaluator = ClauseEvaluator(clause_set=objective.get_clause_set(design_vars=all_system_vars),
+                                    clause_objective=objective.aux_vars)
+        ret = simulator.evaluate(stimulus=simulate_stimulus, 
+                                 environement=simulate_environment, 
+                                 evaluator=evaluator,
+                                 check_unique=False)
+        return ret
+
+    def evaluate_range_system(self, system: str | System, 
+                            objective: DesignExpression,
+                            stimulus: Stimulus | dict[Port, Any] = None, 
+                            environement: DesignExpression = None,
+                            system_compose_level:int|None = None) -> list[Any]:
+        # TODO: allow control layer of composition
+        system_obj = self._verify_system_obj_or_str(system=system)
+        self._generate_system_contracts(system_obj)
+
+        simulate_stimulus = None
+        if isinstance(stimulus, Stimulus):
+            simulate_stimulus = stimulus
+        elif stimulus is not None:
+            simulate_stimulus = Stimulus(port_stimulus_map=stimulus)
+
+        # collect all vars     
+        all_system_vars = [port.var for port in self._ports.values()]
+        simulate_environment = None
+        if environement is not None:
+            simulate_environment = environement.get_clause_set(design_vars=all_system_vars)
+        
+        simulator = Simulator(system=system_obj, system_compose_level=system_compose_level)
+        evaluator = ClauseEvaluator(clause_set=objective.get_clause_set(design_vars=all_system_vars),
+                                    clause_objective=objective.aux_vars)
+        ret = simulator.evaluate_range(stimulus=simulate_stimulus, 
+                                 environement=simulate_environment, 
+                                 evaluator=evaluator)
+        return ret
+
     
-    def simulate_system(self, system: str | System, stimulus: Stimulus | dict[Port, Any], num_unique_simulations: int = 1, system_compose_level:int|None = None) -> list[Stimulus]:
+    def simulate_system(self, 
+                        system: str | System, 
+                        stimulus: Stimulus | dict[Port, Any], 
+                        environement: DesignExpression = None,
+                        num_unique_simulations: int = 1, 
+                        system_compose_level:int|None = None) -> list[Stimulus]:
         """Simulate the system using the stimulus
 
         :param: str | System system: the system for simulation
@@ -389,9 +445,17 @@ class DesignLevelManager():
             simulate_stimulus = stimulus
         else:
             simulate_stimulus = Stimulus(port_stimulus_map=stimulus)
+
+        all_system_vars = [port.var for port in self._ports.values()]
+        simulate_environment = None
+        if environement is not None:
+            simulate_environment = environement.get_clause_set(design_vars=all_system_vars)
         
-        simulator = Simulator(system=system_obj, system_compose_level=system_compose_level)
-        ret = simulator.simulate(stimulus=simulate_stimulus, num_unique_simulations=num_unique_simulations)
+        simulator = Simulator(system=system_obj, 
+                              system_compose_level=system_compose_level)
+        ret = simulator.simulate(stimulus=simulate_stimulus, 
+                                 environement=simulate_environment,
+                                 num_unique_simulations=num_unique_simulations)
         return ret
 
     def auto_simulate_system(self, system: str | System, num_unique_simulations:int = 1, max_depth:int = 3)-> tuple[list[Stimulus], list[Stimulus], dict[Stimulus, list[Stimulus]]]:
