@@ -1,4 +1,4 @@
-contractda.design\_api.DesignLevelManager
+﻿contractda.design\_api.DesignLevelManager
 =========================================
 
 .. currentmodule:: contractda.design_api
@@ -20,6 +20,7 @@ contractda.design\_api.DesignLevelManager
 
    ~contractda.design_api.DesignLevelManager.auto_simulate_system
    ~contractda.design_api.DesignLevelManager.check_system
+   ~contractda.design_api.DesignLevelManager.evaluate_range_system
    ~contractda.design_api.DesignLevelManager.evaluate_system
    ~contractda.design_api.DesignLevelManager.export_design_json
    ~contractda.design_api.DesignLevelManager.get_connection
