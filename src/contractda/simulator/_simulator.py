@@ -212,6 +212,8 @@ class Simulator(object):
             sim_contract = self._contract
             set_type = self._set_type
 
+        #print(sim_contract)
+
         environment_behaviors: list[tuple[list[Stimulus], list[Stimulus]]] = []
         all_simulate_stimulus: list[Stimulus] = []
         result: dict[Stimulus, list[tuple[list[Stimulus], list[Stimulus]]]] = dict()
@@ -224,15 +226,23 @@ class Simulator(object):
                     violated_stimulus: list[Stimulus] = []
                     simulate_stimulus: list[Stimulus] = []
                     for ex_set in ex_sets_a:
-                        sat, sample = ex_set.sample()
+                        try:
+                            sat, sample = ex_set.sample()
+                        except:
+                                continue
                         if sat:
                             violated_stimulus.append(Stimulus(sample))
+                            #print(ex_set, Stimulus(sample))
 
                     for in_set in in_sets_a:
-                        sat, sample = in_set.sample()
+                        try:
+                            sat, sample = in_set.sample()
+                        except:
+                            continue
                         if sat:
                             simulate_stimulus.append(Stimulus(sample))
                             all_simulate_stimulus.append(Stimulus(sample))
+                            #print(in_set, Stimulus(sample))
                     environment_behaviors.append((simulate_stimulus, violated_stimulus))
             else:
                 LOG.info("Stimulus is provided in auto simulation!")

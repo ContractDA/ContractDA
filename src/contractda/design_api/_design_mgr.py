@@ -471,7 +471,7 @@ class DesignLevelManager():
 
         system_obj = self._verify_system_obj_or_str(system=system)
         self._generate_system_contracts(system_obj)
-        simulator = Simulator(system=system_obj, system_compose_level=1)
+        simulator = Simulator(system=system_obj, system_compose_level=0)
         # should we allow auto simulation for system? set to 1 to avoid considering composition of subsystem
         environment_pairs, ret = simulator.auto_simulate(num_unique_simulations=num_unique_simulations, max_depth=max_depth)
         return environment_pairs, ret

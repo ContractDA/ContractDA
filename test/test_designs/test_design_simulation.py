@@ -49,4 +49,4 @@ def test_design_autosimulation():
     design_path = "./example/design_files/simple_design_simulation.json"
     mgr = DesignLevelManager()
     mgr.read_design_from_file(file_path=design_path)
-    _,_,_ = mgr.auto_simulate_system(system="sim_sys_1")
+    _,_ = mgr.auto_simulate_system(system="sim_sys_1")

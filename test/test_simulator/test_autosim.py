@@ -24,11 +24,12 @@ def test_autosim(x, y, z):
 
     sim = Simulator(contract=c)
 
-    success, failure, result = sim.auto_simulate(max_depth=3, num_unique_simulations=2)
-    for e in success:
-        print("success: ", e)
-    for e in failure:
-        print("fail: ", e)
+    environments, result = sim.auto_simulate(max_depth=3, num_unique_simulations=2)
+    for in_e, ex_e in environments:
+        for e in in_e:
+            print("success: ", e)
+        for e in ex_e:
+            print("fail: ", e)
 
     for sti, ret in result.items():
         print(sti)
