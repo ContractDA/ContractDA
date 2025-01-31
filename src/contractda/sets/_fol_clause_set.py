@@ -380,6 +380,17 @@ class FOLClauseSet(ClauseSet):
             external_boundary_sets.append(FOLClauseSet(vars=self.vars, expr=FOLClause._create_clause_by_node(node)))
 
         return internal_boundary_sets, external_boundary_sets
+    
+    def generate_boundary_set_linear(self, max_count:int = None, exclude_empty: bool = True) -> list[tuple[list[ClauseSet], list[ClauseSet]]]:
+        critical_behavior_examples = []
+        result = []
+        self._generate_boundary_set_linear(result=result, node=self.expr.root, root=self.expr.root, exclude_empty=exclude_empty, vars=self.vars)
+        for (in_roots, out_roots) in result:
+            example_ins = [FOLClauseSet(vars=self.vars, expr=FOLClause._create_clause_by_node(root)) for root in in_roots] 
+            example_outs = [FOLClauseSet(vars=self.vars, expr=FOLClause._create_clause_by_node(root)) for root in out_roots]
+            critical_behavior_examples.append((example_ins, example_outs))
+        return critical_behavior_examples 
+            
     ######################
     #   Internal Functions
     ######################
@@ -587,6 +598,141 @@ class FOLClauseSet(ClauseSet):
             external_boundaries = clean_external_boundaries
 
         return internal_boundaries, external_boundaries
+    @staticmethod
+    def _generate_boundary_set_linear(result: list[tuple[list[fol_lan.AST_Node], list[fol_lan.AST_Node]]], node: fol_lan.AST_Node, root: fol_lan.AST_Node, exclude_empty: bool = False, vars = None, reverse:bool = False):
+        
+        #DFS
+        in_roots = []
+        out_roots = []
+        if isinstance(node, fol_lan.PropositionNodeBinOp):
+            if node.op == "==":
+                FOLClauseSet._newnode_change_op_in_place(node, "!=")
+                out_roots.append(copy.deepcopy(root))
+                FOLClauseSet._newnode_change_op_in_place(node, "==")
+                in_roots.append(copy.deepcopy(root))
+                FOLClauseSet._newnode_change_op_in_place(node, "==")
+            elif node.op == "<=":
+                FOLClauseSet._newnode_change_op_in_place(node, "<")
+                in_roots.append(copy.deepcopy(root))
+                FOLClauseSet._newnode_change_op_in_place(node, "==")
+                in_roots.append(copy.deepcopy(root))
+                FOLClauseSet._newnode_change_op_in_place(node, ">")
+                out_roots.append(copy.deepcopy(root))   
+                FOLClauseSet._newnode_change_op_in_place(node, "<=")
+            elif node.op == "<":
+                FOLClauseSet._newnode_change_op_in_place(node, "<")
+                in_roots.append(copy.deepcopy(root))
+                FOLClauseSet._newnode_change_op_in_place(node, "==")
+                out_roots.append(copy.deepcopy(root))
+                FOLClauseSet._newnode_change_op_in_place(node, ">")
+                out_roots.append(copy.deepcopy(root))
+                FOLClauseSet._newnode_change_op_in_place(node, "<")    
+            elif node.op == ">=":
+                FOLClauseSet._newnode_change_op_in_place(node, "<")
+                out_roots.append(copy.deepcopy(root))
+                FOLClauseSet._newnode_change_op_in_place(node, "==")
+                in_roots.append(copy.deepcopy(root))
+                FOLClauseSet._newnode_change_op_in_place(node, ">")
+                in_roots.append(copy.deepcopy(root))   
+                FOLClauseSet._newnode_change_op_in_place(node, ">=") 
+            elif node.op == ">":
+                FOLClauseSet._newnode_change_op_in_place(node, "<")
+                out_roots.append(copy.deepcopy(root))
+                FOLClauseSet._newnode_change_op_in_place(node, "==")
+                out_roots.append(copy.deepcopy(root))
+                FOLClauseSet._newnode_change_op_in_place(node, ">")
+                in_roots.append(copy.deepcopy(root))  
+                FOLClauseSet._newnode_change_op_in_place(node, ">") 
+            elif node.op == "!=":
+                FOLClauseSet._newnode_change_op_in_place(node, "==")
+                out_roots.append(copy.deepcopy(root))
+                FOLClauseSet._newnode_change_op_in_place(node, "!=")
+                in_roots.append(copy.deepcopy(root))  
+                FOLClauseSet._newnode_change_op_in_place(node, "!=") 
+            else:
+                left = node.children[0]
+                right = node.children[1]
+                if node.op == "||":
+                    # DFS
+                    node.children[1] = fol_lan.PropositionNodeUniOp(op="!", exp1=right)
+                    FOLClauseSet._generate_boundary_set_linear(result=result, node=left, root=root, exclude_empty=exclude_empty, vars=vars, reverse=reverse)
+                    node.children[1] = right
+                    node.children[0] = fol_lan.PropositionNodeUniOp(op="!", exp1=left)
+                    FOLClauseSet._generate_boundary_set_linear(result=result, node=right, root=root, exclude_empty=exclude_empty, vars=vars, reverse=reverse)
+                    node.children[0] = left
+                    # explore different combination
+                    in_roots.append(copy.deepcopy(root))
+                    node.children[1] = fol_lan.PropositionNodeUniOp(op="!", exp1=right)
+                    in_roots.append(copy.deepcopy(root))
+                    node.children[0] = fol_lan.PropositionNodeUniOp(op="!", exp1=left)
+                    out_roots.append(copy.deepcopy(root))
+                    node.children[1] = right
+                    in_roots.append(copy.deepcopy(root))
+                    node.children[0] = left
+                    node.children[1] = right
+                    node.children[0] = left
+                elif node.op == "&&":
+                    # DFS
+                    FOLClauseSet._generate_boundary_set_linear(result=result, node=left, root=root, exclude_empty=exclude_empty, vars=vars, reverse=reverse)
+                    FOLClauseSet._generate_boundary_set_linear(result=result, node=right, root=root, exclude_empty=exclude_empty, vars=vars, reverse=reverse)
+                    # explore different combination
+                    in_roots.append(copy.deepcopy(root))
+                    node.children[1] = fol_lan.PropositionNodeUniOp(op="!", exp1=right)
+                    out_roots.append(copy.deepcopy(root))
+                    node.children[0] = fol_lan.PropositionNodeUniOp(op="!", exp1=left)
+                    out_roots.append(copy.deepcopy(root))
+                    node.children[1] = right
+                    out_roots.append(copy.deepcopy(root))
+                    node.children[0] = left
+                    node.children[1] = right
+                    node.children[0] = left
+                elif node.op == "->":
+                    # DFS
+                    node.children[1] = fol_lan.PropositionNodeUniOp(op="!", exp1=right)
+                    FOLClauseSet._generate_boundary_set_linear(result=result, node=left, root=root, exclude_empty=exclude_empty, vars=vars, reverse=reverse^True)
+                    node.children[1] = right
+                    FOLClauseSet._generate_boundary_set_linear(result=result, node=right, root=root, exclude_empty=exclude_empty, vars=vars, reverse=reverse)
+                    # explore different combination
+                    in_roots.append(copy.deepcopy(root))
+                    node.children[1] = fol_lan.PropositionNodeUniOp(op="!", exp1=right)
+                    out_roots.append(copy.deepcopy(root))
+                    node.children[0] = fol_lan.PropositionNodeUniOp(op="!", exp1=left)
+                    in_roots.append(copy.deepcopy(root))
+                    node.children[1] = right
+                    in_roots.append(copy.deepcopy(root))
+                    node.children[0] = left
+                    node.children[1] = right
+                    node.children[0] = left
+                else:
+                    raise Exception(f"Unsupported operator: {node.op}")
+        elif isinstance(node, fol_lan.PropositionNodeUniOp):
+            if node.op == "!":
+                ch = node.children[0]
+                # flip the 
+                FOLClauseSet._generate_boundary_set_linear(result=result, node=ch, root=root, exclude_empty=exclude_empty, vars=vars, reverse=(reverse ^ True))
+                out_roots.append(copy.deepcopy(root))
+                node.children[0] = fol_lan.PropositionNodeUniOp(op="!", exp1=ch)
+                in_roots.append(copy.deepcopy(root))
+                node.children[0] = ch
+            else:
+                raise Exception(f"Unsupported operator: {node.op}")
+        else:
+            if len(node.children) == 1:
+                FOLClauseSet._generate_boundary_set_linear(result=result, node=node.children[0], root=root, exclude_empty=exclude_empty, vars=vars, reverse=reverse)
+                return
+        if reverse:
+            result.append((out_roots, in_roots))
+        else:
+            result.append((in_roots, out_roots))
+
+        return
+        
+    
+    @staticmethod
+    def _newnode_change_op_in_place(node: fol_lan.AST_Node, op:str) -> fol_lan.AST_Node:
+        node.op = op
+        return   
+    
     @staticmethod
     def _newnode_change_op(node: fol_lan.AST_Node, op:str) -> fol_lan.AST_Node:
         new_node = copy.deepcopy(node)

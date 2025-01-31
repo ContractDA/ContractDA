@@ -10,13 +10,18 @@ if __name__ == "__main__":
 
     sim = Simulator(contract=c)
 
-    success, failure, result = sim.auto_simulate(max_depth=3, num_unique_simulations=2)
-    for e in success:
-        print("success: ", e)
-    for e in failure:
-        print("fail: ", e)
+    env, result = sim.auto_simulate(max_depth=3, num_unique_simulations=1)
+    for success, failure in env:
+        print("new pair: ")
+        for e in success:
+            print("    success: ", e)
+        for e in failure:
+            print("    fail: ", e)
 
     for sti, ret in result.items():
-        print(sti)
-        for associated_result in ret:
-            print("    ", associated_result)
+        print("result pair: ", sti)
+        for success, failure in ret:
+            for e in success:
+                print("    success: ", e)
+            for e in failure:
+                print("    fail: ", e)

@@ -458,7 +458,7 @@ class DesignLevelManager():
                                  num_unique_simulations=num_unique_simulations)
         return ret
 
-    def auto_simulate_system(self, system: str | System, num_unique_simulations:int = 1, max_depth:int = 3)-> tuple[list[Stimulus], list[Stimulus], dict[Stimulus, list[Stimulus]]]:
+    def auto_simulate_system(self, system: str | System, num_unique_simulations:int = 1, max_depth:int = 3)-> tuple[list[tuple[list[Stimulus], list[Stimulus]]], dict[Stimulus, list[tuple[list[Stimulus], list[Stimulus]]]]]:
         """Automatic simulate the system
 
         :param: str | System system: the system for simulation
@@ -471,9 +471,10 @@ class DesignLevelManager():
 
         system_obj = self._verify_system_obj_or_str(system=system)
         self._generate_system_contracts(system_obj)
-        simulator = Simulator(system=system_obj)
-        sim_stimulus, violate_stimulus, ret = simulator.auto_simulate(num_unique_simulations=num_unique_simulations, max_depth=max_depth)
-        return sim_stimulus, violate_stimulus, ret
+        simulator = Simulator(system=system_obj, system_compose_level=1)
+        # should we allow auto simulation for system? set to 1 to avoid considering composition of subsystem
+        environment_pairs, ret = simulator.auto_simulate(num_unique_simulations=num_unique_simulations, max_depth=max_depth)
+        return environment_pairs, ret
     
     def register_design(self, system: System):
         """Puts the systems, ports, and connections in the manager
