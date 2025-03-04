@@ -1,4 +1,4 @@
-﻿contractda.contracts.ContractBase
+contractda.contracts.ContractBase
 =================================
 
 .. currentmodule:: contractda.contracts
@@ -27,6 +27,7 @@
 .. autosummary::
 
    ~contractda.contracts.ContractBase.add_constraint
+   ~contractda.contracts.ContractBase.check_environment_satisfy
    ~contractda.contracts.ContractBase.composition
    ~contractda.contracts.ContractBase.conjunction
    ~contractda.contracts.ContractBase.implication

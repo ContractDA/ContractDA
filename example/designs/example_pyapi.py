@@ -2,7 +2,7 @@ from contractda.design._system import System
 from contractda.design._connections import Connection, Port
 from contractda.design._port import VarType, PortDirection
 from contractda.design._design import Design
-from contractda.design._design_mgr import DesignLevelManager
+from contractda.design_api._design_mgr import DesignLevelManager
 #from contractda.design._contracts import AGSystemContract
 
 if __name__ == "__main__":

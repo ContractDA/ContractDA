@@ -1,4 +1,4 @@
-﻿contractda.design.Port
+contractda.design.Port
 ======================
 
 .. currentmodule:: contractda.design
@@ -19,6 +19,7 @@
    ~contractda.design.Port.level_name
    ~contractda.design.Port.port_name
    ~contractda.design.Port.port_type
+   ~contractda.design.Port.var
 
 
 

@@ -16,6 +16,7 @@ dependencies = [
     "prompt-toolkit>=3.0.47",
     "click>=8.1.7",
     "jsonschema>=4.23.0",
+    "matplotlib>=3.10.0",
 ]
 requires-python = ">=3.10"
 readme = "README.md"

@@ -1,4 +1,4 @@
-﻿contractda.design.Connection
+contractda.design.Connection
 ============================
 
 .. currentmodule:: contractda.design

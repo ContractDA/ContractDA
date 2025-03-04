@@ -1,4 +1,4 @@
-﻿contractda.cli.commands.BaseCommand
+contractda.cli.commands.BaseCommand
 ===================================
 
 .. currentmodule:: contractda.cli.commands

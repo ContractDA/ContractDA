@@ -1,4 +1,4 @@
-﻿contractda.vars.VarType
+contractda.vars.VarType
 =======================
 
 .. currentmodule:: contractda.vars

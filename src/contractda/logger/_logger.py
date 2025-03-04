@@ -1,8 +1,9 @@
 import logging
 
 LOG = logging.getLogger("Test")
-LOG.setLevel(logging.DEBUG)
-
+# LOG.setLevel(logging.CRITICAL)
+LOG.setLevel(logging.ERROR)
+# LOG.setLevel(logging.DEBUG)
 #handler
 handler = logging.StreamHandler()
 #formatter

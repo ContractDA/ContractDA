@@ -1,0 +1,7 @@
+read_design_from_file -f ./example/design_files/simple_design_simulate.json
+report_design sim_sys_1
+report_systems
+report_system sim_sys_1.sub1
+report_system sim_sys_1.sub2
+
+auto_simulate_system sim_sys_1 -n 1 -d 4

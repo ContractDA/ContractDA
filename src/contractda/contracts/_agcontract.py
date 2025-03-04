@@ -97,6 +97,13 @@ class AGContract(ContractBase):
         self._guarantee = self._guarantee.intersect(constraint)
         self._vars = self._guarantee.vars # determine vars 
         self._assigned_input_vars = adjusted_input # determine introduced input variables
+
+    ##################################
+    #   Contract Query with Inputs
+    ##################################
+    def check_environment_satisfy(self, env: SetBase) -> bool:
+        return not env.intersect(self.assumption.complement()).is_satifiable()
+
     ##################################
     #   Contract Property
     ##################################

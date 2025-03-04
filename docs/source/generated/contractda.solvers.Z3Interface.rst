@@ -1,4 +1,4 @@
-﻿contractda.solvers.Z3Interface
+contractda.solvers.Z3Interface
 ==============================
 
 .. currentmodule:: contractda.solvers

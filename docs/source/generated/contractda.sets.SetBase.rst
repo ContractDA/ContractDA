@@ -1,4 +1,4 @@
-﻿contractda.sets.SetBase
+contractda.sets.SetBase
 =======================
 
 .. currentmodule:: contractda.sets
@@ -10,6 +10,12 @@
    
 
 
+.. rubric:: Attributes
+
+.. autosummary::
+
+   ~contractda.sets.SetBase.vars
+
 
 
 
@@ -20,6 +26,7 @@
 
    ~contractda.sets.SetBase.complement
    ~contractda.sets.SetBase.difference
+   ~contractda.sets.SetBase.generate_var_val_equivalence_constraint_set
    ~contractda.sets.SetBase.generate_variable_equivalence_constraint_set
    ~contractda.sets.SetBase.get_enumeration
    ~contractda.sets.SetBase.intersect

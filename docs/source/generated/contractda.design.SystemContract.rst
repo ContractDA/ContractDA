@@ -1,4 +1,4 @@
-﻿contractda.design.SystemContract
+contractda.design.SystemContract
 ================================
 
 .. currentmodule:: contractda.design

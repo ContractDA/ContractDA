@@ -52,13 +52,21 @@ class CBContract(ContractBase):
         return self.constraint.intersect(self.intrinsic_behavior)
     
 
-    def add_constraint(self, constraint: SetBase):
+    def add_constraint(self, constraint: SetBase, adjusted_input: list[Var] = None):
         """ Impose constraints on both constraint and behaviors"""
         if constraint is None:
             return 
         self._constraint = self._constraint.intersect(constraint)
         self._intrinsic_behavior = self._intrinsic_behavior.intersect(constraint)
-        self._vars = self._guarantee.vars # determine vars 
+        self._vars = self._intrinsic_behavior.vars # determine vars
+        #self._assigned_input_vars = adjusted_input # CB contract don't have input vars
+ 
+    ##################################
+    #   Contract Query with Inputs
+    ##################################
+    def check_environment_satisfy(self, env: SetBase) -> bool:
+        return not env.intersect(self.intrinsic_behavior).intersect(self.constraint.complement()).is_satifiable()
+
     ##################################
     #   Contract Property
     ##################################

@@ -1,4 +1,4 @@
-from contractda.design import DesignLevelManager
+from contractda.design_api import DesignLevelManager
 
 class Context():
     """Class Context: Management of all the objects in the shell"""

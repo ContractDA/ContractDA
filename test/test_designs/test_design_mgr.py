@@ -1,6 +1,6 @@
 import json
 from contractda.design._system import System
-from contractda.design._design_mgr import DesignLevelManager
+from contractda.design_api import DesignLevelManager
 
 def test_design_mgr():
     with open("./example/design_files/simple_design.json", "r") as file:
@@ -25,3 +25,18 @@ def test_design_mgr():
         print(contract._contract_obj)
 
     design_mgr.verify_system_consistensy(system=sys)
+
+def test_system_composition():
+    design_path = "./example/design_files/simple_design_simulation.json"
+    mgr = DesignLevelManager()
+    mgr.read_design_from_file(file_path=design_path)
+
+    example_system = mgr.get_system("sim_sys_1")
+    
+    example_system._convert_system_contract_to_contract_object()
+    for sub in example_system.subsystems.values():
+        sub._convert_system_contract_to_contract_object()
+    contract1 = example_system._get_composed_system_contract(max_level=0)
+    contract2 = example_system._get_single_system_contract()
+    assert(contract1[0] == contract2)
+    example_system._get_composed_system_contract()

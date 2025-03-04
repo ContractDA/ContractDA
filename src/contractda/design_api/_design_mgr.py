@@ -2,6 +2,10 @@
 from contractda.design._system import System, Port, Connection, SystemContract
 from contractda.logger._logger import LOG
 from contractda.design._design_exceptions import IncompleteContractException, ObjectNotFoundException
+from contractda.simulator import Simulator, ClauseEvaluator, Evaluator, Stimulus
+from contractda.design_api._design_expression import DesignExpression
+
+from typing import Any
 import json
 
 class DesignLevelManager():
@@ -344,15 +348,134 @@ class DesignLevelManager():
         raise NotImplementedError
         pass
 
-    def simulate_design(self, system: str | System, simulator):
-        raise NotImplementedError
-        pass
+    def simulate_design(self, design: str | System, stimulus: Stimulus | dict[Port, Any], num_unique_simulations: int = 1) -> list[Stimulus]:
+        """Simulate the design system using the stimulus
 
-    def simulate_system(self, system: str | System, simulator):
-        raise NotImplementedError
-        pass
+        :param: str | System design: the design for simulation
+        :param Stimulus | dict[Port, Any] stimulus: the stimulus to set for the simulation
+        :param int num_unique_simulations: number of unique behaviors want to perform for this simulation
+        :return: the simulation result as stimulus
+        :rtype: list[Stimulus]
+        
+        """
+        system_obj = self._verify_design_obj_or_str(design=design)
+        return self.simulate_system(system=system_obj, stimulus=stimulus, num_unique_simulations=num_unique_simulations)
 
 
+    def evaluate_system(self, system: str | System, 
+                        objective: DesignExpression,
+                        stimulus: Stimulus | dict[Port, Any] = None, 
+                        environement: DesignExpression = None,
+                        system_compose_level:int|None = None) -> list[Any]:
+        # TODO: allow control layer of composition
+        system_obj = self._verify_system_obj_or_str(system=system)
+        self._generate_system_contracts(system_obj)
+
+        simulate_stimulus = None
+        if isinstance(stimulus, Stimulus):
+            simulate_stimulus = stimulus
+        elif stimulus is not None:
+            simulate_stimulus = Stimulus(port_stimulus_map=stimulus)
+
+        # collect all vars     
+        all_system_vars = [port.var for port in self._ports.values()]
+        simulate_environment = None
+        if environement is not None:
+            simulate_environment = environement.get_clause_set(design_vars=all_system_vars)
+        
+        simulator = Simulator(system=system_obj, system_compose_level=system_compose_level)
+        evaluator = ClauseEvaluator(clause_set=objective.get_clause_set(design_vars=all_system_vars),
+                                    clause_objective=objective.aux_vars)
+        ret = simulator.evaluate(stimulus=simulate_stimulus, 
+                                 environement=simulate_environment, 
+                                 evaluator=evaluator,
+                                 check_unique=False)
+        return ret
+
+    def evaluate_range_system(self, system: str | System, 
+                            objective: DesignExpression,
+                            stimulus: Stimulus | dict[Port, Any] = None, 
+                            environement: DesignExpression = None,
+                            system_compose_level:int|None = None) -> list[Any]:
+        # TODO: allow control layer of composition
+        system_obj = self._verify_system_obj_or_str(system=system)
+        self._generate_system_contracts(system_obj)
+
+        simulate_stimulus = None
+        if isinstance(stimulus, Stimulus):
+            simulate_stimulus = stimulus
+        elif stimulus is not None:
+            simulate_stimulus = Stimulus(port_stimulus_map=stimulus)
+
+        # collect all vars     
+        all_system_vars = [port.var for port in self._ports.values()]
+        simulate_environment = None
+        if environement is not None:
+            simulate_environment = environement.get_clause_set(design_vars=all_system_vars)
+        
+        simulator = Simulator(system=system_obj, system_compose_level=system_compose_level)
+        evaluator = ClauseEvaluator(clause_set=objective.get_clause_set(design_vars=all_system_vars),
+                                    clause_objective=objective.aux_vars)
+        ret = simulator.evaluate_range(stimulus=simulate_stimulus, 
+                                 environement=simulate_environment, 
+                                 evaluator=evaluator)
+        return ret
+
+    
+    def simulate_system(self, 
+                        system: str | System, 
+                        stimulus: Stimulus | dict[Port, Any], 
+                        environement: DesignExpression = None,
+                        num_unique_simulations: int = 1, 
+                        system_compose_level:int|None = None) -> list[Stimulus]:
+        """Simulate the system using the stimulus
+
+        :param: str | System system: the system for simulation
+        :param Stimulus | dict[Port, Any] stimulus: the stimulus to set for the simulation
+        :param int num_unique_simulations: number of unique behaviors want to perform for this simulation
+        :param int system_compose_level: number of level to perform composition, if not given, the whole system is used
+        :return: the simulation result as stimulus
+        :rtype: list[Stimulus]
+        
+        """
+
+        system_obj = self._verify_system_obj_or_str(system=system)
+        self._generate_system_contracts(system_obj)
+        if isinstance(stimulus, Stimulus):
+            simulate_stimulus = stimulus
+        else:
+            simulate_stimulus = Stimulus(port_stimulus_map=stimulus)
+
+        all_system_vars = [port.var for port in self._ports.values()]
+        simulate_environment = None
+        if environement is not None:
+            simulate_environment = environement.get_clause_set(design_vars=all_system_vars)
+        
+        simulator = Simulator(system=system_obj, 
+                              system_compose_level=system_compose_level)
+        ret = simulator.simulate(stimulus=simulate_stimulus, 
+                                 environement=simulate_environment,
+                                 num_unique_simulations=num_unique_simulations)
+        return ret
+
+    def auto_simulate_system(self, system: str | System, num_unique_simulations:int = 1, max_depth:int = 3)-> tuple[list[tuple[list[Stimulus], list[Stimulus]]], dict[Stimulus, list[tuple[list[Stimulus], list[Stimulus]]]]]:
+        """Automatic simulate the system
+
+        :param: str | System system: the system for simulation
+        :param int max_depth: the depth used to automatic generate stimulus
+        :param int num_unique_simulations: number of unique behaviors want to perform for this simulation
+        :return: the simulation result as stimulus
+        :rtype: list[Stimulus]
+        
+        """
+
+        system_obj = self._verify_system_obj_or_str(system=system)
+        self._generate_system_contracts(system_obj)
+        simulator = Simulator(system=system_obj, system_compose_level=0)
+        # should we allow auto simulation for system? set to 1 to avoid considering composition of subsystem
+        environment_pairs, ret = simulator.auto_simulate(num_unique_simulations=num_unique_simulations, max_depth=max_depth)
+        return environment_pairs, ret
+    
     def register_design(self, system: System):
         """Puts the systems, ports, and connections in the manager
         Recursively put them in the manager for every subsystem
@@ -413,24 +536,28 @@ class DesignLevelManager():
         if name in self._systems:
             return self._systems[name]
         else:
+            LOG.error(f"System {name} does not exist!")
             return None
         
     def get_port(self, name: str) -> Port | None:
         if name in self._ports:
             return self._ports[name]
         else:
+            LOG.error(f"Port {name} does not exist!")
             return None
 
     def get_connection(self, name: str) -> Connection | None:
         if name in self._connections:
             return self._connections[name]
         else:
+            LOG.error(f"Connection {name} does not exist!")
             return None
 
     def get_design(self, name: str) -> System | None:
         if name in self._designs:
             return self._designs[name]
         else:
+            LOG.error(f"Design {name} does not exist!")
             return None
         
     def _verify_system_obj_or_str(self, system: str | System) :

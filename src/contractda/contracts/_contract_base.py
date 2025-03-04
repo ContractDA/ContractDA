@@ -227,6 +227,13 @@ class ContractBase(ABC):
     def add_constraint(self, constraint: SetBase, adjusted_input: list[Var] = None):
         pass
 
+    ##################################
+    #   Contract Query with Inputs
+    ##################################
+    @abstractmethod
+    def check_environment_satisfy(self, env: SetBase) -> bool:
+        pass
+
     @staticmethod
     def _convert_to_sets_based_on_language(vars: list[Var], expr: str, language: str):
         if isinstance(expr, str):

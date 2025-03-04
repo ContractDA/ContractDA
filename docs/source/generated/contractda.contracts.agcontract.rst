@@ -1,4 +1,4 @@
-﻿contractda.contracts.AGContract
+contractda.contracts.AGContract
 ===============================
 
 .. currentmodule:: contractda.contracts
@@ -19,6 +19,8 @@
    ~contractda.contracts.AGContract.environment
    ~contractda.contracts.AGContract.guarantee
    ~contractda.contracts.AGContract.implementation
+   ~contractda.contracts.AGContract.input_var
+   ~contractda.contracts.AGContract.input_var_symbols
    ~contractda.contracts.AGContract.non_assumption_vs
    ~contractda.contracts.AGContract.obligation
    ~contractda.contracts.AGContract.vs
@@ -32,6 +34,7 @@
 .. autosummary::
 
    ~contractda.contracts.AGContract.add_constraint
+   ~contractda.contracts.AGContract.check_environment_satisfy
    ~contractda.contracts.AGContract.composition
    ~contractda.contracts.AGContract.conjunction
    ~contractda.contracts.AGContract.implication
