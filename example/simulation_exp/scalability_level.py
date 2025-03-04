@@ -37,7 +37,7 @@ if __name__ == "__main__":
     random.seed(10)
 
     times = []
-    for level in range(3, 15):
+    for level in range(11, 15):
         total_time = 0
         for r in range(10):
             vs, c1 = random_generation_test(level, 100)
