@@ -9,9 +9,14 @@ if __name__ == "__main__":
     c1 = AGContract(vars=[x, z], assumption="x >= 0", guarantee="z == 2 * x")
     c2 = AGContract(vars=[y, z], assumption="z >= 1", guarantee="y == 2 * z")
     c3 = AGContract(vars=[x, y], assumption="x >= 2", guarantee="y == 4 * x")
+    print("c1: ", c1)
+    print("c2: ", c2)
+    print("c3: ", c3)
 
     c12 = c1.composition(c2)
-    print(c3.is_refined_by(c12))
+    print("Composition of c1 with c2:", c12)
+
+    print("Checking whether c3 is refined by c12:", c3.is_refined_by(c12))
 
     c1 = AGContract(vars=[x, z], assumption="x >= -5", guarantee="z == 2 * x && x < 1")
     c2 = AGContract(vars=[y, z], assumption="z >= 1", guarantee="y == 2 * z")
