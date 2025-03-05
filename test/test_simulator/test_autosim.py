@@ -24,7 +24,7 @@ def test_autosim(x, y, z):
 
     sim = Simulator(contract=c)
 
-    environments, result = sim.auto_simulate(max_depth=3, num_unique_simulations=2)
+    environments, result = sim.auto_simulate(num_unique_simulations=2)
     for in_e, ex_e in environments:
         for e in in_e:
             print("success: ", e)

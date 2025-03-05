@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     sim = Simulator(contract=c)
 
-    env, result = sim.auto_simulate(max_depth=3, num_unique_simulations=1)
+    env, result = sim.auto_simulate(num_unique_simulations=1, use_generator=True)
     for success, failure in env:
         print("new pair: ")
         for e in success:

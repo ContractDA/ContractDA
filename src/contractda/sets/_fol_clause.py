@@ -38,10 +38,13 @@ class FOLClause(Clause):
         return cls(root = root, symbols=symbols)   
 
     @classmethod
-    def _create_clause_by_node(cls, node: fol_lan.AST_Node):
+    def _create_clause_by_node(cls, node: fol_lan.AST_Node, symbols = None):
         instance = cls(description=None, ctx=None)
         instance._root = node
-        instance._symbols = instance._root.get_symbols()
+        if symbols is None:
+            instance._symbols = instance._root.get_symbols()
+        else:
+            instance._symbols = symbols
         return instance
 
     def get_symbols(self) -> dict:

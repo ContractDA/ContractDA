@@ -558,7 +558,7 @@ class AutoSimulateSystemCommand(BaseCommand):
         parser = argparse.ArgumentParser(prog=self.name, exit_on_error=False)
         parser.add_argument("system_name", type=str, help="system name")
         parser.add_argument("-num", type=int, help="number of unique behavior", default=1)
-        parser.add_argument("-depth", type=int, help="number of unique behavior", default=3)
+
         try:
             parsed_args = parser.parse_args(args)
         except SystemExit as e:
@@ -570,11 +570,9 @@ class AutoSimulateSystemCommand(BaseCommand):
         
         system_name = parsed_args.system_name    
         num_unique_simulations = parsed_args.num
-        max_depth = parsed_args.depth  
         try:
             sim_behaviors, violate_behaviors, result_map = self.context._design_mgr.auto_simulate_system(system=system_name, 
-                                                                num_unique_simulations=num_unique_simulations, 
-                                                                max_depth=max_depth)
+                                                                num_unique_simulations=num_unique_simulations)
         except ObjectNotFoundException as e:
             error_msg = f"{str(e)}"
             LOG.info(error_msg)

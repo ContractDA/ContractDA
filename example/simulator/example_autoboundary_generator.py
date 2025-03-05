@@ -7,31 +7,47 @@ if __name__ == "__main__":
     y = RealVar("y")
     z = RealVar("z")
     c = AGContract([x, y, z], assumption="x <= 5 && y >= 3", guarantee="z == x + y")
+    print("generator")
+    prev_node = None
+    for clause, flag, node,  in c.assumption.generate_boundary_set_generator():
+        if prev_node is None or prev_node != node:
+            print("New node")
+        if flag:
+            print("in", clause, node.op)
+        else:
+            print("ex", clause, node.op)
+        prev_node = node
 
-    ib, ob = c.assumption.generate_boundary_set(max_depth=3)
-    for i in ib:
-        print("in", i)
-    for o in ob:
-        print("ex", o)
-
+    print("linear")
+    examples = c.assumption.generate_boundary_set_linear()
+    for example_ins, example_outs in examples:
+        print("Example: ")
+        for i in example_ins:
+            print("in", i)
+        for o in example_outs:
+            print("ex", o)
     print()
     c = AGContract([x, y, z], assumption="(x <= 5 && x >= 3) || (y >= 3 && y<= 4)", guarantee="z == x + y")
 
-    ib, ob = c.assumption.generate_boundary_set(max_depth=3)
-    print(len(ib), len(ob))
-    for i in ib:
-        print("in", i)
-    for o in ob:
-        print("ex", o)
+    for clause, flag, node,  in c.assumption.generate_boundary_set_generator():
+        if prev_node is None or prev_node != node:
+            print("New node")
+        if flag:
+            print("in", clause, node.op)
+        else:
+            print("ex", clause, node.op)
+        prev_node = node
 
     c = AGContract([x, y, z], assumption="(x <= 5 && x >= 3) || (!(y >= 3))", guarantee="z == x + y")
     print()
-    ib, ob = c.assumption.generate_boundary_set(max_depth=3)
-    print(len(ib), len(ob))
-    for i in ib:
-        print("in", i)
-    for o in ob:
-        print("ex", o)
+    for clause, flag, node,  in c.assumption.generate_boundary_set_generator():
+        if prev_node is None or prev_node != node:
+            print("New node")
+        if flag:
+            print("in", clause, node.op)
+        else:
+            print("ex", clause, node.op)
+        prev_node = node
     # sti = Stimulus({x: 50})
     # obj = RealVar("obj")
 

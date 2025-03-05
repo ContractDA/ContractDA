@@ -458,11 +458,10 @@ class DesignLevelManager():
                                  num_unique_simulations=num_unique_simulations)
         return ret
 
-    def auto_simulate_system(self, system: str | System, num_unique_simulations:int = 1, max_depth:int = 3)-> tuple[list[tuple[list[Stimulus], list[Stimulus]]], dict[Stimulus, list[tuple[list[Stimulus], list[Stimulus]]]]]:
+    def auto_simulate_system(self, system: str | System, num_unique_simulations:int = 1)-> tuple[list[tuple[list[Stimulus], list[Stimulus]]], dict[Stimulus, list[tuple[list[Stimulus], list[Stimulus]]]]]:
         """Automatic simulate the system
 
         :param: str | System system: the system for simulation
-        :param int max_depth: the depth used to automatic generate stimulus
         :param int num_unique_simulations: number of unique behaviors want to perform for this simulation
         :return: the simulation result as stimulus
         :rtype: list[Stimulus]
@@ -473,7 +472,7 @@ class DesignLevelManager():
         self._generate_system_contracts(system_obj)
         simulator = Simulator(system=system_obj, system_compose_level=0)
         # should we allow auto simulation for system? set to 1 to avoid considering composition of subsystem
-        environment_pairs, ret = simulator.auto_simulate(num_unique_simulations=num_unique_simulations, max_depth=max_depth)
+        environment_pairs, ret = simulator.auto_simulate(num_unique_simulations=num_unique_simulations)
         return environment_pairs, ret
     
     def register_design(self, system: System):

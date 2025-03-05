@@ -196,8 +196,8 @@ class Simulator(object):
     def auto_simulate(self, stimulus: Stimulus = None, 
                       environement: SetBase = None,  
                       num_unique_simulations: int = 1, 
-                      max_depth:int = 3, 
                       contract: ContractBase = None,
+                      use_generator: bool = True,
                       produce_env_only: bool = False) -> tuple[list[tuple[list[Stimulus], list[Stimulus]]], dict[Stimulus, list[tuple[list[Stimulus], list[Stimulus]]]]]:
         """Automatic simulate the contract, no stimulus is needed"""
         if contract is not None:
@@ -221,55 +221,102 @@ class Simulator(object):
         if isinstance(sim_contract, AGContract):
             if stimulus is None:
                 # Use Assumption Boundary to generate stimulus automatically
-                examples = sim_contract.assumption.generate_boundary_set_linear()
-                for in_sets_a, ex_sets_a in examples:
+                if use_generator:
+                    prev_node = None
                     violated_stimulus: list[Stimulus] = []
                     simulate_stimulus: list[Stimulus] = []
-                    for ex_set in ex_sets_a:
+                    for clause, in_flag, node in sim_contract.assumption.generate_boundary_set_generator():
+                        if prev_node is not None and node != prev_node:
+                            environment_behaviors.append((simulate_stimulus, violated_stimulus))
+                            violated_stimulus = []
+                            simulate_stimulus = []
                         try:
-                            sat, sample = ex_set.sample()
-                        except:
-                                continue
-                        if sat:
-                            violated_stimulus.append(Stimulus(sample))
-                            #print(ex_set, Stimulus(sample))
-
-                    for in_set in in_sets_a:
-                        try:
-                            sat, sample = in_set.sample()
+                            sat, sample = clause.sample()
                         except:
                             continue
                         if sat:
-                            simulate_stimulus.append(Stimulus(sample))
-                            all_simulate_stimulus.append(Stimulus(sample))
-                            #print(in_set, Stimulus(sample))
+                            if in_flag:
+                                simulate_stimulus.append(Stimulus(sample))
+                                all_simulate_stimulus.append(Stimulus(sample))
+                            else:
+                                violated_stimulus.append(Stimulus(sample))
+                        prev_node = node
                     environment_behaviors.append((simulate_stimulus, violated_stimulus))
+                else:
+                    examples = sim_contract.assumption.generate_boundary_set_linear()
+                    for in_sets_a, ex_sets_a in examples:
+                        violated_stimulus: list[Stimulus] = []
+                        simulate_stimulus: list[Stimulus] = []
+                        for ex_set in ex_sets_a:
+                            try:
+                                sat, sample = ex_set.sample()
+                            except:
+                                    continue
+                            if sat:
+                                violated_stimulus.append(Stimulus(sample))
+                                #print(ex_set, Stimulus(sample))
+
+                        for in_set in in_sets_a:
+                            try:
+                                sat, sample = in_set.sample()
+                            except:
+                                continue
+                            if sat:
+                                simulate_stimulus.append(Stimulus(sample))
+                                all_simulate_stimulus.append(Stimulus(sample))
+                                #print(in_set, Stimulus(sample))
+                        environment_behaviors.append((simulate_stimulus, violated_stimulus))
             else:
                 LOG.info("Stimulus is provided in auto simulation!")
                 simulate_stimulus.append(stimulus)
 
             if produce_env_only:
                 return environment_behaviors, None
+            
             # Guarantee boundary
-            examples = sim_contract.guarantee.generate_boundary_set_linear()
-
-            for stimulus in all_simulate_stimulus:
-                stimulus_result = []
-                for in_sets_g, ex_sets_g in examples:
+            if use_generator:
+                for stimulus in all_simulate_stimulus:
+                    stimulus_result = []
+                    prev_node = None
                     in_results = []
                     out_results = []
-                    for in_set in in_sets_g:
-                        auto_contract = AGContract(vars=sim_contract._vars, assumption=sim_contract.assumption, guarantee=in_set)
+                    for clause, in_flag, node in sim_contract.guarantee.generate_boundary_set_generator():
+                        if prev_node is not None and node != prev_node:
+                            stimulus_result.append((in_results, out_results))
+                            in_results = []
+                            out_results = []
+                        auto_contract = AGContract(vars=sim_contract._vars, assumption=sim_contract.assumption, guarantee=clause)
                         LOG.debug(f"Running stimulus {stimulus} on boundary contract {auto_contract}")
                         ret = self.simulate(stimulus=stimulus, num_unique_simulations=num_unique_simulations, contract=auto_contract)
-                        in_results.extend(ret)
-                    for ex_set in ex_sets_g:
-                        auto_contract = AGContract(vars=sim_contract._vars, assumption=sim_contract.assumption, guarantee=ex_set)
-                        LOG.debug(f"Running stimulus {stimulus} on boundary contract {auto_contract}")
-                        ret = self.simulate(stimulus=stimulus, num_unique_simulations=num_unique_simulations, contract=auto_contract)
-                        out_results.extend(ret)
+                        if in_flag:
+                            in_results.extend(ret)
+                        else:
+                            out_results.extend(ret)
+                        
+                        prev_node = node
                     stimulus_result.append((in_results, out_results))
-                result[stimulus] = stimulus_result
+                    result[stimulus] = stimulus_result
+
+            else:
+                examples = sim_contract.guarantee.generate_boundary_set_linear()
+
+                for stimulus in all_simulate_stimulus:
+                    stimulus_result = []
+                    for in_sets_g, ex_sets_g in examples:
+                        in_results = []
+                        out_results = []
+                        for in_set in in_sets_g:
+                            auto_contract = AGContract(vars=sim_contract._vars, assumption=sim_contract.assumption, guarantee=in_set)
+                            LOG.debug(f"Running stimulus {stimulus} on boundary contract {auto_contract}")
+                            ret = self.simulate(stimulus=stimulus, num_unique_simulations=num_unique_simulations, contract=auto_contract)
+                            in_results.extend(ret)
+                        for ex_set in ex_sets_g:
+                            auto_contract = AGContract(vars=sim_contract._vars, assumption=sim_contract.assumption, guarantee=ex_set)
+                            LOG.debug(f"Running stimulus {stimulus} on boundary contract {auto_contract}")
+                            ret = self.simulate(stimulus=stimulus, num_unique_simulations=num_unique_simulations, contract=auto_contract)
+                            out_results.extend(ret)
+                        stimulus_result.append((in_results, out_results))
+                    result[stimulus] = stimulus_result
 
 
             # use success_stimulus to generate behaviors for contract

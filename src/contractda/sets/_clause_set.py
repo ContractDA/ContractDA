@@ -178,7 +178,7 @@ class ClauseSet(SetBase):
     def generate_var_val_lt_constraint_set(cls, var: Var, val) -> ClauseSet:
         pass
 
-    def generate_boundary_set(self, max_depth:int = 3, max_count:int = None, exclude_empty: bool = True) -> tuple[list[ClauseSet], list[ClauseSet]]:
+    def generate_boundary_set_linear(self, max_depth:int = 3, max_count:int = None, exclude_empty: bool = True) -> tuple[list[ClauseSet], list[ClauseSet]]:
         """Return the boundary set associated with the set
         
         """

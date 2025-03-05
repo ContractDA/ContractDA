@@ -2,6 +2,7 @@ from contractda.vars import Var, RealVar, IntVar
 from contractda.sets import FOLClauseSet
 import random
 import time
+import argparse
 
 operator_expression = [">=", ">", "<", "<=", "==", "!="]
 operator_clause = ["&&", "||", "->"]
@@ -34,10 +35,17 @@ def _generate_with_depth(depth: int, variables: list[Var]):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser("Experiment of Scalability")
+    group = parser.add_mutually_exclusive_group(required=True)  # Either --generator OR --linear (not both)
+    group.add_argument("--generator", action="store_true", help="Run the generator function")
+    group.add_argument("--linear", action="store_true", help="Run the linear function")
+    parser.add_argument("--start", type=int, default=2)
+    parser.add_argument("--end", type=int, default=11)
+    args = parser.parse_args()
     random.seed(10)
 
     times = []
-    for level in range(11, 15):
+    for level in range(args.start, args.end):
         total_time = 0
         for r in range(10):
             vs, c1 = random_generation_test(level, 100)
@@ -46,11 +54,21 @@ if __name__ == "__main__":
             clause = FOLClauseSet(vars=vs, expr=c1)
         
             start_time = time.perf_counter()
-            examples = clause.generate_boundary_set_linear()
+            num_examples = 0
+            if args.linear:
+                examples = clause.generate_boundary_set_linear()
+                num_examples = len(examples)
+            else:
+                prev_node = None
+                for clause, flag, node in clause.generate_boundary_set_generator():
+                    if prev_node is None or prev_node != node:
+                        num_examples += 1
+                    prev_node = node
+
             end_time = time.perf_counter()
             print(level, r, end_time-start_time)
             total_time += end_time-start_time
-            print(len(examples))
+            print(num_examples)
         times.append(total_time/10.0)
         print(f"finish level{level}, time:", total_time/10.0)
 
