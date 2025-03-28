@@ -1,0 +1,7 @@
+read_design_from_file -f ./example/design_files/simple_design_feedback_composition_success.json
+report_systems
+verify_system_independent test_sys_feedback_composition_success
+
+read_design_from_file -f ./example/design_files/simple_design_feedback_composition_fail.json
+report_systems
+verify_system_independent test_sys_feedback_composition_fail

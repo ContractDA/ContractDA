@@ -16,7 +16,7 @@ class AGContract(ContractBase):
     The guarantee is the result ensured by the system if the assumption holds
     """
 
-    def __init__(self, vars: list[Var], assumption: SetBase | str, guarantee: SetBase | str, language = "FOL"):
+    def __init__(self, vars: list[Var], assumption: SetBase | str, guarantee: SetBase | str, language = "FOL", inputs: list[Var]| None = None):
         """Constructor
 
         :param list[Var] vars: the variables
@@ -26,7 +26,7 @@ class AGContract(ContractBase):
         self._assumption: SetBase = self._convert_to_sets_based_on_language(vars, assumption, language)
         self._guarantee: SetBase = self._convert_to_sets_based_on_language(vars, guarantee, language)
         self._vars: list[Var] = vars
-        self._assigned_input_vars: list[Var] = None
+        self._assigned_input_vars: list[Var] = inputs
 
     def __str__(self):
         return f" AG Contract: Assumption: {self.assumption}, Guarantee: {self.guarantee}"
@@ -658,8 +658,8 @@ class AGContract(ContractBase):
 
             # create neighbor constraints
             if solver_var_distinct_outputs:
-                neighbor_clause_1 = solver.clause_and(same_1, solver.clause_exists(solver_var_distinct_outputs, encoded_copied_obligation1))
-                neighbor_clause_2 = solver.clause_and(same_2, solver.clause_exists(solver_var_distinct_outputs, encoded_copied_obligation2))
+                neighbor_clause_1 = solver.clause_and(same_1, solver.clause_exists(solver_var_copied_distinct_outputs, encoded_copied_obligation1))
+                neighbor_clause_2 = solver.clause_and(same_2, solver.clause_exists(solver_var_copied_distinct_outputs, encoded_copied_obligation2))
             else:
                 neighbor_clause_1 = solver.clause_and(same_1, encoded_copied_obligation1)
                 neighbor_clause_2 = solver.clause_and(same_2, encoded_copied_obligation2)
@@ -677,13 +677,13 @@ class AGContract(ContractBase):
             encoded_tree1_array = [encoded_tree1_0]
             encoded_tree2_array = [encoded_tree2_0]
             for k in range(1, d):
-                print(k)
+                #print(k)
                 encoded_tree1 = solver.clause_forall(solver_var_related_input_array[d-k], solver.clause_implies(neighbor1_array[d-k], solver.clause_or(encoded_tree2_array[k-1], same_2_array[d-k])))
                 encoded_tree2 = solver.clause_forall(solver_var_related_input_array[d-k], solver.clause_implies(neighbor2_array[d-k], solver.clause_or(encoded_tree1_array[k-1], same_1_array[d-k])))
                 encoded_tree1_array.append(encoded_tree1)
                 encoded_tree2_array.append(encoded_tree2)
 
-            encoded_positive_proof = solver.clause_and(encoded_assumption, solver.clause_forall(solver_var_related_input_array[0], 
+            encoded_positive_proof = solver.clause_and(encoded_assumption, solver.clause_forall(solver_var_related_input_array[0]+solver_var_distinct_output_array[0], 
                                                                                                 solver.clause_or(solver.clause_not(encoded_fp_array[0]),
                                                                                                                  solver.clause_not(encoded_tree1_array[d-1]),
                                                                                                                  solver.clause_not(encoded_tree2_array[d-1]))
@@ -724,7 +724,7 @@ class AGContract(ContractBase):
                 encoded_fail1_array.append(encoded_fail1)
                 encoded_fail2_array.append(encoded_fail2)
 
-            encoded_negative_proof = solver.clause_and(encoded_assumption,  solver.clause_forall(solver_var_related_input_array[0],
+            encoded_negative_proof = solver.clause_and(encoded_assumption,  solver.clause_forall(solver_var_related_input_array[0]+solver_var_distinct_output_array[0],
                                                                                                 solver.clause_implies(encoded_fp_array[0],
                                                                                                                         solver.clause_or(encoded_fail1_array[d-1],
                                                                                                                                          encoded_fail2_array[d-1]))))

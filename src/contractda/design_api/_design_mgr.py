@@ -121,18 +121,17 @@ class DesignLevelManager():
         # 3. For system not involve in feedback loop, try to estabilish its receptiveness. check strong replaceability
         # 4. check receptiveness in the leaf
         # 5. 
-        system_obj = self._verify_system_obj_or_str(system=system)
         # check refinement
-        if not self.verify_system_refinement(system=system):
+        if not self.verify_system_refinement(system=system_obj):
             LOG.info("Not passing independent test because refinement not held")
             return False
 
         # check receptiveness
         receptive_flag = True
-        irreceptive_contracts = self.verify_system_receptiveness(system=system)
+        irreceptive_contracts = self.verify_system_receptiveness(system=system_obj)
         if irreceptive_contracts:
             receptive_flag = False
-        for subsystem in system.subsystems.values():
+        for subsystem in system_obj.subsystems.values():
             irreceptive_contracts = self.verify_system_receptiveness(system=subsystem)
             if irreceptive_contracts:
                 receptive_flag = False    
@@ -144,7 +143,7 @@ class DesignLevelManager():
                 return True
             else:
                 # remember to set input variables....
-                LOG.info("Incllude non-receptive contract, checking strong replaceability")
+                LOG.info("Include non-receptive contract, checking strong replaceability")
                 system_contract = system_obj._get_single_system_contract()
                 subsystem_composed_contract = system_obj._get_subsystem_contract_composition()
                 connection_constraint = system_obj._generate_contract_system_connection_constraint()
@@ -165,8 +164,7 @@ class DesignLevelManager():
             input_vars = [port.var for port in system_obj.input_ports]
             LOG.info(f"Length of input vars: {len(input_vars)}")
             LOG.info(" ".join([var.id for var in input_vars]))
-            print(subsystem_contract1)
-            system_contract.add_constraint(connection_constraint, adjusted_input=input_vars)
+            #system_contract.add_constraint(connection_constraint, adjusted_input=input_vars)
             # get the input port vars, and make it consistent with system inputs.
             c1_input_vars = [port.var for port in subsystems[0].input_ports]
             c2_input_vars = [port.var for port in subsystems[1].input_ports]
@@ -201,7 +199,6 @@ class DesignLevelManager():
             subsystem_contract1.add_constraint(connection_constraint, adjusted_input=new_c1_input_vars)
             LOG.info(" ".join([port.var.id for port in subsystems[1].input_ports]))
             subsystem_contract2.add_constraint(connection_constraint, adjusted_input=new_c2_input_vars)
-
             return system_contract.is_independent_decomposition_of(other1=subsystem_contract1, other2=subsystem_contract2)
         
         raise NotImplementedError("Not support when feedback composition has more than 2 subsystems")

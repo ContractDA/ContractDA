@@ -1,5 +1,5 @@
 {
-    "system_name": "test_sys_feedback_composition1",
+    "system_name": "test_sys_feedback_composition_success",
     "ports": [
         {
             "port_name": "x",
@@ -45,7 +45,7 @@
                         },
                         "guarantee": {
                             "set_type": "FOL",
-                            "description": "y == z + 1 || y == x * z"
+                            "description": "y == x * z"
                         }
                     }
                 }
@@ -89,7 +89,7 @@
         {
             "name": "net1",
             "terminals": [
-                "test_sys_feedback_composition1.x",
+                "test_sys_feedback_composition_success.x",
                 "sub1.x"
             ]
         },
@@ -103,7 +103,7 @@
         {
             "name": "net3",
             "terminals": [
-                "test_sys_feedback_composition1.y",
+                "test_sys_feedback_composition_success.y",
                 "sub1.y",
                 "sub2.y"
             ]

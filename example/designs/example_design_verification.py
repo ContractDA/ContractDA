@@ -29,10 +29,21 @@ if __name__ == "__main__":
     print(design_mgr.verify_design_refinement(design=design))
     print("Indpendent:", design_mgr.verify_system_independent(system=design))
 
-    with open("./example/design_files/simple_design_feedback_composition.json", "r") as file:
+    with open("./example/design_files/simple_design_feedback_composition_fail.json", "r") as file:
         json_obj = json.load(file)
     design_mgr.read_design_json(json_obj)
-    design = design_mgr.get_design("test_sys_feedback_composition1")
+    design = design_mgr.get_design("test_sys_feedback_composition_fail")
+    design.report()
+    print(design)
+    print(design_mgr.verify_design_compatibility(design=design))
+    print(design_mgr.verify_design_consistensy(design=design))
+    print(design_mgr.verify_design_refinement(design=design))
+    print(design_mgr.verify_system_independent(system=design))
+
+    with open("./example/design_files/simple_design_feedback_composition_success.json", "r") as file:
+        json_obj = json.load(file)
+    design_mgr.read_design_json(json_obj)
+    design = design_mgr.get_design("test_sys_feedback_composition_success")
     design.report()
     print(design)
     print(design_mgr.verify_design_compatibility(design=design))

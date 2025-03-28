@@ -548,7 +548,54 @@ class VerifySystemConnectionCommand(BaseCommand):
             LOG.info(info_msg)
             print(info_msg)
             return 0
+    
+class VerifySystemIndependentCommand(BaseCommand):
+    def __init__(self):
+        super().__init__()
+        self.name = "verify_system_independent"
+    
+    def exec(self, *args):
+        parser = argparse.ArgumentParser(prog=self.name, exit_on_error=False)
+        parser.add_argument("system_name", type=str, help="system name")
+        try:
+            parsed_args = parser.parse_args(args)
+        except SystemExit as e:
+            return -1
+        except argparse.ArgumentError as e:
+            print(e)
+            return -1
+        except Exception as e:
+            print("?????")
+            print(type(e))
+            return -1
         
+        system_name = parsed_args.system_name      
+        try:
+            ret = self.context._design_mgr.verify_system_independent(system=system_name)
+        except ObjectNotFoundException as e:
+            error_msg = f"{str(e)}"
+            LOG.info(error_msg)
+            print(error_msg)
+            return -1
+        except IncompleteContractException as e:
+            error_msg = f"{str(e)}"
+            LOG.info(error_msg)
+            print(error_msg)
+            return -1            
+                    
+        if not ret:
+            info_msg = f"The system \"{system_name}\" is not decomposed correctly with its subsystems"
+            LOG.info(info_msg)
+            print(info_msg)
+            return 0
+        else:
+            info_msg = f"The system \"{system_name}\" is decomposed correctly with its subsystems"
+            LOG.info(info_msg)
+            print(info_msg)
+            return 0
+        return 0
+
+
 class AutoSimulateSystemCommand(BaseCommand):
     def __init__(self):
         super().__init__()
@@ -571,7 +618,7 @@ class AutoSimulateSystemCommand(BaseCommand):
         system_name = parsed_args.system_name    
         num_unique_simulations = parsed_args.num
         try:
-            sim_behaviors, violate_behaviors, result_map = self.context._design_mgr.auto_simulate_system(system=system_name, 
+            environment_pairs, result = self.context._design_mgr.auto_simulate_system(system=system_name, 
                                                                 num_unique_simulations=num_unique_simulations)
         except ObjectNotFoundException as e:
             error_msg = f"{str(e)}"
@@ -580,11 +627,19 @@ class AutoSimulateSystemCommand(BaseCommand):
             return -1
 
         print("Simulation Behavior")     
-        for behavior in sim_behaviors:
-            print(behavior)
-            for ret in result_map[behavior]:
-                print("    ", ret)
+        for sim_behavior, ret in result.items():
+            print(sim_behavior)
+            for ins, exs in ret:
+                for i in ins:
+                    print(" ", i)
+                for e in exs:
+                    print(" ", e)
 
-        print("Violation Inputs")
-        for behavior in violate_behaviors:
-            print(behavior)
+        print("Environment Inputs")
+        for simulate_stimulus, violated_stimulus in environment_pairs:
+            print("    Satisfied: ")
+            for simulate_input in simulate_stimulus:
+                print("         ", simulate_input)
+            print("    Violated: ")
+            for violate_input in violated_stimulus:
+                print("         ", violate_input)
